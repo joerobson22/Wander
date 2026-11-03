@@ -1,0 +1,242 @@
+[gd_resource type="Resource" script_class="SoundLibrary" load_steps=67 format=3]
+
+[ext_resource type="Script" path="res://core/sound_library.gd" id="lib"]
+[ext_resource type="Script" path="res://core/sound_setting.gd" id="set"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/rabbit_squeak.mp3" id="a_rabbit_squeak"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/water_ambience.mp3" id="a_water_ambience"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/night_ambience.mp3" id="a_night_ambience"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/bird_tweet.mp3" id="a_bird_tweet"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/dog_bark.mp3" id="a_dog_bark"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/bear_roar.mp3" id="a_bear_roar"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/button_click.mp3" id="a_button_click"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/daytime_birds.mp3" id="a_daytime_birds"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/project_complete.mp3" id="a_project_complete"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/cat_meow.mp3" id="a_cat_meow"]
+[ext_resource type="AudioStreamMP3" path="res://assets/sounds/snail_sludge.mp3" id="a_snail_sludge"]
+
+[sub_resource type="Resource" id="s_button_click"]
+script = ExtResource("set")
+id = "button_click"
+stream = ExtResource("a_button_click")
+
+[sub_resource type="Resource" id="s_orb_tap"]
+script = ExtResource("set")
+id = "orb_tap"
+
+[sub_resource type="Resource" id="s_map_open"]
+script = ExtResource("set")
+id = "map_open"
+
+[sub_resource type="Resource" id="s_locked"]
+script = ExtResource("set")
+id = "locked"
+
+[sub_resource type="Resource" id="s_level_up"]
+script = ExtResource("set")
+id = "level_up"
+
+[sub_resource type="Resource" id="s_first_gift"]
+script = ExtResource("set")
+id = "first_gift"
+
+[sub_resource type="Resource" id="s_gift_odds_up"]
+script = ExtResource("set")
+id = "gift_odds_up"
+
+[sub_resource type="Resource" id="s_bush_rustle"]
+script = ExtResource("set")
+id = "bush_rustle"
+
+[sub_resource type="Resource" id="s_gift_found"]
+script = ExtResource("set")
+id = "gift_found"
+
+[sub_resource type="Resource" id="s_walk_end"]
+script = ExtResource("set")
+id = "walk_end"
+
+[sub_resource type="Resource" id="s_thunder"]
+script = ExtResource("set")
+id = "thunder"
+
+[sub_resource type="Resource" id="s_walk_gifts"]
+script = ExtResource("set")
+id = "walk_gifts"
+
+[sub_resource type="Resource" id="s_gift_pick_up"]
+script = ExtResource("set")
+id = "gift_pick_up"
+
+[sub_resource type="Resource" id="s_gift_throw"]
+script = ExtResource("set")
+id = "gift_throw"
+
+[sub_resource type="Resource" id="s_gift_splash"]
+script = ExtResource("set")
+id = "gift_splash"
+
+[sub_resource type="Resource" id="s_gift_land"]
+script = ExtResource("set")
+id = "gift_land"
+
+[sub_resource type="Resource" id="s_trade_new_gift"]
+script = ExtResource("set")
+id = "trade_new_gift"
+
+[sub_resource type="Resource" id="s_trade_not_yet"]
+script = ExtResource("set")
+id = "trade_not_yet"
+
+[sub_resource type="Resource" id="s_shelf_pick_up"]
+script = ExtResource("set")
+id = "shelf_pick_up"
+
+[sub_resource type="Resource" id="s_shelf_place"]
+script = ExtResource("set")
+id = "shelf_place"
+
+[sub_resource type="Resource" id="s_shelf_remove"]
+script = ExtResource("set")
+id = "shelf_remove"
+
+[sub_resource type="Resource" id="s_project_complete"]
+script = ExtResource("set")
+id = "project_complete"
+stream = ExtResource("a_project_complete")
+
+[sub_resource type="Resource" id="s_water_ambience"]
+script = ExtResource("set")
+id = "water_ambience"
+stream = ExtResource("a_water_ambience")
+
+[sub_resource type="Resource" id="s_daytime_birds"]
+script = ExtResource("set")
+id = "daytime_birds"
+stream = ExtResource("a_daytime_birds")
+
+[sub_resource type="Resource" id="s_night_ambience"]
+script = ExtResource("set")
+id = "night_ambience"
+stream = ExtResource("a_night_ambience")
+
+[sub_resource type="Resource" id="s_wind_ambience"]
+script = ExtResource("set")
+id = "wind_ambience"
+
+[sub_resource type="Resource" id="s_rain_ambience"]
+script = ExtResource("set")
+id = "rain_ambience"
+
+[sub_resource type="Resource" id="s_dog_bark"]
+script = ExtResource("set")
+id = "dog_bark"
+stream = ExtResource("a_dog_bark")
+
+[sub_resource type="Resource" id="s_cat_meow"]
+script = ExtResource("set")
+id = "cat_meow"
+stream = ExtResource("a_cat_meow")
+
+[sub_resource type="Resource" id="s_rabbit_squeak"]
+script = ExtResource("set")
+id = "rabbit_squeak"
+stream = ExtResource("a_rabbit_squeak")
+
+[sub_resource type="Resource" id="s_bird_tweet"]
+script = ExtResource("set")
+id = "bird_tweet"
+stream = ExtResource("a_bird_tweet")
+
+[sub_resource type="Resource" id="s_snail_sludge"]
+script = ExtResource("set")
+id = "snail_sludge"
+stream = ExtResource("a_snail_sludge")
+
+[sub_resource type="Resource" id="s_bear_roar"]
+script = ExtResource("set")
+id = "bear_roar"
+stream = ExtResource("a_bear_roar")
+
+[sub_resource type="Resource" id="s_sheep_baa"]
+script = ExtResource("set")
+id = "sheep_baa"
+
+[sub_resource type="Resource" id="s_pig_oink"]
+script = ExtResource("set")
+id = "pig_oink"
+
+[sub_resource type="Resource" id="s_tortoise_munch"]
+script = ExtResource("set")
+id = "tortoise_munch"
+
+[sub_resource type="Resource" id="s_frog_croak"]
+script = ExtResource("set")
+id = "frog_croak"
+
+[sub_resource type="Resource" id="s_fox_yip"]
+script = ExtResource("set")
+id = "fox_yip"
+
+[sub_resource type="Resource" id="s_parakeet_chirp"]
+script = ExtResource("set")
+id = "parakeet_chirp"
+
+[sub_resource type="Resource" id="s_spider_skitter"]
+script = ExtResource("set")
+id = "spider_skitter"
+
+[sub_resource type="Resource" id="s_hyrax_squeak"]
+script = ExtResource("set")
+id = "hyrax_squeak"
+
+[sub_resource type="Resource" id="s_lizard_chirp"]
+script = ExtResource("set")
+id = "lizard_chirp"
+
+[sub_resource type="Resource" id="s_snake_hiss"]
+script = ExtResource("set")
+id = "snake_hiss"
+
+[sub_resource type="Resource" id="s_monkey_ooh"]
+script = ExtResource("set")
+id = "monkey_ooh"
+
+[sub_resource type="Resource" id="s_gorilla_grunt"]
+script = ExtResource("set")
+id = "gorilla_grunt"
+
+[sub_resource type="Resource" id="s_tiger_roar"]
+script = ExtResource("set")
+id = "tiger_roar"
+
+[sub_resource type="Resource" id="s_giraffe_hum"]
+script = ExtResource("set")
+id = "giraffe_hum"
+
+[sub_resource type="Resource" id="s_elephant_trumpet"]
+script = ExtResource("set")
+id = "elephant_trumpet"
+
+[sub_resource type="Resource" id="s_rhino_snort"]
+script = ExtResource("set")
+id = "rhino_snort"
+
+[sub_resource type="Resource" id="s_leopard_growl"]
+script = ExtResource("set")
+id = "leopard_growl"
+
+[sub_resource type="Resource" id="s_lion_roar"]
+script = ExtResource("set")
+id = "lion_roar"
+
+[sub_resource type="Resource" id="s_eagle_screech"]
+script = ExtResource("set")
+id = "eagle_screech"
+
+[sub_resource type="Resource" id="s_red_panda_squeak"]
+script = ExtResource("set")
+id = "red_panda_squeak"
+
+[resource]
+script = ExtResource("lib")
+sounds = Array[ExtResource("set")]([SubResource("s_button_click"), SubResource("s_orb_tap"), SubResource("s_map_open"), SubResource("s_locked"), SubResource("s_level_up"), SubResource("s_first_gift"), SubResource("s_gift_odds_up"), SubResource("s_bush_rustle"), SubResource("s_gift_found"), SubResource("s_walk_end"), SubResource("s_thunder"), SubResource("s_walk_gifts"), SubResource("s_gift_pick_up"), SubResource("s_gift_throw"), SubResource("s_gift_splash"), SubResource("s_gift_land"), SubResource("s_trade_new_gift"), SubResource("s_trade_not_yet"), SubResource("s_shelf_pick_up"), SubResource("s_shelf_place"), SubResource("s_shelf_remove"), SubResource("s_project_complete"), SubResource("s_water_ambience"), SubResource("s_daytime_birds"), SubResource("s_night_ambience"), SubResource("s_wind_ambience"), SubResource("s_rain_ambience"), SubResource("s_dog_bark"), SubResource("s_cat_meow"), SubResource("s_rabbit_squeak"), SubResource("s_bird_tweet"), SubResource("s_snail_sludge"), SubResource("s_bear_roar"), SubResource("s_sheep_baa"), SubResource("s_pig_oink"), SubResource("s_tortoise_munch"), SubResource("s_frog_croak"), SubResource("s_fox_yip"), SubResource("s_parakeet_chirp"), SubResource("s_spider_skitter"), SubResource("s_hyrax_squeak"), SubResource("s_lizard_chirp"), SubResource("s_snake_hiss"), SubResource("s_monkey_ooh"), SubResource("s_gorilla_grunt"), SubResource("s_tiger_roar"), SubResource("s_giraffe_hum"), SubResource("s_elephant_trumpet"), SubResource("s_rhino_snort"), SubResource("s_leopard_growl"), SubResource("s_lion_roar"), SubResource("s_eagle_screech"), SubResource("s_red_panda_squeak")])

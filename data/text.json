@@ -7,58 +7,74 @@
 		"save": "Save",
 		"done": "Done",
 		"delete": "Delete",
-		"complete": "Complete",
 		"home": "Home",
 		"sort_by": "Sort by",
-		"labelled": "{label}: {value}"
+		"labelled": "{label}: {value}",
+		"undo": "Undo"
+	},
+	"save": {
+		"reset": "Your save was from an older version, so this is a fresh start. The old one is kept beside it as save.old."
 	},
 	"greetings": {
-		"_doc": "The line above the focus orb on the home screen. One is picked each time you come home: half the time a greeting for the time of day (morning 5am to noon, afternoon to 5pm, evening to 10pm, then night), otherwise a line from 'anytime'. '{name}' becomes the player's name; lines with it are skipped until they've set one. 'fallback' shows if a list is ever empty.",
+		"_doc": "The line above the focus orb on the home screen. One is picked each time you come home: half the time a greeting for the time of day (morning 5am to noon, afternoon to 5pm, evening to 10pm, then night), otherwise a line from 'anytime'. On a holiday, it's always a line from that holiday's list in 'holidays' (add or change them freely). '{name}' becomes the player's name; lines with it are skipped until they've set one. 'fallback' shows if a list is ever empty.",
 		"morning": [
 			"Good morning, {name}",
 			"Morning, {name}. Fresh start.",
-			"Rise and shine, {name}",
-			"Good morning",
+			"Rise and shine, {name}!",
+			"Good morning!",
 			"Morning! The day's wide open.",
 			"Early start? Your pet's already up.",
 			"Morning light, clear head.",
 			"Coffee, then one good hour?",
-			"A quiet morning is a gift. Use it well."
+			"A quiet morning is a gift. Use it well.",
+			"Let's get started.",
+			"How do you want to start today?",
+			"What did you have for breakfast?",
+			"Well rested?",
+			"The sun's up, and so are you."
 		],
 		"afternoon": [
-			"Good afternoon, {name}",
-			"Afternoon, {name}",
-			"Good afternoon",
+			"Good afternoon, {name}.",
+			"Afternoon, {name}.",
+			"Good afternoon.",
 			"Post-lunch focus? Let's go.",
 			"Halfway through the day. Keep the pace.",
 			"Afternoon walks are the best walks.",
 			"Still plenty of daylight left.",
-			"The afternoon is yours, {name}"
+			"The afternoon is yours, {name}.",
+			"Keep it up, {name}.",
+			"Remember your goals.",
+			"You're on the right track."
 		],
 		"evening": [
-			"Good evening, {name}",
-			"Evening, {name}",
-			"Good evening",
+			"Good evening, {name}.",
+			"Evening, {name}.",
+			"Good evening.",
 			"One more stretch before you rest?",
 			"Evening light, steady focus.",
 			"The day's nearly done. Finish it well.",
 			"Wind down with one calm session.",
-			"A gentle evening walk, {name}?"
+			"A gentle evening walk, {name}?",
+			"Almost time for dinner!",
+			"Had a good day, {name}?",
+			"Finish what you've started. Let's do this."
 		],
 		"night": [
 			"Burning the midnight oil, {name}?",
 			"Late one tonight?",
-			"Hello, night owl",
+			"Hello, night owl.",
 			"Quiet hours, clear thinking.",
 			"Night walk, {name}? Bring a torch.",
 			"Don't forget to sleep after this one.",
-			"The stars are out. So are you."
+			"The stars are out. So are you.",
+			"Late sessions are the best.",
+			"Get ready for tomorrow!"
 		],
 		"anytime": [
-			"Welcome back, {name}",
+			"Welcome back, {name}.",
 			"Hi, {name}. Ready when you are.",
-			"Good to see you, {name}",
-			"Ready when you are",
+			"Good to see you, {name}.",
+			"Ready when you are.",
 			"What are we working on today?",
 			"One focus at a time.",
 			"Small steps still get you up the hill.",
@@ -80,7 +96,7 @@
 			"Every walk ends with a gift.",
 			"Somewhere out there is a gift with your name on it.",
 			"Breathe in. Focus. Begin.",
-			"Let's make some progress, {name}",
+			"Let's make some progress, {name}.",
 			"Your streak is rooting for you.",
 			"Phone down, paws up.",
 			"The best walks start with one step.",
@@ -94,9 +110,55 @@
 			"Let the work be easy for a while.",
 			"Mess first, polish later.",
 			"Clear the noise. Find the path.",
-			"Your companion believes in you."
+			"Your companion believes in you.",
+			"Ready to wander?",
+			"It's time to wander.",
+			"Let's explore."
 		],
-		"fallback": "Ready when you are"
+		"holidays": {
+			"halloween": [
+				"Happy Halloween, {name}!",
+				"Happy Halloween!",
+				"Spooky focus, anyone?",
+				"The pumpkins are watching. Better get to work.",
+				"Not even the skeletons skip focus time.",
+				"Trick or treat?"
+			],
+			"christmas": [
+				"Merry Christmas, {name}!",
+				"Merry Christmas!",
+				"Snow's settling. Stay cosy and focused.",
+				"A little focus, then back to the mince pies.",
+				"Season's greetings from the hilltop.",
+				"Even the reindeer put in the hours.",
+				"Focus time on Christmas day?!",
+				"I hope you were on Santa's nice list!",
+				"Get ahead while the competition are snoozing!",
+				"Focus first, family second."
+			],
+			"new_year": [
+				"Happy New Year, {name}!",
+				"Happy New Year!",
+				"A brand new year. Start it well.",
+				"Focus first, fireworks second. Resolutions... another time",
+				"Here to check your yearly stats?"
+			],
+			"easter": [
+				"Happy Easter, {name}!",
+				"Happy Easter!",
+				"Eggs hidden everywhere. Focus first, hunt later.",
+				"Hop to it.",
+				"A sweet day for a little focus."
+			],
+			"birthday": [
+				"Happy birthday, {name}!",
+				"Happy birthday!",
+				"It's your day. Do something you're proud of.",
+				"Another year older, another step up the hill.",
+				"Party hat on. Let's go."
+			]
+		},
+		"fallback": "Ready when you are."
 	},
 	"quotes": [
 		"Small steps still get you up the hill.",
@@ -124,17 +186,19 @@
 		"One more stretch, then a well-earned rest.",
 		"Done is a lovely word. Let's get there.",
 		"Curiosity first, perfection later.",
-		"Trust the process; enjoy the walk."
+		"Trust the process; enjoy the walk.",
+		"Keep doing what you're doing.",
+		"Walk your own path, nobody can walk it for you.",
+		"Believe!",
+		"Head up. Keep walking.",
+		"One step at a time.",
+		"Take a break when you need it."
 	],
 	"nav": {
 		"left": "Go left",
 		"right": "Go right",
 		"up": "Go up",
 		"down": "Go down"
-	},
-	"theme": {
-		"to_light": "Switch to light mode",
-		"to_dark": "Switch to dark mode"
 	},
 	"weather_prompt": {
 		"title": "Bring your weather along?",
@@ -149,23 +213,26 @@
 	"choose_focus": {
 		"new_pet": "New pet",
 		"adopt": "Adopt",
-		"delete_pet": "Delete pet",
-		"complete_project": "Complete project",
-		"level_short": "Lv {level}",
-		"place_locked": "{place} unlocks at level {level}",
-		"place_locked_name": "{place} · unlocks at level {level}",
+		"rehome_pet": "Rehome pet",
+		"rehome": "Rehome",
+		"rehome_title": "Rehome {pet}?",
+		"rehome_body": "{pet} goes off to a happy new home. Projects it walked for still show it. You can't undo this.",
+		"rehomed": "{pet} has a new home",
+		"place_locked_name": "{place} · locked · {rule}",
 		"no_pets_title": "No pets yet",
-		"no_pets_body": "Tap the + to adopt one for something you're working on.",
+		"no_pets_body": "Tap the paw at the top right to adopt one.",
 		"tap_to_walk": "Tap your pet to start walking",
-		"pet_under": "{kind} · {time} focused",
-		"delete_title": "Delete {project}?",
-		"delete_body": "{pet} will go for good. Time you've already spent stays in your stats.",
-		"deleted": "{project} deleted",
-		"complete_title": "Complete {project}?",
-		"complete_body": "It moves to Completed with everything {pet} found along the way. You can't undo this.",
-		"completed": "{project} moved to Completed",
+		"pick_project_first": "Pick a project, then tap your pet",
+		"project_named": "Project: {project}. Tap to change",
+		"projects_title": "Your projects",
+		"new_project": "New project",
+		"create_project": "Create project",
+		"no_projects": "No ongoing projects yet",
+		"project_started": "{project} started",
+		"pet_under": "{kind} · {time} walked · adopted {date}",
 		"project_placeholder": "What are you focusing on?",
 		"name_first": "Give it a name first",
+		"name_pet_placeholder": "Name your pet",
 		"colour_roles": [
 			"Primary",
 			"Secondary",
@@ -173,14 +240,11 @@
 		],
 		"colour_name": "{role} colour",
 		"scroll_animals": "Scroll for more animals",
-		"name_pet": "Name your {kind}",
-		"animal_locked": "Unlocks at level {level}",
-		"say_hello": "Say hello to {pet}"
+		"animal_locked": "{rule}"
 	},
 	"pet": {
 		"your_kind": "your {kind}",
 		"your_kind_start": "Your {kind}",
-		"name_and_kind": "{name} · {kind}",
 		"fallback": "your pet",
 		"fallback_start": "Your pet"
 	},
@@ -190,6 +254,8 @@
 		"sound": "Sound",
 		"sound_on": "Sound on",
 		"sound_off": "Sound off",
+		"weather": "Weather",
+		"weather_real": "Real weather",
 		"end_title": "End your walk?",
 		"end_body": "{pet} hasn't found a gift yet. {time} more and it will.",
 		"minutes": {
@@ -197,6 +263,7 @@
 			"other": "{n} minutes"
 		},
 		"end": "End walk",
+		"end_focus": "End focus",
 		"keep_walking": "Keep walking"
 	},
 	"finish": {
@@ -207,7 +274,8 @@
 		"found": "{pet} found you {a_rarity} gift",
 		"xp": "+{xp} xp",
 		"level_up": "Level {level}!",
-		"level_up_unlocks": "Level {level}! {unlocked} unlocked"
+		"level_up_unlocks": "Level {level}! {unlocked} unlocked",
+		"unlocked": "{unlocked} unlocked!"
 	},
 	"ended": {
 		"title": "Focus ended",
@@ -229,14 +297,15 @@
 		"empty_body": "Focus for {minutes} minutes and your pet dives into the bushes to find you one."
 	},
 	"gift": {
-		"from": "from the {animal}",
+		"from": "from the {table} table",
 		"new": "NEW",
 		"wearable": "Wearable ({slot}). Dress your character on your profile, above the focus screen.",
 		"you_have": "You have {n}",
-		"trade": "Trade in {cost} for {a_rarity}",
-		"trade_short": "Trade in {cost} for {a_rarity} gift: {left} more to go.",
 		"no_trade": "Legendary gifts can't be traded in.",
 		"count": "×{n}",
+		"tally": "{have}/{need}",
+		"click_to_trade": "Click to trade {cost} in for {a_rarity}!",
+		"tap_to_trade": "Tap again to trade {cost} in for {a_rarity}!",
 		"on_shelf": "{gift} (on your shelf)"
 	},
 	"sort": {
@@ -246,23 +315,41 @@
 		"most_gifts": "Most gifts",
 		"biggest": "Biggest",
 		"longest": "Longest",
-		"grade": "Grade"
+		"grade": "Grade",
+		"focus_time": "Focus time",
+		"recently_walked": "Recently walked",
+		"recently_adopted": "Recently adopted",
+		"top_pet": "Top pet"
 	},
-	"completed": {
-		"title": "Completed",
-		"empty_title": "Nothing finished yet",
-		"empty_body": "When a project's done, tap the green tick on the choose focus screen and it moves here, with everything your pet found along the way.",
-		"your_projects": "Your projects",
-		"finished": "Finished",
+	"projects": {
+		"title": "Projects",
+		"show": "Show",
+		"ongoing": "Ongoing",
+		"completed": "Completed",
+		"all": "All",
+		"complete": "Complete",
+		"x_of_y": "{x} of {y} done",
+		"empty_title_ongoing": "Nothing on the go",
+		"empty_body_ongoing": "Start a project from the project pill when you choose a focus. It shows here while you work on it.",
+		"empty_title_completed": "Nothing finished yet",
+		"empty_body_completed": "When a project's done, swipe it from right to left under Ongoing. It moves here with everything your pets found along the way.",
+		"empty_title_all": "No projects yet",
+		"empty_body_all": "Start a project from the project pill when you choose a focus.",
+		"hint_ongoing": "Swipe left to complete",
+		"hint_completed": "Swipe left to reopen",
+		"hint_all": "Your projects",
 		"graded": "{n} graded",
 		"focus_time": "Focus time",
-		"focus_time_note": "across all of them",
+		"focus_time_note": "across these",
 		"biggest": "Biggest",
 		"longest": "Longest",
 		"days": {
 			"one": "{n} day",
 			"other": "{n} days"
 		},
+		"deleted": "{project} deleted",
+		"reopened": "{project} is ongoing again",
+		"completed_toast": "{project} completed",
 		"grade_title": "Grade for {project}",
 		"remove_grade": "Remove grade",
 		"graded_toast": "{project}: {grade}"
@@ -274,7 +361,12 @@
 		"extra_and_dates": "{extra}  ·  {dates}",
 		"add_grade": "Give it a grade",
 		"change_grade": "{grade} · change the grade",
-		"grade_name": "{scale} {grade}"
+		"grade_name": "{scale} {grade}",
+		"pets": "Pets",
+		"places": "Places",
+		"no_walks": "No walks yet",
+		"ongoing": "Ongoing",
+		"completed": "Completed"
 	},
 	"profile": {
 		"title": "Profile",
@@ -290,10 +382,11 @@
 		"school_placeholder": "e.g. University of Leeds",
 		"joined": "Joined",
 		"joined_today": "Today",
+		"total_focus": "Total focus time",
+		"total_focus_tap": "Total focus time {time}. Tap to show it another way",
 		"edit_field": "Edit {field}"
 	},
 	"friend": {
-		"school_empty": "Not added yet",
 		"joined_unknown": "Recently",
 		"no_achievements": "No achievements yet"
 	},
@@ -319,8 +412,8 @@
 		"hours_description": "Focus for {hours} hours in total",
 		"all_gifts_name": "Full collection",
 		"all_gifts_description": "Find every gift",
-		"animal_name": "{animal} set",
-		"animal_description": "Find all {count} of the {animal}'s gifts"
+		"table_name": "{table} set",
+		"table_description": "Find all {count} of the {table} table's gifts"
 	},
 	"rewards": {
 		"title": "Rewards",
@@ -329,6 +422,15 @@
 		"from_start": "From the start",
 		"new_place": "{when}  ·  new place",
 		"new_animal": "{when}  ·  new animal"
+	},
+	"unlock": {
+		"start": "Yours from the start",
+		"holiday": "Focus for {minutes} minutes {when}",
+		"level": "Reach level {level}",
+		"hours": "Focus for {hours} hours",
+		"hours_in": "Focus for {hours} hours {where}",
+		"table": "Discover all {table} gifts",
+		"all_tables": "Discover every gift"
 	},
 	"level_bar": {
 		"caption": "Level {level}  ·  {xp} / {needed} XP"
@@ -339,8 +441,7 @@
 		"skin_option": "Tone {n}",
 		"hair": "Hair colour",
 		"hair_option": "Shade {n}",
-		"previous": "Previous {option}",
-		"next": "Next {option}"
+		"custom_colour": "Pick any colour"
 	},
 	"settings": {
 		"title": "Settings",
@@ -355,7 +456,18 @@
 		"weather": "Local sunrise and weather",
 		"weather_note": "Walks follow the real sky where you are, from your rough location (worked out from your internet connection).",
 		"weather_now": "Now: {place}, {weather}.",
-		"about": "Paws & Progress {version}  ·  Fonts: Fredoka and Nunito (SIL Open Font License)"
+		"about": "{app} {version}",
+		"accessibility": "Accessibility",
+		"vision": "Colour vision",
+		"vision_note": "Recolours the app so colours that look alike come apart.",
+		"visions": {
+			"off": "Standard",
+			"protanopia": "Protanopia",
+			"deuteranopia": "Deuteranopia",
+			"tritanopia": "Tritanopia"
+		},
+		"data": "Data",
+		"data_name": "Your data"
 	},
 	"window": {
 		"title": "Window",
@@ -382,11 +494,28 @@
 		"last_week": "Last week",
 		"week_span": "{from} – {to}",
 		"week_of": "Week of {day}",
-		"no_focus": "No focus this week yet.",
 		"deleted_project": "Deleted project",
 		"chip": "{project}  {time}",
 		"time_this_week": "{time} this week",
-		"time_on_day": "{time} on {day}"
+		"time_on_day": "{time} on {day}",
+		"tab_week": "Week",
+		"tab_month": "Month",
+		"tab_year": "Year",
+		"this_month": "This month",
+		"last_month": "Last month",
+		"this_year": "This year",
+		"last_year": "Last year",
+		"month_name": "{month} {year}",
+		"no_focus_week": "No focus this week yet.",
+		"no_focus_month": "No focus this month yet.",
+		"no_focus_year": "No focus this year yet.",
+		"time_this_month": "{time} this month",
+		"time_this_year": "{time} this year",
+		"time_in": "{time} in {period}",
+		"split_by": "Split the bars by",
+		"by_projects": "Projects",
+		"by_pets": "Pets",
+		"by_places": "Places"
 	},
 	"leaderboard": {
 		"title": "Friends leaderboard",
@@ -402,6 +531,14 @@
 	"dates": {
 		"hours_minutes": "{h}h {m}m",
 		"minutes": "{m}m",
+		"long": {
+			"years": "{n}yr",
+			"months": "{n}mo",
+			"weeks": "{n}wk",
+			"days": "{n}d",
+			"hours": "{n}h",
+			"minutes": "{n}m"
+		},
 		"date": "{day} {month} {year}",
 		"day": "{day} {month}",
 		"months": [
@@ -435,40 +572,140 @@
 			"Friday",
 			"Saturday",
 			"Sunday"
+		],
+		"months_long": [
+			"January",
+			"February",
+			"March",
+			"April",
+			"May",
+			"June",
+			"July",
+			"August",
+			"September",
+			"October",
+			"November",
+			"December"
 		]
 	},
 	"debug": {
 		"title": "DEBUG",
 		"unlock_all": "Unlock all",
-		"unlock_all_note": "Unlock every animal and place (debug builds only)",
+		"unlock_all_note": "Unlock every animal and place, and get 50 of every gift (debug builds only)",
 		"phone_size": "Phone size",
 		"phone_size_note": "Show the app at a phone's proportions (debug builds only)",
-		"weather": "Weather",
-		"live_weather": "Live",
-		"add_minutes": "+{minutes}"
+		"add_minutes": "+{minutes}",
+		"time": "Time",
+		"time_now": "Now",
+		"time_note": "Try the sky at another time of day (debug builds only)",
+		"holiday": "Theme",
+		"holiday_note": "Try out a holiday's look (debug builds only)",
+		"holiday_real": "Today's date",
+		"holiday_none": "No holiday"
 	},
-	"setup": {
-		"welcome": "Welcome to your new account",
+	"holiday": {
+		"present": {
+			"halloween": "Happy Halloween! Here's a present.",
+			"christmas": "Merry Christmas! Here's a present.",
+			"easter": "Happy Easter! Here's a present.",
+			"birthday": "Happy birthday! Here's a present."
+		},
+		"hat_locked": "Your {hat} stays on all day"
+	},
+	"create": {
+		"title": "Create account",
+		"note": "Walk animals through beautiful places while you work.",
 		"name": "Your name",
 		"school": "Where you study",
-		"start": "Start walking",
-		"step_done": "{step}: done",
-		"step_todo": "{step}: to do"
+		"create": "Create",
+		"have_account": "I have an account",
+		"dob": "Date of birth",
+		"dob_day": "DD",
+		"dob_month": "MM",
+		"dob_year": "YYYY",
+		"dob_day_name": "Day of birth",
+		"dob_month_name": "Month of birth",
+		"dob_year_name": "Year of birth",
+		"dob_invalid": "That date doesn't look right.",
+		"agree": "I agree to the",
+		"agree_and": "and",
+		"agree_name": "I agree to the Privacy Policy and Terms of Service",
+		"parent_title": "Ask a parent or guardian",
+		"parent_body": "You're under 18, so a parent or guardian needs to approve your account. Please show them this screen.",
+		"parent_points": [
+			"Everything stays on this device.",
+			"Friends will never see where {name} studies or their date of birth.",
+			"You can see, download or delete the data at any time in Settings, Data."
+		],
+		"parent_approve": "Approve"
 	},
 	"accounts": {
-		"title": "Switch account",
-		"new": "New account",
+		"title": "Your accounts",
+		"log_out": "Log out",
 		"unnamed": "New account",
-		"note": "Each account on this device keeps its own projects, gifts and stats.",
-		"switch_to": "Switch to {name}",
+		"switch_to": "Log in as {name}",
 		"unnamed_lower": "new account",
 		"focused": "{time} focused",
 		"achievements": "{percent}% of achievements",
-		"current": "The account you're using",
 		"delete": "Delete {who}",
 		"whose": "{name}'s account",
 		"this_one": "this account",
 		"delete_title": "Delete {who}?",
 		"delete_body": "Its projects, walks, gifts and stats go for good. This can't be undone."
+	},
+	"podium": {
+		"rehomed": "{time} · rehomed"
+	},
+	"pet_card": {
+		"adopted": "Adopted {date}",
+		"kind_rehomed": "{kind} · rehomed",
+		"top_projects": "Top projects",
+		"top_pets": "Top pets"
+	},
+	"data": {
+		"title": "Your data",
+		"where": "This is everything the app keeps about you. It all stays on this device, and nothing is sent to us.",
+		"profile": "Your account",
+		"profile_detail": "Your name, where you study, your date of birth, when you joined and your character.",
+		"projects": "Projects and pets",
+		"projects_detail": {
+			"one": "{n} project and {pets}, with their names, grades and colours.",
+			"other": "{n} projects and {pets}, with their names, grades and colours."
+		},
+		"focus": "Focus time",
+		"focus_detail": {
+			"one": "How long you focused on {n} day, by project, pet and place.",
+			"other": "How long you focused on each of {n} days, by project, pet and place."
+		},
+		"gifts": "Gifts",
+		"gifts_detail": {
+			"one": "{n} gift, your gift shelf and your XP.",
+			"other": "{n} gifts, your gift shelf and your XP."
+		},
+		"settings": "Settings",
+		"settings_detail": "Your choices in Settings, and your rough location if Local sunrise and weather is on.",
+		"download": "Download",
+		"delete": "Delete",
+		"delete_title": "Delete your data?",
+		"delete_body": "{name}'s account, projects, pets, focus time and gifts are deleted from this device for good. This can't be undone.",
+		"saved": "Saved to {where}",
+		"saved_phone": "Files, in the app's folder",
+		"save_failed": "Couldn't save the file",
+		"pets": {
+			"one": "{n} pet",
+			"other": "{n} pets"
+		}
+	},
+	"legal": {
+		"privacy": "Privacy Policy",
+		"terms": "Terms of Service",
+		"licences": "Licences",
+		"licence": "Licence: {licence}",
+		"weather_credit": "Weather data by Open-Meteo.com, under the Creative Commons Attribution 4.0 licence (CC BY 4.0). Rough location by GeoJS (geojs.io)."
+	},
+	"alt": {
+		"character": "Character, head to toe",
+		"face": "Character's face",
+		"chart": "Focus time, {period}: {time}"
 	}
 }

@@ -1,0 +1,10 @@
+{
+	"_doc": "Days the app dresses up (see core/holidays.gd). The first one on today's date is how the app looks (your birthday is first, so it beats every holiday), but every one on today's date gives its present and counts towards its pet. 'from' and 'to' are \"MM-DD\" (the whole of each day) or \"MM-DD HH:MM\" (from or until that minute), local time; a span can run over New Year. 'when' finishes \"Focus for 30 minutes ...\" on its pet's lock popup. 'easter': [first, last] days from Easter Sunday (-2 is Good Friday, 1 Easter Monday). 'birthday': true follows your date of birth instead. 'gift' is the legendary gift (gifts.json) you're given for opening the app on the day, once a year. An animal with the unlock rule {\"holiday\": id, \"minutes\": 30} (animals.json) is adopted by focusing that long over one year's run of the holiday. How each one looks (time of day, weather, trees, decorations) is art/holidays/<id>/look.tres: see assets/README.md.",
+	"holidays": [
+		{"id": "birthday",  "name": "Your birthday", "when": "on your birthday", "birthday": true,  "gift": "party_hat",        "pet": "birthday_cake"},
+		{"id": "new_year",  "name": "New Year",      "when": "at New Year",      "from": "01-01 00:00", "to": "01-01 00:05"},
+		{"id": "halloween", "name": "Halloween",     "when": "on Halloween",     "from": "10-31", "to": "10-31", "gift": "pumpkin_head"},
+		{"id": "christmas", "name": "Christmas",     "when": "at Christmas",     "from": "12-24", "to": "12-26", "gift": "tree_costume"},
+		{"id": "easter",    "name": "Easter",        "when": "at Easter",        "easter": [-2, 1],  "gift": "bunny_ears",       "pet": "easter_egg"}
+	]
+}

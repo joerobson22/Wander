@@ -29,8 +29,12 @@ macOS, Windows, Linux and Steam from one project. See [ROADMAP.md](ROADMAP.md).
 
 ## How it's laid out
 
-The app is five screens arranged like a plus sign. Swipe between them, use
-the arrow keys on a keyboard (Esc comes back to the middle), click the big
+The app is five screens arranged like a plus sign. Swipe between them, give
+the mouse wheel or trackpad a small flick (a list under the pointer scrolls
+first; once it's at its end, a fresh flick moves on), use
+the arrow keys on a keyboard (Esc comes back to the middle; Tab and
+Shift+Tab step through what you can press on screen, or in the popup on top,
+and Enter or Space presses it), click the big
 faint arrows at the screen's edges (computers only: one on every side of the
 focus screen, and one back home on the others), or use the little map in the
 bottom left corner, which shows where you are. It grows up and to the right
@@ -39,6 +43,13 @@ gifts, a tick for completed, a person for your profile and a bar chart for
 stats). With a mouse it grows while the pointer is over it and shrinks a
 moment after it leaves; on phones tap it to grow it, and tap it again (or
 anywhere else) to shrink it. Pick a tile to go there.
+
+The first launch (and Log out) shows the create account screen: your name,
+where you study and your date of birth, then a box to tick agreeing to the
+Privacy Policy and Terms of Service (each name opens it) before Create
+works. Under 18, Create first asks a parent or guardian to approve, in a
+popup only Approve closes. "I have an account" logs back into one already
+on the device.
 
 On computers, Settings also picks the window's mode (windowed, maximised,
 fullscreen or exclusive fullscreen) and its size. The window can't get
@@ -56,18 +67,25 @@ smaller than 800 × 560 points, so layouts never squash.
   above the orb (it grows under the pointer), and the sun/moon switch for dark
   mode. Tap the orb and the choose focus screen grows out of it, set in the
   place you'll walk (holding still, with the place's growth in front of your
-  pets): pick the place from the row at the top (in the order they unlock),
-  with the project and the pet's name under it. Swipe through your pets (each
-  one's kind and time focused is under it), tap one to start a walk, or
-  complete or delete one with the buttons at the bottom. The × in the top left
-  goes back. The + in the top right adopts a new one (what it's for, the pet's
+  pets): pick the place from the row at the top (in the order they unlock;
+  a highlight slides to the one you pick as the places fade into each
+  other), with the project and the pet's name under it. Swipe through your
+  pets (each one's kind and time focused is under it) and tap one to set
+  off: the screen fades away but your pet, which walks over to the path;
+  you walk in from the left to join it, the lead appears with the project's
+  name, and a second later you set off together and the clock starts. The
+  red-rimmed bin at the bottom rehomes a pet. The × in the top left goes
+  back, and the screen shrinks back into the orb. The + in the top right adopts a new one (what it's for, the pet's
   name, its animal and three colours; a locked animal hides the colours):
   while you fill that in the bottom buttons go, the × cancels and the + turns
   into a tick that adopts it. Debug builds (running from the editor) also show
   two small switches beside the home icon in the top left: one unlocks every
-  animal and place, the other turns the window into a phone's shape and lays
-  the app out as on a phone (tap-to-open map, no edge arrows); turning it off
-  puts the window back as it was.
+  animal and place, the other shows the app exactly as on a phone (an
+  iPhone's 390 × 844 screen with its rounded corners, camera island and
+  home bar, kept clear of as on the phone; everything is built again at
+  that size, with no hovering). The window narrows to fit where it can,
+  with black either side where it can't; turning it off puts the window
+  back as it was.
 - **Gifts** (left): three rings under "Collection stats" for how your
   collection's coming along: gifts discovered (green), pets' gift tables
   completed (blue) and cosmetics unlocked from gifts (purple). Under them,
@@ -98,14 +116,20 @@ smaller than 800 × 560 points, so layouts never squash.
   one with how far along it is: 10, 50, 100, 500, 1,000 and 10,000 hours
   focused, every gift found, and a set for each animal's gifts
   (`data/achievements.json`). The page never scrolls. The settings are
-  behind the gear in the top right.
+  behind the gear in the top right. Their top row is your account, with
+  Data (what the app keeps about you, a Download of it all and a Delete)
+  and Log out on the right. Accessibility has Colour vision (protanopia,
+  deuteranopia or tritanopia swap the colours that mean something for ones
+  that stay apart) and Reduce motion. The Privacy Policy, Terms of Service
+  and open source Licences are linked at the bottom (see
+  [legal/README.md](legal/README.md)).
 - **Stats** (down): this week's focus split by project (the projects scroll
   sideways under the chart), past weeks with any focus in them, your streak
   as a flame with the days beside it (a blue shield on the flame when you've
   earned a rest day: one allowed after three days in a row), and the friends
   leaderboard, which scrolls inside its card. "See full" lists everyone in a
   popup. Tap a friend's face or name for their profile: their character,
-  where they study, when they joined, their week, their gift shelf (tap a
+  when they joined (never where they study), their week, their gift shelf (tap a
   gift for a look) and their achievements. Tap yours for your profile. The
   page never scrolls. Debug builds come with sample friends (`core/friends.gd`).
 
@@ -113,11 +137,14 @@ On a walk, the button in the corner is a pie chart of the gift your pet will
 bring back. For the first ten minutes a dark green slice sweeps round; then it
 dings and fills with bright green from the middle, and from there blue, purple
 and gold slices show the chance of a rare, epic or legendary gift, growing as
-you go (rarities below a guaranteed one drop out). The sound button in the top
+you go (rarities below a guaranteed one drop out). The time and the
+project's name sit at the top, and under them a line of encouragement types
+itself out word by word, changing every ten minutes. The sound button in the top
 right mutes everything. Debug builds add a weather picker in the top left and
 buttons that add 5, 10, 30 or 60 minutes. When you finish, your pet dives into
-a bush and comes back with the gift, the camera zooms in, and the XP you
-earned pours into your level bar.
+a bush and comes back with the gift, turns round to show you, the camera
+zooms in, and the XP you earned pours into your level bar at the top. What
+it found is along the very bottom.
 
 **Levels.** Every minute focused is 1 XP, plus a bonus for the walk's gift.
 Levelling up unlocks new animals and places (lakeside, forest, jungle, tundra,
@@ -158,8 +185,15 @@ it, then flick it. Your pet will fetch it, wading in if it lands in the water.
 2. In the project manager, **Import** and pick this folder's `project.godot`.
 3. Press **F5**. Resize the window narrow and tall to see the phone layout.
 
-On first launch on desktop, a save from the original app
-(`…/app_userdata/Paws-And-Progress/gamedata.save`) is imported automatically.
+## Renaming the app
+
+The app's name is set in one place: **Project → Project Settings →
+Application → Config → Name** (`config/name` in `project.godot`). The window
+title, the iPhone home screen name and any `{app}` in `data/text.json` all
+follow it. Two things don't, on purpose: the iOS bundle ID (changing it makes
+a new App Store app) and this repo's file names. Godot also keeps desktop
+save data in a folder named after the app, so a rename starts a fresh save
+on computers.
 
 ## Running it on an iPhone
 
@@ -234,13 +268,15 @@ core/            game logic, no UI
   audio.gd         autoload "Audio": sounds and ambience
   synth.gd         placeholder sounds made in code (bong, pops, rain, thunder)
   game_state.gd    everything that's saved
-  save_system.gd   versioned JSON save, migrations, backup, v1 import
+  save_system.gd   small versioned JSON save with a backup
   session_clock.gd timestamp-based focus timer
   gift_roller.gd   gift odds, guaranteed rarities, pity timer, trade-ins
-  levels.gd        XP from the walk log, levels, and what each one unlocks
-  stats.gd         weekly totals, records, streaks (from the session log)
+  levels.gd        XP per walk, and levels from the XP total
+  unlocks.gd       what unlocks each animal and place, and how far along you are
+  stats.gd         weekly totals, records, streaks (from the focus time per day)
   achievements.gd  achievements and how far along each one is
   friends.gd       the leaderboard order, and sample friends for debug builds
+  legal.gd         privacy policy and terms (legal/), dates of birth, your data, licences
   collection.gd    the gifts screen's rings: discovered, gift tables, cosmetics
   display.gd       the computer window: mode, size, minimum, debug phone view
   models/          ProjectData, FocusSession resources
@@ -312,37 +348,50 @@ names on the left alone.
   achievements stay with the rest of their details in the other `data/` files.
 
 In code, `Text.t("profile.title")` gets a line,
-`Text.t("choose_focus.say_hello", {"pet": name})` fills one in,
+`Text.t("choose_focus.rehomed", {"pet": name})` fills one in,
 `Text.count("stats.days", n)` picks one or many, and `Text.list("quotes")`
 gets a list. The unit tests check that every key the code uses is in the file.
 
 ## Adding content (no code needed)
 
-- **Animal:** add an entry to `data/animals.json` (with its `dive`) and its four
-  gifts to `data/gifts.json` (one per rarity; epic and legendary need a `slot`
-  and `style`).
+- **Animal:** add an entry to `data/animals.json` (with its `dive`, `home`
+  place, gift `table` and `unlock` rule). A new kind of animal also needs a
+  table in `data/gifts.json` with its four gifts (one per rarity; epic and
+  legendary need a `slot` and `style`); animals of a kind share one.
+- **Unlocks:** each animal and place has an `unlock` rule: a level, hours
+  in all, hours in one place, finishing a gift table, or finishing them all.
+  The rules are explained at the top of `data/animals.json`.
 - **Gift odds and guarantees:** edit `data/drop_table.json`.
 - **Trade-in rates:** `trade_in` on each rarity in `data/gifts.json`.
 - **Clothes:** `data/cosmetics.json`.
 - **Grades:** `data/grades.json`.
 - **Achievements:** `data/achievements.json` (hour goals; the gift sets come
   from the animals and gifts).
-- **Place:** add a stack of layers to `data/biomes.json` (and an icon), and
-  give it a level in `data/levels.json`.
-- **Level rewards and XP:** `data/levels.json`.
+- **Place:** add it to `data/biomes.json` (name, icon, `unlock` rule,
+  ambience) and give it a scenery scene, `art/scenery/<id>/place.tscn`,
+  made and changed in the Godot editor. A white `art/places/<id>.png`
+  replaces the drawn icon.
+- **XP and level thresholds:** `data/levels.json`.
 
 ## Art and sound status
 
-All art is placeholder, drawn in code, so the game runs before any sprites
-exist:
+[assets/README.md](assets/README.md) is the guide to changing every
+picture, place, sound and animation in the Godot editor: each place's
+scenery is a scene you open and edit (drawn live in the editor), every
+sound's recording, loudness and pitch are in one list
+(`assets/sounds/sounds.tres`), and the app's timings and curves in
+`ui/motion.tres`. Animals and the character are rigs of separate limbs,
+painted red, green and blue and recoloured by a shader. Anything without
+art keeps its placeholder:
 
 - Animals: `ui/components/animal_view.gd` draws each animal from its
-  recolourable parts. Real art goes in `animal.sprite_dir` (e.g.
-  `res://animals/staffy/`); swap the drawing for a sprite rig with the same
-  properties.
-- Character: `ui/components/character_view.gd`, one look per cosmetic `style`.
+  recolourable parts. A rig at `animal.sprite_dir`
+  (e.g. `res://art/animals/dog1/animal.tscn`) replaces the drawing.
+- Character: `ui/components/character_view.gd`, one look per cosmetic `style`; a rig in `art/character/` with per-item pieces in `art/cosmetics/<id>/` replaces it.
 - Gifts: `ui/components/gift_art.gd` (every screen showing a gift uses it).
-- Scenery: `scenes/walk/scenery.gd` draws each place's layers in chunks,
+- Scenery: each place's layers are in `art/scenery/<id>/place.tscn`;
+  `scenes/walk/scenery_painter.gd` draws a layer's kind (in the editor
+  too) and `scenes/walk/scenery.gd` scrolls them in chunks, with
   the sun and moon, the growth in front of the walker, and the weather
   (clouds, rain, lightning, snow, blizzards, the tundra's wind, stars,
   fireflies). The light tints each layer through its node, so the clock
@@ -356,9 +405,15 @@ exist:
 - **Honest time.** Walk length is always `now - start - paused`, from saved
   timestamps, so backgrounding or sleep can't corrupt it. While you walk, the
   app notes every 30 seconds that it's still open; if it's closed or killed
-  mid-walk, the walk ends at the last of those (and never runs past 12 hours).
-- **Stats from the log.** Every finished walk is stored; weekly totals, best
-  week and streaks are computed from it, never kept as running counters.
+  mid-walk, the walk ends at the last of those. Walks can run past a day:
+  the clock then shows `1d 02:13:05`, and the time is split across the days
+  it fell on.
+- **Small saves.** The save keeps only what can't be worked out again: your
+  profile, projects, focus time per day (by project and by place), XP total,
+  gifts and settings. Levels, stats, achievements and unlocks are worked out
+  from those and the data files each time, so the data files can change
+  freely. A save from another version isn't loaded: the app starts afresh
+  and keeps the old file as `.old`.
 - **Saves** are written to a temp file and swapped in, with the previous save
   kept as `.bak` and used if the main file is ever damaged.
 - **Light on battery.** Panes are built once and only redrawn when something

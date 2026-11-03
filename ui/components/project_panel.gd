@@ -1,16 +1,26 @@
 class_name ProjectPanel
 extends PanelContainer
-## A wide panel about one project: its animal top left with the total time
-## underneath, the name alongside with the gifts it brought in a row below,
-## the grade top right, and when it ran in muted text bottom right. Used on
-## the completed screen and in the stats popups, so they always match.
-## With `gradeable`, the top right is a button: a circled "?" until the
-## project has a grade, then its grade badge; either asks for a grade
+## A wide panel about one project. Along the top: a badge saying whether it's
+## ongoing (hourglass) or completed (tick), its name and its total focus
+## time, then when it ran in muted text in the top right (left of a
+## completed one's grade). The gifts it brought sit under the name, rarest
+## first. Then two podiums (Podium): the pets that walked for it most and
+## the places it was walked most, side by side (one above the other on a
+## narrow panel). Used on the projects screen and in the stats popups, so
+## they always match.
+## With `gradeable`, a completed project's grade is a button: a circled "?"
+## until it has a grade, then its grade badge; either asks for a grade
 ## (`grade_pressed`). Nothing else on the panel can be tapped. `flat` drops
 ## its own box, for a panel that is the whole of a popup; `on_close` puts a
 ## close button in its top right corner, after the grade.
 
 signal grade_pressed(project_id: String)
+
+## Narrower than this, the two podiums stack.
+const PODIUMS_SIDE_BY_SIDE := 480.0
+## Narrower than this, the dates leave the name's line for one of their own
+## under it (still on the right), so the name keeps its room.
+const DATES_BESIDE_NAME := 480.0
 
 var project_id := ""
 
@@ -25,28 +35,64 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var row := UI.hbox(14)
-	add_child(row)
+	var col := UI.vbox(8)
+	add_child(col)
 
-	var left := UI.vbox(6)
-	left.add_child(UI.animal_portrait(p.animal_id, p.colours, Vector2(84, 72)))
-	var time := UI.label(Stats.format_duration(App.state.project_seconds(p.id)), 15, UI.INK, true, 600)
-	time.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	left.add_child(time)
-	row.add_child(left)
-
-	var right := UI.vbox(6)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(right)
+	# The name's line and the gifts under it on the left; the grade (and a
+	# close button) to their right, beside both, so it doesn't push the
+	# gifts down.
 	var top := UI.hbox(10)
-	var names := UI.vbox(0)
-	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	names.add_child(UI.trimmed(p.name, 21, UI.INK, true, 600))
-	names.add_child(UI.trimmed(Content.pet_label(p), 13, UI.INK_SOFT, false, 700))
-	top.add_child(names)
-	var graded := p.grade != "" and not Content.grade(p.grade).is_empty()
+	var left := UI.vbox(8)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(left)
+	var name_line := UI.hbox(10)
+	name_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_child(name_line)
+	name_line.add_child(_status_badge(p.is_complete()))
+	var title := UI.trimmed(p.name, 21, UI.INK, true, 600)
+	title.size_flags_horizontal = Control.SIZE_FILL
+	title.size_flags_stretch_ratio = 0.0
+	# The name takes what it needs (up to the room there is) and the time
+	# follows straight after it.
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	head.add_child(title)
+	var bar := UI.label("|", 18, UI.LINE, false, 600)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(bar)
+	var time := UI.label(Stats.format_duration(App.state.project_seconds(p.id)), 17, UI.ACCENT, true, 600)
+	time.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(time)
+	head.resized.connect(func():
+		var room := head.size.x - bar.get_combined_minimum_size().x - time.get_combined_minimum_size().x - 16.0
+		var want := title.get_theme_font("font").get_string_size(p.name, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x + 2.0
+		title.custom_minimum_size.x = clampf(want, 0.0, maxf(room, 0.0)))
+	name_line.add_child(head)
+	var bias := App.tz_bias()
+	var when := Text.t("project.dates", {"from": Stats.format_date(p.created_unix, bias),
+		"to": Stats.format_date(p.completed_unix, bias) if p.is_complete() else Text.t("project.now")})
+	if extra != "":
+		when = Text.t("project.extra_and_dates", {"extra": extra, "dates": when})
+	var dates := UI.label(when, 12, UI.INK_FAINT, false, 700)
+	dates.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	dates.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	name_line.add_child(dates)
+	left.resized.connect(func():
+		var beside := left.size.x >= DATES_BESIDE_NAME
+		if beside == (dates.get_parent() == name_line):
+			return
+		dates.get_parent().remove_child(dates)
+		if beside:
+			name_line.add_child(dates)
+		else:
+			left.add_child(dates)
+			left.move_child(dates, 1), CONNECT_DEFERRED)
+	var graded := p.is_complete() and p.grade != "" and not Content.grade(p.grade).is_empty()
 	var grade_button: _GradeButton = null
-	if gradeable:
+	if gradeable and p.is_complete():
 		grade_button = _GradeButton.new(p.grade if graded else "")
 		grade_button.pressed.connect(func(): grade_pressed.emit(project_id))
 		top.add_child(grade_button)
@@ -56,37 +102,56 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 		top.add_child(badge)
 	var close_button: Button = null
 	if on_close.is_valid():
-		close_button = UI.round_button("close", Text.t("common.close"), on_close, UI.SURFACE_SOFT, UI.INK, 36, false)
+		close_button = UI.ghost_button("close", Text.t("common.close"), on_close)
 		close_button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		top.add_child(close_button)
-	right.add_child(top)
+	col.add_child(top)
 
 	var gifts := App.state.project_gifts(p.id)
 	var flow := HFlowContainer.new()
 	flow.add_theme_constant_override("h_separation", 10)
 	flow.add_theme_constant_override("v_separation", 6)
 	var ids := gifts.keys()
-	ids.sort_custom(func(a, b): return GiftRoller.RARITIES.find(Content.gift(a).get("rarity", "")) > GiftRoller.RARITIES.find(Content.gift(b).get("rarity", "")))
+	ids.sort_custom(func(a, b):
+		var ra := GiftRoller.RARITIES.find(Content.gift(a).get("rarity", ""))
+		var rb := GiftRoller.RARITIES.find(Content.gift(b).get("rarity", ""))
+		return ra > rb if ra != rb else str(a) < str(b))
 	for id in ids:
 		flow.add_child(_gift_chip(id, gifts[id]))
 	if ids.is_empty():
 		flow.add_child(UI.label(Text.t("project.no_gifts"), 13, UI.INK_FAINT, false, 700))
-	right.add_child(flow)
+	left.add_child(flow)
 
-	right.add_child(UI.spacer(true))
-	var bias := App.tz_bias()
-	var when := Text.t("project.dates", {"from": Stats.format_date(p.created_unix, bias),
-		"to": Stats.format_date(p.completed_unix, bias) if p.is_complete() else Text.t("project.now")})
-	if extra != "":
-		when = Text.t("project.extra_and_dates", {"extra": extra, "dates": when})
-	var dates := UI.label(when, 12, UI.INK_FAINT, false, 700)
-	dates.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	dates.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(dates)
+	col.add_child(UI.divider())
+	var pair := BoxContainer.new()
+	pair.add_theme_constant_override("separation", 16)
+	pair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pair.add_child(Podium.new(Text.t("project.pets"), Podium.pet_rows(p.pets), Text.t("project.no_walks")))
+	var rule := _Rule.new()
+	pair.add_child(rule)
+	pair.add_child(Podium.new(Text.t("project.places"), Podium.place_rows(p.places), Text.t("project.no_walks")))
+	pair.resized.connect(func():
+		var stack := pair.size.x < PODIUMS_SIDE_BY_SIDE
+		if pair.vertical != stack:
+			pair.vertical = stack
+			rule.queue_redraw())
+	col.add_child(pair)
 	UI.ignore_mouse(self)
 	for b in [grade_button, close_button]:
 		if b:
 			b.mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+## A small round badge: an hourglass on amber while a project's going, a
+## tick on green once it's done.
+static func _status_badge(done: bool) -> Control:
+	var badge := UI.panel(UI.SUCCESS if done else UI.SERIES[1], 999, 0)
+	badge.custom_minimum_size = Vector2(30, 30)
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.accessibility_name = Text.t("project.completed" if done else "project.ongoing")
+	badge.add_child(UI.icon_rect("check" if done else "hourglass", 16, UI.ON_COLOUR))
+	return badge
 
 
 static func _gift_chip(gift_id: String, count: int) -> Control:
@@ -158,3 +223,24 @@ class _GradeButton extends Button:
 			var r := minf(size.x, size.y) * 0.5
 			var disc := UI.box(Color(0, 0, 0, 0.12 * _shade), Color.TRANSPARENT, int(r))
 			_cover.draw_style_box(disc, Rect2(Vector2.ZERO, size))
+
+
+## A short line between the two podiums: upright while they sit side by
+## side, flat while they stack.
+class _Rule extends Control:
+	const SHARE := 0.6
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(1, 1)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := size * 0.5
+		if size.y > size.x:
+			draw_line(Vector2(c.x, c.y - size.y * SHARE * 0.5), Vector2(c.x, c.y + size.y * SHARE * 0.5), UI.LINE, 1.0)
+		else:
+			draw_line(Vector2(c.x - size.x * SHARE * 0.5, c.y), Vector2(c.x + size.x * SHARE * 0.5, c.y), UI.LINE, 1.0)
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_RESIZED:
+			queue_redraw()

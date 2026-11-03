@@ -2,8 +2,9 @@ class_name Text
 extends RefCounted
 ## Every word the app shows, from data/text.json, so wording is a data edit.
 ## Keys are dotted paths into the file ("profile.settings"). A {word} in a
-## line is filled in from `values` ({"name": "Joe"}); anything else in braces
-## is left alone. A line that differs for one thing and many is a pair:
+## line is filled in from `values` ({"name": "Joe"}), and {app} is always the
+## app's name (Project Settings > Application > Config > Name, the one place
+## it's set); anything else in braces is left alone. A line that differs for one thing and many is a pair:
 ## {"one": "{n} day", "other": "{n} days"}, picked by count().
 
 const PATH := "res://data/text.json"
@@ -57,4 +58,4 @@ static func lookup(key: String) -> Variant:
 static func fill(line: String, values: Dictionary) -> String:
 	for k in values:
 		line = line.replace("{%s}" % k, str(values[k]))
-	return line
+	return line.replace("{app}", ProjectSettings.get_setting("application/config/name", ""))

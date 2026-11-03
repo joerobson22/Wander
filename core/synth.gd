@@ -1,8 +1,9 @@
 class_name Synth
 extends RefCounted
 ## Placeholder sounds made in code, so the app has its bong, pops and rustles
-## before real recordings exist. Drop an .mp3 with the same name into
-## assets/sounds/ and Audio plays that instead.
+## before real recordings exist. Drop a .wav, .ogg or .mp3 named after the
+## moment into assets/sounds/ (see the list in assets/sounds/README.md) and
+## Audio plays that instead.
 
 const RATE := 22050
 const NAMES := ["bong", "pop", "rustle", "chime", "whoosh", "levelup", "wind", "splash", "rain", "thunder", "ding"]

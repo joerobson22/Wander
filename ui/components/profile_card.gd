@@ -23,6 +23,9 @@ static func field(title: String, value: String, placeholder: bool = false, on_ta
 		var b := UI.round_button("edit", Text.t("profile.edit_field", {"field": title.to_lower()}), on_tap, UI.SURFACE_SOFT, UI.INK, 28, false)
 		row.add_child(b)
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
+		# A whole row of details stays still under the pointer; only its
+		# pencil grows.
+		row.set_meta("no_grow", true)
 		Press.attach(row).tapped.connect(on_tap)
 	return row
 

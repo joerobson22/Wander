@@ -1,11 +1,18 @@
 class_name Motion
 extends RefCounted
 ## Every animation in the app goes through here, so everything moves the same
-## way: a tween that eases in and out. Change the curve or the timings here
-## and the whole app follows.
+## way: a tween that eases in and out. Its curve, overall speed and the
+## timings of the bigger moments are in ui/motion.tres, to change in the
+## Godot editor (see MotionStyle); change them there and the whole app follows.
 
-const TRANS := Tween.TRANS_SINE
-const EASE := Tween.EASE_IN_OUT
+## How the app moves (ui/motion.tres).
+static var style: MotionStyle = _load_style()
+
+
+static func _load_style() -> MotionStyle:
+	const PATH := "res://ui/motion.tres"
+	var s := load(PATH) as MotionStyle if ResourceLoader.exists(PATH) else null
+	return s if s else MotionStyle.new()
 
 ## Durations in seconds.
 const FAST := 0.18
@@ -30,7 +37,7 @@ static func reduced() -> bool:
 static func time(seconds: float) -> float:
 	if still:
 		return 0.0
-	return seconds * (0.5 if reduced() else 1.0)
+	return seconds * (0.5 if reduced() else 1.0) / maxf(style.speed, 0.05)
 
 
 ## A tween bound to `node` with the app's curve. Starting another with the
@@ -43,7 +50,7 @@ static func tween(node: Node, key: String = "") -> Tween:
 			var old = node.get_meta(meta)
 			if old is Tween and old.is_valid():
 				old.kill()
-	var t := node.create_tween().set_trans(TRANS).set_ease(EASE)
+	var t := node.create_tween().set_trans(style.transition).set_ease(style.easing)
 	if meta != "":
 		node.set_meta(meta, t)
 	return t
@@ -101,6 +108,52 @@ static func shake(control: Control, distance: float = 10.0) -> Tween:
 		var dx := distance * (1.0 - i * 0.22) * (1.0 if i % 2 == 0 else -1.0)
 		t.tween_property(control, "position", rest + Vector2(dx, 0), 0.06)
 	t.tween_property(control, "position", rest, 0.06)
+	return t
+
+
+## A quick rock from side to side about its centre, for "that's locked" or
+## "not yet" on things that sit in a layout (which a shake would fight).
+static func wiggle(control: Control) -> Tween:
+	control.pivot_offset = control.size * 0.5
+	var t := tween(control, "wiggle")
+	if reduced() or still:
+		t.tween_property(control, "rotation", 0.0, 0.01)
+		return t
+	for i in 4:
+		var a := deg_to_rad(7.0 * (1.0 - i * 0.22) * (1.0 if i % 2 == 0 else -1.0))
+		t.tween_property(control, "rotation", a, 0.06)
+	t.tween_property(control, "rotation", 0.0, 0.06)
+	return t
+
+
+## Types `text` into `label` letter by letter, pausing a moment between
+## words (Motion.style.type_letter and type_space), after any words already
+## there fade. Less motion: it's just there. Returns the tween (null when
+## it isn't typed). With `appear` false the label's fade is left to the
+## caller (it's fading in some other way).
+static func type_out(label: Label, text: String, appear: bool = true) -> Tween:
+	if reduced() or still:
+		tween(label, "type").kill()
+		label.text = text
+		label.visible_characters = -1
+		if appear:
+			label.modulate.a = 1.0
+		return null
+	# Laid out as the whole text from the start, so centred words don't
+	# shuffle along as each letter arrives.
+	label.visible_characters_behavior = TextServer.VC_CHARS_AFTER_SHAPING
+	var t := tween(label, "type")
+	if appear and label.modulate.a > 0.0 and label.visible_characters != 0 and label.text != "":
+		t.tween_property(label, "modulate:a", 0.0, time(NORMAL))
+	t.tween_callback(func():
+		label.text = text
+		label.visible_characters = 0
+		if appear:
+			label.modulate.a = 1.0)
+	for i in text.length():
+		t.tween_interval(time(style.type_letter + (style.type_space if text[i] == " " else 0.0)))
+		t.tween_callback(func(): label.visible_characters = i + 1)
+	t.tween_callback(func(): label.visible_characters = -1)
 	return t
 
 

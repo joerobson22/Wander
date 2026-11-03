@@ -4,6 +4,8 @@ extends Node
 
 var animals: Array = []
 var gifts: Array = []
+## Gift tables: [{id, name, animal}]. Animals of a kind share one (gifts.json).
+var tables: Array = []
 var rarities: Array = []
 var drop_table: Dictionary = {}
 var biomes: Array = []
@@ -22,9 +24,14 @@ var cosmetic_slots: Array = []
 var cosmetic_items: Array = []
 var skin_tones: Array[Color] = []
 var hair_tones: Array[Color] = []
+## The customise popup's tabs: [{id, name, rows: [slot or "skin_tone"/"hair_tone"]}].
+var cosmetic_sections: Array = []
+## Days the app dresses up (data/holidays.json; see Holidays).
+var holidays: Array = []
 
 var _animals_by_id: Dictionary = {}
 var _gifts_by_id: Dictionary = {}
+var _tables_by_id: Dictionary = {}
 var _rarities_by_id: Dictionary = {}
 var _items_by_id: Dictionary = {}
 
@@ -34,10 +41,12 @@ func _init() -> void:
 	animals = a.get("animals", [])
 	var g := _load("res://data/gifts.json")
 	gifts = g.get("gifts", [])
+	tables = g.get("tables", [])
 	rarities = g.get("rarities", [])
 	drop_table = _load("res://data/drop_table.json")
 	var b := _load("res://data/biomes.json")
 	biomes = b.get("biomes", [])
+	_read_place_scenes()
 	day_cycle = b.get("day_cycle", {})
 	weathers = b.get("weathers", {})
 	var keys: Array = day_cycle.get("keys", [])
@@ -48,6 +57,8 @@ func _init() -> void:
 	var c := _load("res://data/cosmetics.json")
 	cosmetic_slots = c.get("slots", [])
 	cosmetic_items = c.get("items", [])
+	cosmetic_sections = c.get("sections", [])
+	holidays = _load("res://data/holidays.json").get("holidays", [])
 	for hex in c.get("skin_tones", []):
 		skin_tones.append(Color.from_string(hex, Color.WHITE))
 	for hex in c.get("hair_tones", []):
@@ -56,6 +67,8 @@ func _init() -> void:
 		_animals_by_id[x["id"]] = x
 	for x in gifts:
 		_gifts_by_id[x["id"]] = x
+	for x in tables:
+		_tables_by_id[x["id"]] = x
 	for x in rarities:
 		_rarities_by_id[x["id"]] = x
 	for x in cosmetic_items:
@@ -66,19 +79,16 @@ func animal(id: String) -> Dictionary:
 	return _animals_by_id.get(id, animals[0] if not animals.is_empty() else {})
 
 
-## A project's pet as you'd say it in a sentence: its name ("Biscuit"), or
-## "your staffy" if it hasn't got one ("Your staffy" to start a sentence).
-func pet_called(p: ProjectData, start_of_sentence: bool = false) -> String:
-	if p.pet_name != "":
-		return p.pet_name
+## A pet as you'd say it in a sentence: its name ("Biscuit"), or "your
+## rabbit" if it hasn't got one ("Your rabbit" to start a sentence), or
+## "your pet" with no pet at all.
+func pet_called(p: PetData, start_of_sentence: bool = false) -> String:
+	if p == null:
+		return Text.t("pet.fallback_start" if start_of_sentence else "pet.fallback")
+	if p.name != "":
+		return p.name
 	return Text.t("pet.your_kind_start" if start_of_sentence else "pet.your_kind",
 		{"kind": str(animal(p.animal_id).get("name", "pet")).to_lower()})
-
-
-## "Biscuit · Staffy", or just "Staffy" for a pet without a name.
-func pet_label(p: ProjectData) -> String:
-	var kind := str(animal(p.animal_id).get("name", ""))
-	return kind if p.pet_name == "" else Text.t("pet.name_and_kind", {"name": p.pet_name, "kind": kind})
 
 
 func animal_default_colours(id: String) -> Array[Color]:
@@ -92,12 +102,41 @@ func gift(id: String) -> Dictionary:
 	return _gifts_by_id.get(id, {})
 
 
+## A gift table by id: {id, name, animal (the one shown for it)}.
+func table(id: String) -> Dictionary:
+	return _tables_by_id.get(id, {})
+
+
+## The gift table an animal brings gifts from.
+func table_of(animal_id: String) -> String:
+	return str(animal(animal_id).get("table", animal_id))
+
+
+## Every gift in a table, commonest first.
+func table_gifts(table_id: String) -> Array:
+	return gifts.filter(func(g): return g["table"] == table_id)
+
+
+## What it takes to unlock an animal or place ("animal" / "place"): its
+## "unlock" rule from the data, {} for from the start (see Unlocks).
+func unlock_rule(type: String, id: String) -> Dictionary:
+	var thing := animal(id) if type == "animal" else biome(id)
+	if thing.get("id", "") != id:
+		return {}
+	var rule = thing.get("unlock", {})
+	return rule if rule is Dictionary else {}
+
+
 func rarity_colour(rarity_id: String) -> Color:
+	if UI.vision != "off" and UI.SAFE["rarities"].has(rarity_id):
+		return Color(UI.SAFE["rarities"][rarity_id][0])
 	return Color.from_string(_rarities_by_id.get(rarity_id, {}).get("colour", "#888888"), Color.GRAY)
 
 
 ## A darker shade of the rarity colour that reads as text on a light background.
 func rarity_text_colour(rarity_id: String) -> Color:
+	if UI.vision != "off" and UI.SAFE["rarities"].has(rarity_id):
+		return Color(UI.SAFE["rarities"][rarity_id][1])
 	return Color.from_string(_rarities_by_id.get(rarity_id, {}).get("text_colour", "#5e5e52"), Color.DIM_GRAY)
 
 
@@ -118,6 +157,34 @@ func next_rarity(rarity_id: String) -> String:
 
 func gift_rarity(id: String) -> String:
 	return str(gift(id).get("rarity", ""))
+
+
+## Each place's look comes from its scene, art/scenery/<id>/place.tscn
+## (made and changed in the Godot editor: see PlaceScenery), as its layers.
+const PLACE_SCENE := "res://art/scenery/%s/place.tscn"
+
+
+func _read_place_scenes() -> void:
+	for b in biomes:
+		var path := PLACE_SCENE % str(b["id"])
+		if not ResourceLoader.exists(path):
+			push_warning("Content: no scenery scene for %s (%s)" % [b["id"], path])
+			b["layers"] = b.get("layers", [])
+			continue
+		var place := (load(path) as PackedScene).instantiate() as PlaceScenery
+		if place == null:
+			push_warning("Content: %s isn't a place's scenery" % path)
+			continue
+		b["layers"] = place.layers()
+		place.free()
+
+
+## A holiday by id (data/holidays.json), or {} for none.
+func holiday(id: String) -> Dictionary:
+	for h in holidays:
+		if h["id"] == id:
+			return h
+	return {}
 
 
 func biome(id: String) -> Dictionary:
@@ -183,9 +250,10 @@ func quote(key: int) -> String:
 
 
 ## A line for the home screen at this hour: half the time a greeting for the
-## time of day, otherwise an anytime line. Lines needing a name are skipped
-## when there isn't one.
-func greeting(hour: int, username: String, rng: RandomNumberGenerator) -> String:
+## time of day, otherwise an anytime line. On a holiday (an id from
+## data/holidays.json) it's always one of that holiday's lines, if it has
+## any. Lines needing a name are skipped when there isn't one.
+func greeting(hour: int, username: String, rng: RandomNumberGenerator, holiday_id := "") -> String:
 	var part := "night"
 	if hour >= 5 and hour < 12:
 		part = "morning"
@@ -194,6 +262,10 @@ func greeting(hour: int, username: String, rng: RandomNumberGenerator) -> String
 	elif hour >= 17 and hour < 22:
 		part = "evening"
 	var pool: Array = Text.list("greetings." + part) if rng.randf() < 0.5 else Text.list("greetings.anytime")
+	var festive: Array = Text.list("greetings.holidays." + holiday_id) if holiday_id != "" else []
+	festive = festive.filter(func(l): return username != "" or not str(l).contains("{name}"))
+	if not festive.is_empty():
+		pool = festive
 	pool = pool.filter(func(l): return username != "" or not str(l).contains("{name}"))
 	if pool.is_empty():
 		return Text.t("greetings.fallback")
@@ -233,6 +305,24 @@ func cosmetic_options(slot: String, inventory: Dictionary) -> Array:
 		if g.get("slot", "") == slot and int(inventory.get(g["id"], 0)) > 0:
 			out.append(g)
 	return out
+
+
+## A look's skin colour: its own picked colour ("skin_colour", a hex) if it
+## has one, else its swatch ("skin_tone").
+func skin_of(look: Dictionary) -> Color:
+	return _tone_of(look, "skin", skin_tones)
+
+
+## A look's hair colour, the same way ("hair_colour", else "hair_tone").
+func hair_of(look: Dictionary) -> Color:
+	return _tone_of(look, "hair", hair_tones)
+
+
+func _tone_of(look: Dictionary, which: String, tones: Array[Color]) -> Color:
+	var own := str(look.get(which + "_colour", ""))
+	if own != "":
+		return Color.from_string(own, tones[0])
+	return tones[clampi(int(look.get(which + "_tone", 0)), 0, tones.size() - 1)]
 
 
 ## The colour an item is drawn in: its own, else its rarity's for a gift.

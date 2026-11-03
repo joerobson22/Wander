@@ -9,6 +9,10 @@ extends Pane
 ## gear in the top right opens the settings. A new save slot shows what's
 ## left to fill in above the achievements, and keeps you here till then.
 
+## Whether your total focus time shows in years, months, weeks and so on
+## (tap it to switch) rather than hours and minutes.
+var _long_total := false
+
 
 func build() -> void:
 	var col := frame(720, 14)
@@ -31,11 +35,7 @@ func build() -> void:
 	side.add_child(_shelf())
 	body.add_child(side)
 
-	if App.setup_pending():
-		col.add_child(_setup())
-		col.add_child(_spare_achievements(me))
-	else:
-		col.add_child(_achievements())
+	col.add_child(_achievements())
 
 
 ## The character, with a pencil in the corner to change how they look. Your
@@ -54,6 +54,7 @@ func _figure() -> Control:
 	badge.mouse_filter = Control.MOUSE_FILTER_STOP
 	badge.mouse_default_cursor_shape = Cursor.HOVER
 	badge.accessibility_name = Text.t("profile.levels")
+	badge.set_meta("no_grow", true)
 	Press.attach(badge).tapped.connect(open_rewards)
 	var shine := Glint.new(0.5)
 	badge.add_child(shine)
@@ -75,11 +76,12 @@ static func _hover_badge(badge: Control, on: bool) -> void:
 	badge.pivot_offset = badge.size * 0.5
 	var t := Motion.tween(badge, "hover")
 	t.set_parallel(true)
-	t.tween_property(badge, "scale", Vector2.ONE * (1.12 if on else 1.0), Motion.time(Motion.FAST))
-	t.tween_property(badge, "self_modulate", Color(1.22, 1.22, 1.22) if on else Color.WHITE, Motion.time(Motion.FAST))
+	t.tween_property(badge, "scale", Vector2.ONE * (HoverGrow.GROW if on else 1.0), Motion.time(HoverGrow.TIME))
+	t.tween_property(badge, "self_modulate", Color(1.22, 1.22, 1.22) if on else Color.WHITE, Motion.time(HoverGrow.TIME))
 
 
-## Your name, where you study and when you joined: small, at the top.
+## Your name, where you study, when you joined and how long you've focused
+## in all (every project, finished or not): small, at the top.
 func _details() -> Control:
 	var p := App.state.profile
 	var username := str(p.get("username", ""))
@@ -91,7 +93,28 @@ func _details() -> Control:
 		ProfileCard.field(Text.t("profile.school"), school if school != "" else Text.t("profile.school_empty"), school == "",
 			_edit.bind("institution", Text.t("profile.school_prompt"), Text.t("profile.school_placeholder"), 60)),
 		ProfileCard.field(Text.t("profile.joined"), Stats.format_date(joined, App.tz_bias()) if joined > 0 else Text.t("profile.joined_today")),
+		_total_focus(),
 	])
+
+
+## Your total focus time; tapping it switches between "312h 40m" and
+## "1wk 6d 40m".
+func _total_focus() -> Control:
+	var row := ProfileCard.field(Text.t("profile.total_focus"), _total_text())
+	var value: Label = row.get_child(0).get_child(1)
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.set_meta("no_grow", true)
+	row.accessibility_name = Text.t("profile.total_focus_tap", {"time": value.text})
+	Press.attach(row).tapped.connect(func():
+		_long_total = not _long_total
+		value.text = _total_text()
+		row.accessibility_name = Text.t("profile.total_focus_tap", {"time": value.text}))
+	return row
+
+
+func _total_text() -> String:
+	var seconds := App.state.total_seconds()
+	return Stats.format_long(seconds) if _long_total else Stats.format_duration(seconds)
 
 
 ## Your gift shelf, along the bottom of the card, with a pencil that opens
@@ -125,76 +148,18 @@ func _achievements() -> Control:
 	return section
 
 
-## The achievements under a new account's setup card, when there's room
-## for a row of medals; on a short screen they're left out and the card
-## takes the room. When every medal fits with room to spare, the card takes
-## that too, as it does once setup is done.
-func _spare_achievements(card: Control) -> Control:
-	var section := _achievements()
-	# A plain Control, so the medals never squeeze the card or the setup.
-	var room := Control.new()
-	room.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	room.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	room.add_child(section)
-	card.size_flags_vertical = Control.SIZE_FILL
-	room.resized.connect(func():
-		var least := section.get_combined_minimum_size().y
-		if room.size.y < least:
-			# Hidden whole, so the column leaves no gap for it either.
-			room.hide()
-			card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		else:
-			section.size = Vector2(room.size.x, maxf(least, room.size.y))
-		, CONNECT_DEFERRED)
-	(section.get_child(1) as MedalCard).shrank.connect(func():
-		room.size_flags_vertical = Control.SIZE_FILL
-		room.custom_minimum_size.y = section.get_combined_minimum_size().y
-		card.size_flags_vertical = Control.SIZE_EXPAND_FILL, CONNECT_DEFERRED)
-	return room
-
-
-## A new save slot's first stop, under the card (it has no achievements
-## yet): a tick by each thing to fill in, and "Start walking", which only
-## works once both are done and lets you leave this screen.
-func _setup() -> Control:
-	var c := UI.card(UI.SURFACE, 20)
-	var v := UI.vbox(12)
-	c.add_child(v)
-	v.add_child(UI.label(Text.t("setup.welcome"), 20, UI.INK, true, 600))
-	var p := App.state.profile
-	var todo := UI.hbox(20)
-	todo.add_child(_todo(Text.t("setup.name"), str(p.get("username", "")).strip_edges() != ""))
-	todo.add_child(_todo(Text.t("setup.school"), str(p.get("institution", "")).strip_edges() != ""))
-	v.add_child(todo)
-	var go := UI.button(Text.t("setup.start"), func():
-		App.finish_setup()
-		App.go("focus"), "accent")
-	go.disabled = not App.profile_complete()
-	v.add_child(go)
-	return c
-
-
-## One thing a new account fills in, ticked once it's done.
-func _todo(text: String, done: bool) -> Control:
-	var row := UI.hbox(8)
-	var dot := UI.panel(UI.ACCENT if done else UI.SURFACE_SOFT, 999, 0)
-	dot.custom_minimum_size = Vector2(22, 22)
-	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	if done:
-		var tick := UI.icon_rect("check", 14, UI.ON_COLOUR)
-		tick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		dot.add_child(tick)
-	row.add_child(dot)
-	row.add_child(UI.label(text, 15, UI.INK if done else UI.INK_SOFT, false, 700))
-	row.accessibility_name = Text.t("setup.step_done" if done else "setup.step_todo", {"step": text})
-	return row
-
-
 # --- Settings ----------------------------------------------------------------
 
 func open_settings() -> void:
-	var m := Modal.open(480)
+	_fill_settings(Modal.open(480))
+
+
+## The settings in `m`, built again in the new colours when colour vision
+## changes.
+func _fill_settings(m: Modal) -> void:
+	for part in [m.header, m.body]:
+		for child in part.get_children():
+			child.queue_free()
 	# The title stays put while the settings scroll.
 	m.header.add_child(m.heading_row(Text.t("settings.title")))
 	var s := UI.vbox(10)
@@ -204,28 +169,41 @@ func open_settings() -> void:
 	s.add_child(UI.divider())
 	s.add_child(_toggle(Text.t("settings.ambience"), Text.t("settings.ambience_note"), "ambience"))
 	s.add_child(UI.divider())
-	s.add_child(_toggle(Text.t("settings.reduce_motion"), Text.t("settings.reduce_motion_note"), "reduce_motion"))
-	s.add_child(UI.divider())
 	s.add_child(_toggle(Text.t("settings.keep_screen_on"), Text.t("settings.keep_screen_on_note"), "keep_screen_on"))
 	s.add_child(UI.divider())
 	s.add_child(_location_toggle())
 	for row in Display.settings_rows(get_window()):
 		s.add_child(UI.divider())
 		s.add_child(row)
-	var about := UI.para(Text.t("settings.about", {"version": ProjectSettings.get_setting("application/config/version", "")}), 13, UI.INK_FAINT)
+	s.add_child(UI.divider())
+	s.add_child(UI.caption(Text.t("settings.accessibility")))
+	s.add_child(_vision_row(m))
+	s.add_child(UI.divider())
+	s.add_child(_toggle(Text.t("settings.reduce_motion"), Text.t("settings.reduce_motion_note"), "reduce_motion"))
+	s.add_child(UI.divider())
+	var links := HFlowContainer.new()
+	links.alignment = FlowContainer.ALIGNMENT_CENTER
+	links.add_theme_constant_override("h_separation", 14)
+	links.add_child(UI.text_link(Text.t("legal.privacy"), Legal.open.bind(Legal.PRIVACY), 14))
+	links.add_child(UI.text_link(Text.t("legal.terms"), Legal.open.bind(Legal.TERMS), 14))
+	links.add_child(UI.text_link(Text.t("legal.licences"), Legal.open_licences, 14))
+	s.add_child(links)
+	var about := UI.para(Text.t("settings.about", {"app": ProjectSettings.get_setting("application/config/name", ""),
+		"version": ProjectSettings.get_setting("application/config/version", "")}), 13, UI.INK_SOFT)
 	about.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	s.add_child(about)
 	# Clear of the scrollbar, so the switches never touch it.
 	var room := MarginContainer.new()
 	room.add_child(s)
 	m.body.add_child(room)
-	UI.clear_of_bar(m.body.get_parent() as ScrollContainer, room)
+	UI.clear_of_bar(m.scroller(), room)
 
 
-## Whose save this is, and "Switch account" for the other saves on this
-## device (AccountSwitcher).
+## Whose account this is: their face, name and where they study, with Data
+## (what's kept about you) and Log out on the right. The account stays on
+## this device to log back into.
 func _account_row() -> Control:
-	var row := UI.hbox(14)
+	var row := UI.hbox(12)
 	var face := UI.character_portrait({}, Vector2(44, 44), true)
 	face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(face)
@@ -234,13 +212,48 @@ func _account_row() -> Control:
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var username := str(App.state.profile.get("username", ""))
 	text.add_child(UI.trimmed(username if username != "" else Text.t("accounts.unnamed"), 16, UI.INK, false, 800))
-	text.add_child(UI.para(Text.t("accounts.note"), 13))
+	var school := str(App.state.profile.get("institution", ""))
+	if school != "":
+		text.add_child(UI.trimmed(school, 13, UI.INK_SOFT, false, 600))
 	row.add_child(text)
-	var switch := UI.button(Text.t("accounts.title"), AccountSwitcher.open, "quiet")
-	switch.custom_minimum_size.y = 40
-	switch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	switch.add_theme_font_size_override("font_size", 14)
-	row.add_child(switch)
+	var data := _small_button(Text.t("settings.data"), Legal.open_data, "quiet")
+	data.accessibility_name = Text.t("settings.data_name")
+	row.add_child(data)
+	row.add_child(_small_button(Text.t("accounts.log_out"), func():
+		Modal.close_all()
+		App.log_out(), "danger"))
+	return row
+
+
+func _small_button(text: String, on_press: Callable, kind: String) -> Button:
+	var b := UI.button(text, on_press, kind)
+	b.custom_minimum_size.y = 38
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	b.add_theme_font_size_override("font_size", 14)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		var sb := (b.get_theme_stylebox(state) as StyleBoxFlat).duplicate() as StyleBoxFlat
+		sb.content_margin_left = 14
+		sb.content_margin_right = 14
+		b.add_theme_stylebox_override(state, sb)
+	return b
+
+
+## Colour vision (UI.VISIONS): the app recolours as soon as one's picked.
+func _vision_row(m: Modal) -> Control:
+	var row := UI.hbox(16)
+	var text := UI.vbox(2)
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_child(UI.label(Text.t("settings.vision"), 16, UI.INK, false, 800))
+	text.add_child(UI.para(Text.t("settings.vision_note"), 13))
+	row.add_child(text)
+	var options := UI.VISIONS.map(func(id): return [id, Text.t("settings.visions." + id)])
+	var pick := Dropdown.new(options, str(App.state.settings.get("vision", "off")), false, "", false)
+	pick.accessibility_name = Text.t("settings.vision")
+	pick.chosen.connect(func(id: String, _reversed: bool):
+		if id != UI.vision:
+			App.set_setting("vision", id)
+			_fill_settings(m))
+	row.add_child(pick)
 	return row
 
 
@@ -282,9 +295,15 @@ func _location_toggle() -> Control:
 
 # --- Rewards -----------------------------------------------------------------
 
-## Everything levelling up unlocks, in order, with a line down the left
-## filled to where you are now. The title and your level stay at the top
-## while the rewards scroll, and it opens scrolled to where you are.
+## The level line's width in the rewards (and the padlock column under it).
+const TRACK_WIDTH := 28
+
+## Everything levelling up unlocks, in order, each row hugging the left
+## with a line down the right filled to where you are now (levels still to
+## come have a padlock on their dot). Under a divider, what's unlocked by
+## exploring (hours in a place, a finished gift table), each with a bar for
+## how far along you are. The title and your level stay at the top while
+## the rewards scroll, and it opens scrolled to where you are.
 func open_rewards() -> void:
 	var table := Content.levels
 	var xp := App.xp()
@@ -315,20 +334,67 @@ func open_rewards() -> void:
 		if here == null and float(rows[i]["level"]) > at:
 			here = row
 	m.body.add_child(list)
+	var others := Unlocks.other_rewards()
+	if not others.is_empty():
+		m.body.add_child(UI.divider())
+		var more := UI.vbox(0)
+		for r in others:
+			more.add_child(_other_row(r))
+		m.body.add_child(more)
 	m.scroll_to(here if here else list.get_child(list.get_child_count() - 1))
 
 
 ## Level 1's animals and places first, then each reward in level order.
 func _reward_list() -> Array:
-	var out: Array = []
-	for b in Content.biomes:
-		if Levels.unlock_level("place", b["id"], Content.levels) == 1:
-			out.append({"level": 1, "type": "place", "id": b["id"]})
-	for a in Content.animals:
-		if Levels.unlock_level("animal", a["id"], Content.levels) == 1:
-			out.append({"level": 1, "type": "animal", "id": a["id"]})
-	out.append_array(Levels.rewards(Content.levels))
-	return out
+	return Unlocks.level_rewards()
+
+
+## An animal or place unlocked by exploring: what it takes and, until it's
+## yours, a bar for how far along you are and a padlock on the right.
+func _other_row(r: Dictionary) -> Control:
+	var open := App.is_unlocked(r["type"], r["id"])
+	var row := UI.hbox(12)
+	row.custom_minimum_size.y = 72
+	row.set_meta("locked", not open)
+	var icon := _reward_picture(r)
+	icon.modulate.a = 1.0 if open else 0.45
+	row.add_child(icon)
+	var title: String = _reward_name(r)
+	var words := UI.vbox(2)
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.alignment = BoxContainer.ALIGNMENT_CENTER
+	words.add_child(UI.trimmed(title, 17, UI.INK if open else UI.INK_SOFT, false, 800))
+	words.add_child(UI.para(Unlocks.describe(Content.unlock_rule(r["type"], r["id"])), 13, UI.INK_FAINT, 700))
+	if not open:
+		var p := App.unlock_progress(r["type"], r["id"])
+		var goal := float(p["goal"])
+		var bar := UI.progress_line(float(p["have"]) / goal if goal > 0.0 else 0.0, UI.ACCENT, 6)
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var gap := Control.new()
+		gap.custom_minimum_size.y = 4
+		words.add_child(gap)
+		words.add_child(bar)
+	row.add_child(words)
+	if not open:
+		var lock := UI.icon_rect("lock", 16, UI.INK_FAINT)
+		lock.custom_minimum_size.x = TRACK_WIDTH
+		row.add_child(lock)
+	return row
+
+
+## A reward's picture: the place's tile or the animal.
+func _reward_picture(r: Dictionary) -> Control:
+	var icon: Control
+	if r["type"] == "place":
+		icon = UI.place_tile(Content.biome(r["id"]), 56)
+	else:
+		icon = UI.animal_portrait(r["id"], Content.animal_default_colours(r["id"]), Vector2(56, 56))
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return icon
+
+
+func _reward_name(r: Dictionary) -> String:
+	return str(Content.biome(r["id"]).get("name", "") if r["type"] == "place" else Content.animal(r["id"]).get("name", ""))
 
 
 func _reward_row(r: Dictionary, before: int, after: int, at: float) -> Control:
@@ -336,48 +402,33 @@ func _reward_row(r: Dictionary, before: int, after: int, at: float) -> Control:
 	var open := at >= level
 	var row := UI.hbox(12)
 	row.custom_minimum_size.y = 72
-	var track := _Track.new()
-	track.custom_minimum_size.x = 22
-	# How full the line is above this row's dot (coming from the row before)
-	# and below it (going on to the next).
-	track.above = 1.0 if before == level else clampf((at - before) / float(level - before) * 2.0 - 1.0, 0.0, 1.0)
-	track.below = 1.0 if after == level else clampf((at - level) / float(after - level) * 2.0, 0.0, 1.0)
-	track.reached = open
-	row.add_child(track)
-
-	var icon: Control
-	var title := ""
-	if r["type"] == "place":
-		var b := Content.biome(r["id"])
-		title = b.get("name", "")
-		icon = UI.panel(_place_colour(b), 16, 0)
-		icon.custom_minimum_size = Vector2(56, 56)
-		icon.add_child(UI.icon_rect(str(b.get("icon", "place_lake")), 28, Color.WHITE))
-	else:
-		title = Content.animal(r["id"]).get("name", "")
-		icon = UI.animal_portrait(r["id"], Content.animal_default_colours(r["id"]), Vector2(56, 56))
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.set_meta("locked", not open)
+	var icon := _reward_picture(r)
 	icon.modulate.a = 1.0 if open else 0.45
 	row.add_child(icon)
 
 	var words := UI.vbox(0)
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.alignment = BoxContainer.ALIGNMENT_CENTER
-	words.add_child(UI.trimmed(title, 17, UI.INK if open else UI.INK_SOFT, false, 800))
+	words.add_child(UI.trimmed(_reward_name(r), 17, UI.INK if open else UI.INK_SOFT, false, 800))
 	var when := Text.t("rewards.new_place" if r["type"] == "place" else "rewards.new_animal", {"when": Text.t("rewards.from_start") if level == 1 else Text.t("rewards.level", {"level": level})})
 	words.add_child(UI.label(when, 13, UI.INK_FAINT, false, 700))
 	row.add_child(words)
-	if not open:
-		row.add_child(UI.icon_rect("lock", 16, UI.INK_FAINT))
+
+	# The line runs down the right; a level still to come has a padlock on
+	# its dot.
+	var track := _Track.new()
+	track.custom_minimum_size.x = TRACK_WIDTH
+	# How full the line is above this row's dot (coming from the row before)
+	# and below it (going on to the next).
+	# Rewards at the same level share a stretch of line, filled once that
+	# level is reached.
+	var same := 1.0 if open else 0.0
+	track.above = same if before == level else clampf((at - before) / float(level - before) * 2.0 - 1.0, 0.0, 1.0)
+	track.below = same if after == level else clampf((at - level) / float(after - level) * 2.0, 0.0, 1.0)
+	track.reached = open
+	row.add_child(track)
 	return row
-
-
-## A place's tile colour: its ground, a little darker so a white icon shows.
-static func _place_colour(b: Dictionary) -> Color:
-	for layer in b.get("layers", []):
-		if layer["kind"] == "ground":
-			return Color.from_string(layer["colour"], UI.ACCENT).darkened(0.3)
-	return UI.ACCENT
 
 
 ## One row's piece of the progress line, with its dot.
@@ -395,5 +446,12 @@ class _Track extends Control:
 			draw_line(Vector2(x, 0), Vector2(x, mid * above), UI.ACCENT, w)
 		if below > 0.0:
 			draw_line(Vector2(x, mid), Vector2(x, mid + mid * below), UI.ACCENT, w)
-		draw_circle(Vector2(x, mid), 8.0, UI.ACCENT if reached else UI.SURFACE, true, -1.0, true)
-		draw_arc(Vector2(x, mid), 8.0, 0, TAU, 24, UI.ACCENT if reached else UI.LINE, 3.0, true)
+		if reached:
+			draw_circle(Vector2(x, mid), 8.0, UI.ACCENT, true, -1.0, true)
+			return
+		# Still to come: a padlock in a ring on the line.
+		var r := 12.0
+		draw_circle(Vector2(x, mid), r, UI.SURFACE, true, -1.0, true)
+		draw_arc(Vector2(x, mid), r, 0, TAU, 32, UI.LINE, 3.0, true)
+		var lock := Icons.texture("lock", 14, UI.INK_FAINT)
+		draw_texture(lock, Vector2(x, mid) - Vector2(lock.get_size()) * 0.5)

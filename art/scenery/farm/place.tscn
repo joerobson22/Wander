@@ -1,0 +1,84 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Farm" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 316.8)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.06
+y = 0.44
+height = 0.14
+colour = Color(0.6627, 0.7529, 0.5569, 1)
+pattern = 71
+wavelength = 560
+
+[node name="Fields" type="Node2D" parent="."]
+position = Vector2(0, 403.2)
+script = ExtResource("2_layer")
+kind = "fields"
+parallax = 0.14
+y = 0.56
+height = 0.12
+colour = Color(0.7882, 0.7059, 0.3529, 1)
+pattern = 72
+wavelength = 420
+
+[node name="Barns" type="Node2D" parent="."]
+position = Vector2(0, 460.8)
+script = ExtResource("2_layer")
+kind = "barns"
+parallax = 0.3
+y = 0.64
+height = 0.17
+colour = Color(0.7059, 0.2784, 0.2275, 1)
+pattern = 73
+spacing = 460
+
+[node name="Trees" type="Node2D" parent="."]
+position = Vector2(0, 489.6)
+script = ExtResource("2_layer")
+kind = "trees"
+parallax = 0.42
+y = 0.68
+height = 0.15
+colour = Color(0.3725, 0.5412, 0.2902, 1)
+pattern = 74
+spacing = 150
+
+[node name="Fences" type="Node2D" parent="."]
+position = Vector2(0, 511.2)
+script = ExtResource("2_layer")
+kind = "fences"
+parallax = 0.85
+y = 0.71
+height = 0.05
+colour = Color(0.6588, 0.5255, 0.3529, 1)
+pattern = 75
+spacing = 60
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.5255, 0.6902, 0.3529, 1)
+pattern = 76
+path_colour = Color(0.7882, 0.6627, 0.4706, 1)
+
+[node name="Reeds" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "reeds"
+parallax = 1.4
+y = 0.97
+height = 0.07
+colour = Color(0.4314, 0.6039, 0.2706, 1)
+pattern = 77
+spacing = 52

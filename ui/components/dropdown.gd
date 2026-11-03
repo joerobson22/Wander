@@ -18,6 +18,8 @@ var prefix := ""
 var current := ""
 var reversed := false
 var sortable := true
+## The menu opens above the pill (for one at the bottom of the screen).
+var opens_up := false
 var _options: Array = []  # [[id, label], ...]
 var _menu: Control
 var _flipping := false
@@ -29,13 +31,7 @@ func _init(options: Array, selected: String, is_reversed: bool = false, label_pr
 	reversed = is_reversed and can_reverse
 	prefix = label_prefix
 	sortable = can_reverse
-	UI.style_button(self, UI.SURFACE_SOFT, UI.INK, 999)
-	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-		var sb: StyleBoxFlat = get_theme_stylebox(state)
-		sb.content_margin_left = 14
-		sb.content_margin_right = 12
-		sb.content_margin_top = 4
-		sb.content_margin_bottom = 4
+	_style(UI.SURFACE_SOFT, UI.INK)
 	add_theme_font_size_override("font_size", 13)
 	add_theme_constant_override("h_separation", 6)
 	icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -49,6 +45,30 @@ func _init(options: Array, selected: String, is_reversed: bool = false, label_pr
 ## the option and `key`_reversed the direction. Saving tells the whole app
 ## the state changed; with `quiet` it only saves, for a screen that re-sorts
 ## its own list from `chosen` rather than rebuilding everything.
+## For over the scenery: a paper pill with a soft shadow so it stands off
+## the picture, as tall as the round buttons beside it.
+func on_scenery(height: int = 40) -> Dropdown:
+	_style(UI.SURFACE, UI.INK, true)
+	custom_minimum_size.y = height
+	if height > 44:
+		add_theme_font_size_override("font_size", 15)
+		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+			var sb: StyleBoxFlat = get_theme_stylebox(state)
+			sb.content_margin_left = 20
+			sb.content_margin_right = 18
+	return self
+
+
+func _style(fill: Color, ink: Color, shadow: bool = false) -> void:
+	UI.style_button(self, fill, ink, 999, shadow)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var sb: StyleBoxFlat = get_theme_stylebox(state)
+		sb.content_margin_left = 14
+		sb.content_margin_right = 12
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+
+
 static func for_setting(options: Array, key: String, fallback: String, quiet: bool = false) -> Dropdown:
 	var d := Dropdown.new(options, str(App.state.settings.get(key, fallback)), bool(App.state.settings.get(key + "_reversed", false)), Text.t("common.sort_by"))
 	d.chosen.connect(func(option: String, is_reversed: bool):
@@ -100,9 +120,13 @@ func _open() -> void:
 	_menu.add_child(card)
 	var list := UI.vbox(2)
 	card.add_child(list)
+	# Opened from the keyboard, the keyboard moves into the menu.
+	var keys := has_focus(true)
 	for o in _options:
 		var on: bool = o[0] == current
 		var b := UI.button(o[1], Callable(), "quiet" if on else "ghost")
+		# Menu rows only shade under the pointer; they never grow.
+		b.set_meta("no_grow", true)
 		b.custom_minimum_size = Vector2(150, 40)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_size_override("font_size", 14)
@@ -122,11 +146,13 @@ func _open() -> void:
 				arrow.pivot_offset = arrow.size * 0.5)
 		b.pressed.connect(_choose.bind(o[0], arrow))
 		list.add_child(b)
+		if on and keys:
+			b.grab_focus.call_deferred()
 	card.size = card.get_combined_minimum_size()
 	var at := get_global_rect()
-	# Under the pill, or above it when there's no room underneath.
+	# Under the pill, or above it when asked or there's no room underneath.
 	var y := at.end.y + 6.0
-	if y + card.size.y > _menu.size.y - 8.0:
+	if opens_up or y + card.size.y > _menu.size.y - 8.0:
 		y = at.position.y - 6.0 - card.size.y
 	# Always on the screen, even if the pill itself is partly off it.
 	y = clampf(y, 8.0, maxf(8.0, _menu.size.y - card.size.y - 8.0))
@@ -135,7 +161,8 @@ func _open() -> void:
 	var t := Motion.tween(card, "menu")
 	t.set_parallel(true)
 	t.tween_property(card, "modulate:a", 1.0, Motion.time(Motion.FAST))
-	t.tween_property(card, "position:y", card.position.y + 4.0, Motion.time(Motion.FAST)).from(card.position.y - 4.0)
+	var rise := -4.0 if y < at.position.y else 4.0
+	t.tween_property(card, "position:y", card.position.y + rise, Motion.time(Motion.FAST)).from(card.position.y - rise)
 
 
 func _choose(id: String, arrow: TextureRect) -> void:
@@ -168,9 +195,19 @@ func _apply() -> void:
 	chosen.emit(current, reversed)
 
 
+## Esc closes the menu (not the popup it's in) and goes back to the pill.
+func _unhandled_input(e: InputEvent) -> void:
+	if is_instance_valid(_menu) and e.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_close()
+
+
 func _close() -> void:
 	if is_instance_valid(_menu):
 		var m := _menu
+		var keys := m.get_viewport().gui_get_focus_owner()
+		if keys and m.is_ancestor_of(keys):
+			grab_focus(not keys.has_focus(true))
 		_menu = null
 		m.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		UI.ignore_mouse(m)

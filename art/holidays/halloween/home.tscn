@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/pumpkin.svg" id="2"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/jack_o_lantern.svg" id="3"]
+
+[node name="HomeDecor" type="Node2D"]
+
+[node name="Hilltop" type="Node2D" parent="."]
+
+[node name="Pumpkin1" type="Sprite2D" parent="Hilltop"]
+position = Vector2(188, 842)
+scale = Vector2(0.42, 0.42)
+texture = ExtResource("2")
+offset = Vector2(0, -50.0)
+
+[node name="Pumpkin2" type="Sprite2D" parent="Hilltop"]
+position = Vector2(336, 852)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3")
+offset = Vector2(0, -50.0)
+
+[node name="Pumpkin3" type="Sprite2D" parent="Hilltop"]
+position = Vector2(452, 866)
+scale = Vector2(0.36, 0.36)
+texture = ExtResource("2")
+offset = Vector2(0, -50.0)
+
+[node name="Pumpkin4" type="Sprite2D" parent="Hilltop"]
+position = Vector2(1440, 928)
+scale = Vector2(0.48, 0.48)
+texture = ExtResource("3")
+offset = Vector2(0, -50.0)
+
+[node name="Pumpkin5" type="Sprite2D" parent="Hilltop"]
+position = Vector2(1560, 914)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource("2")
+offset = Vector2(0, -50.0)
+

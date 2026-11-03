@@ -1,0 +1,72 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Lakeside" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 302.4)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.08
+y = 0.42
+height = 0.16
+colour = Color(0.6235, 0.7059, 0.6588, 1)
+pattern = 1
+wavelength = 520
+
+[node name="Hills2" type="Node2D" parent="."]
+position = Vector2(0, 360.0)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.15
+y = 0.5
+height = 0.12
+colour = Color(0.498, 0.6118, 0.5255, 1)
+pattern = 2
+wavelength = 360
+
+[node name="Trees" type="Node2D" parent="."]
+position = Vector2(0, 417.6)
+script = ExtResource("2_layer")
+kind = "trees"
+parallax = 0.25
+y = 0.58
+height = 0.16
+colour = Color(0.3333, 0.4627, 0.3608, 1)
+pattern = 3
+spacing = 70
+
+[node name="Water" type="Node2D" parent="."]
+position = Vector2(0, 432.0)
+script = ExtResource("2_layer")
+kind = "water"
+parallax = 0.35
+y = 0.6
+height = 0.12
+colour = Color(0.498, 0.698, 0.7882, 1)
+pattern = 4
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.5608, 0.6824, 0.3686, 1)
+pattern = 5
+path_colour = Color(0.851, 0.7686, 0.6039, 1)
+
+[node name="Reeds" type="Node2D" parent="."]
+position = Vector2(0, 691.2)
+script = ExtResource("2_layer")
+kind = "reeds"
+parallax = 1.4
+y = 0.96
+height = 0.08
+colour = Color(0.4314, 0.5608, 0.2706, 1)
+pattern = 6
+spacing = 46

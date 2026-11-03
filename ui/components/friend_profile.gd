@@ -1,8 +1,9 @@
 class_name FriendProfile
 extends RefCounted
 ## A friend's profile in a popup, laid out like your profile screen but
-## fitting one popup: their character head to toe on the left; where they
-## study, when they joined and their week on the right, with their gift
+## fitting one popup: their character head to toe on the left; when they
+## joined and their week on the right (never where they study, which stays
+## private), with their gift
 ## shelf along the bottom (tap a gift for a closer look); then the
 ## achievements they've earned, in a row that scrolls sideways when there
 ## are more than fit. Opened by tapping a friend's face or name anywhere.
@@ -25,10 +26,8 @@ static func open(f: Dictionary) -> void:
 	body.add_child(figure)
 	var side := UI.vbox(8)
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var school := str(f.get("institution", ""))
 	var joined := int(f.get("joined_unix", 0))
 	side.add_child(ProfileCard.details([
-		ProfileCard.field(Text.t("profile.school"), school if school != "" else Text.t("friend.school_empty"), school == ""),
 		ProfileCard.field(Text.t("profile.joined"), Stats.format_date(joined, App.tz_bias()) if joined > 0 else Text.t("friend.joined_unknown")),
 		ProfileCard.field(Text.t("stats.this_week"), Stats.format_duration(int(f.get("weekly_seconds", 0)))),
 	]))
@@ -40,7 +39,7 @@ static func open(f: Dictionary) -> void:
 	body.add_child(side)
 	m.body.add_child(body)
 
-	var rows := Achievements.progress(Achievements.list(Content.achievements, Content.animals, Content.gifts),
+	var rows := Achievements.progress(Achievements.list(Content.achievements, Content.tables, Content.gifts),
 		int(f.get("focused_seconds", 0)), f.get("gifts", []), Content.gifts)
 	var section := UI.vbox(8)
 	section.add_child(ProfileCard.achievements_head(rows))

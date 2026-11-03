@@ -56,7 +56,14 @@ static func apply(window: Window) -> void:
 		window.mode = Window.MODE_WINDOWED
 		var screen := Vector2(DisplayServer.screen_get_usable_rect(window.current_screen).size)
 		var fit := minf(1.0, screen.y * PHONE_SCREEN_SHARE / (PHONE.y * scale))
-		_resize(window, Vector2i(Vector2(PHONE) * scale * fit))
+		var px := Vector2i(Vector2(PHONE) * scale * fit)
+		_resize(window, px)
+		# Leaving fullscreen or a maximised window takes the system a moment
+		# (an animation on a Mac), and a resize asked for meanwhile is lost:
+		# ask again once it's done. The app is drawn phone-shaped either way.
+		window.get_tree().create_timer(0.8).timeout.connect(func():
+			if App.debug_phone_view() and is_instance_valid(window):
+				_resize(window, px))
 		return
 	window.min_size = Vector2i(Vector2(MIN_SIZE) * scale)
 	if not _before_phone.is_empty():
@@ -81,6 +88,7 @@ static func _resize(window: Window, px: Vector2i) -> void:
 		return
 	var screen := DisplayServer.screen_get_usable_rect(window.current_screen)
 	window.size = px
+	@warning_ignore("integer_division")
 	window.position = screen.position + (screen.size - px) / 2
 
 

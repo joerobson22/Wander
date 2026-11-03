@@ -4,11 +4,14 @@ extends PanelContainer
 ## card behind it, and how many you have on a tag in its bottom-right corner
 ## when it's given a `count`. Shelf gifts (`glowing`) glow in their rarity's
 ## colour and glint under the pointer.
-## What it does is up to where it is: `tappable` tiles open the gift's
-## details (`tapped`), and `draggable` ones can be picked up (`lifted`), by
+## What it does is up to where it is: `tappable` tiles report taps
+## (`tapped`), and `draggable` ones can be picked up (`lifted`), by
 ## pressing and holding, or with `quick_drag` just by dragging. Either way
-## they grow a little under the pointer and show the grab hand. Tiles that
-## are only to look at ignore the pointer altogether.
+## they grow under the pointer, easing smoothly, and show the grab hand.
+## `trades` tiles (your collection) show a GiftInfo card while hovered (on a
+## phone, after a first tap); clicking one with enough to trade trades it
+## in, and one without enough wiggles. Tiles that are only to look at ignore
+## the pointer altogether.
 
 signal tapped(gift_id: String)
 signal lifted(tile: GiftTile)
@@ -24,8 +27,18 @@ var tappable := false:
 var draggable := false:
 	set(v):
 		draggable = v
+		# Gifts that can be moved pick up after a short hold.
+		_press.hold_time = Gestures.QUICK_HOLD if v else Gestures.LONG_PRESS
+		_update_pointer()
+## Your collection: hover (or a first tap) for its card, click to trade.
+var trades := false:
+	set(v):
+		trades = v
 		_update_pointer()
 var _press := Press.new(self, true)
+var _hovered := false
+## How fast the grow settles: about 95% of the way in three of these.
+const EASE_TIME := 0.045
 var _glint: Glint
 var _drag_from := Vector2.ZERO
 var _armed := false
@@ -39,9 +52,7 @@ func _init(id: String, count: int = -1, glowing: bool = false, side: float = 78.
 	var sb := StyleBoxEmpty.new()
 	sb.set_content_margin_all(4)
 	add_theme_stylebox_override("panel", sb)
-	_press.tapped.connect(func():
-		if tappable:
-			tapped.emit(gift_id))
+	_press.tapped.connect(_on_tapped)
 	_press.held.connect(func():
 		if draggable:
 			# Picked up by holding: moving afterwards mustn't pick it up again.
@@ -52,6 +63,7 @@ func _init(id: String, count: int = -1, glowing: bool = false, side: float = 78.
 	mouse_entered.connect(_hover.bind(true))
 	mouse_exited.connect(_hover.bind(false))
 	resized.connect(func(): pivot_offset = size * 0.5)
+	set_process(false)
 	_update_pointer()
 
 	art = GiftArt.new(id)
@@ -65,7 +77,8 @@ func _init(id: String, count: int = -1, glowing: bool = false, side: float = 78.
 		return
 	# The count sits over the picture's corner. A PanelContainer stretches its
 	# children, so the tag lives in its own holder.
-	var colour := Content.rarity_colour(g.get("rarity", "common"))
+	# The darker text shade, so the white count reads on it.
+	var colour := Content.rarity_text_colour(g.get("rarity", "common"))
 	var corner := Control.new()
 	corner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(corner)
@@ -92,7 +105,34 @@ func press_point() -> Vector2:
 
 
 func _interactive() -> bool:
-	return tappable or draggable
+	return tappable or draggable or trades
+
+
+func _on_tapped() -> void:
+	if trades:
+		if App.touch_screen() and GiftInfo.showing(self) == null:
+			GiftInfo.show_for(self, gift_id)
+			set_process(true)
+			return
+		_trade()
+	if tappable:
+		tapped.emit(gift_id)
+
+
+## Trades it in when there are enough (then shows what it brought), or
+## wiggles to say "not yet".
+func _trade() -> void:
+	var rarity := Content.gift_rarity(gift_id)
+	if not GiftInfo.can_trade(rarity, App.state.gift_count(gift_id)):
+		Motion.wiggle(self)
+		Audio.play("trade_not_yet", 0.7, -8.0, "pop")
+		return
+	GiftInfo.hide_any()
+	# A gift you've had before (even if you've none left) isn't new.
+	var seen := App.state.inventory.keys()
+	var new_id := App.trade_in(gift_id)
+	if new_id != "":
+		GiftDetails.open(new_id, true, true, not seen.has(new_id))
 
 
 ## Only tiles that do something take the pointer; the rest let it through
@@ -103,11 +143,38 @@ func _update_pointer() -> void:
 
 
 func _hover(on: bool) -> void:
+	_hovered = on
 	if not _interactive():
 		return
-	Motion.to(self, "scale", Vector2.ONE * (1.06 if on else 1.0), Motion.FAST)
+	set_process(true)
+	if trades and not App.touch_screen():
+		if on:
+			GiftInfo.show_for(self, gift_id)
+		elif GiftInfo.showing(self):
+			GiftInfo.hide_any()
 	if on and _glint:
 		_glint.shine()
+
+
+## Grown while hovered or while its card shows (a tap on a phone).
+func _target() -> float:
+	if not _interactive():
+		return 1.0
+	var grown := GiftInfo.showing(self) != null if trades else _hovered
+	if trades and not App.touch_screen():
+		grown = grown or _hovered
+	return HoverGrow.GROW if grown else 1.0
+
+
+## Eases the size towards where it's going every frame, rather than with a
+## tween, so moving on and off quickly never restarts it from a standstill.
+func _process(dt: float) -> void:
+	var goal := _target()
+	var s := lerpf(scale.x, goal, 1.0 - exp(-dt / EASE_TIME))
+	if absf(s - goal) < 0.001:
+		s = goal
+		set_process(false)
+	scale = Vector2.ONE * s
 
 
 func _gui_input(e: InputEvent) -> void:
@@ -119,6 +186,10 @@ func _gui_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		_armed = e.pressed
 		_drag_from = e.position
-	elif e is InputEventMouseMotion and _armed and e.position.distance_to(_drag_from) >= Gestures.TAP_SLOP:
+		if e.pressed:
+			Gestures.lifts = true
+	elif e is InputEventMouseMotion and _armed and e.position.distance_to(_drag_from) >= Gestures.LIFT_SLOP:
 		_armed = false
+		# The drag is the gift's now, not a scroll's or a swipe's.
+		Gestures.claimed = true
 		lifted.emit(self)

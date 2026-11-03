@@ -46,10 +46,14 @@ func open(instant: bool = false, seconds: float = Motion.SLOW) -> Tween:
 	return t
 
 
-## Shrinks back to the origin, then frees itself.
-func close(seconds: float = Motion.SLOW) -> Tween:
+## Shrinks back to the origin, then frees itself. With `to_radius` it
+## stops at a circle that big (the focus orb's), fading away as it gets
+## there.
+func close(seconds: float = Motion.SLOW, to_radius: float = 0.0) -> Tween:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_children = CanvasItem.CLIP_CHILDREN_ONLY
-	var t := Motion.method(self, "reveal", _set_radius, _full(), 0.0, seconds)
+	var t := Motion.method(self, "reveal", _set_radius, _full(), to_radius, seconds)
+	if to_radius > 0.0:
+		t.parallel().tween_property(self, "modulate:a", 0.0, Motion.time(seconds * 0.4)).set_delay(Motion.time(seconds * 0.6))
 	t.tween_callback(queue_free)
 	return t

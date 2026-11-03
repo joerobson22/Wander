@@ -68,3 +68,23 @@ static func arc(hour: float, rise: float, set_at: float) -> float:
 	if span <= 0.0 or into > span:
 		return -1.0
 	return into / span
+
+
+## How long dusk and dawn take, in hours, centred on sunset and sunrise.
+const TWILIGHT := 40.0 / 60.0
+
+
+## How much it's night at local `hour`, given that day's `sunrise` and
+## `sunset`: 0 by day, 1 by night, easing between over the twilight round
+## each. 0.5 is the moment of sunset or sunrise.
+static func night_at(hour: float, sunrise: float, sunset: float) -> float:
+	var half := TWILIGHT * 0.5
+	var h := fposmod(hour, 24.0)
+	# Signed hours from each edge, the short way round the clock.
+	var from_rise := fposmod(h - sunrise + 12.0, 24.0) - 12.0
+	var from_set := fposmod(h - sunset + 12.0, 24.0) - 12.0
+	if absf(from_rise) <= half:
+		return 1.0 - smoothstep(-half, half, from_rise)
+	if absf(from_set) <= half:
+		return smoothstep(-half, half, from_set)
+	return 0.0 if arc(h, sunrise, sunset) >= 0.0 else 1.0

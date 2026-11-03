@@ -1,5 +1,5 @@
 {
-	"_doc": "Achievements on the profile. 'focus' rewards total hours focused (walks plus any time carried over from the original app). 'all_gifts' is for finding every gift. 'animal_gifts' makes one achievement per animal for finding all of its gifts; {animal} becomes the animal's name. Whether you have each is worked out from the walk log and the gifts you've found (core/achievements.gd), never stored.",
+	"_doc": "Achievements on the profile. 'focus' rewards total hours focused. 'all_gifts' is for finding every gift. 'table_gifts' makes one achievement per gift table (gifts.json) for finding all of its gifts; {table} becomes the table's name. Whether you have each is worked out from your focus time and the gifts you've found (core/achievements.gd), never stored.",
 	"focus": [
 		{"id": "focus_10",    "hours": 10,    "name": "Getting going"},
 		{"id": "focus_50",    "hours": 50,    "name": "In the habit"},
@@ -9,5 +9,5 @@
 		{"id": "focus_10000", "hours": 10000, "name": "Mastery"}
 	],
 	"all_gifts": {"id": "all_gifts", "name": "Full collection"},
-	"animal_gifts": {"name": "{animal} set"}
+	"table_gifts": {"name": "{table} set"}
 }

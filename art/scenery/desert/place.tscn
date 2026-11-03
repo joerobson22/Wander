@@ -1,0 +1,73 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Desert" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 338.4)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.05
+y = 0.47
+height = 0.1
+colour = Color(0.902, 0.7882, 0.5843, 1)
+pattern = 41
+wavelength = 760
+
+[node name="Mesas" type="Node2D" parent="."]
+position = Vector2(0, 403.2)
+script = ExtResource("2_layer")
+kind = "mesas"
+parallax = 0.12
+y = 0.56
+height = 0.16
+colour = Color(0.7882, 0.5451, 0.3529, 1)
+pattern = 42
+spacing = 300
+
+[node name="Hills2" type="Node2D" parent="."]
+position = Vector2(0, 460.8)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.25
+y = 0.64
+height = 0.08
+colour = Color(0.8863, 0.7098, 0.4549, 1)
+pattern = 43
+wavelength = 540
+
+[node name="Cacti" type="Node2D" parent="."]
+position = Vector2(0, 525.6)
+script = ExtResource("2_layer")
+kind = "cacti"
+parallax = 0.5
+y = 0.73
+height = 0.16
+colour = Color(0.4235, 0.5882, 0.3451, 1)
+pattern = 44
+spacing = 170
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.9098, 0.7765, 0.549, 1)
+pattern = 45
+path_colour = Color(0.8392, 0.6902, 0.4667, 1)
+
+[node name="Reeds" type="Node2D" parent="."]
+position = Vector2(0, 705.6)
+script = ExtResource("2_layer")
+kind = "reeds"
+parallax = 1.4
+y = 0.98
+height = 0.05
+colour = Color(0.7059, 0.6039, 0.3608, 1)
+pattern = 46
+spacing = 120

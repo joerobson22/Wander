@@ -1,0 +1,124 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scenes/home/backdrop.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/home/backdrop_layer.gd" id="2"]
+[ext_resource type="Texture2D" path="res://art/home/sky_day.svg" id="3"]
+[ext_resource type="Texture2D" path="res://art/home/sky_night.svg" id="4"]
+[ext_resource type="Texture2D" path="res://art/home/sun.svg" id="5"]
+[ext_resource type="Texture2D" path="res://art/home/moon.svg" id="6"]
+[ext_resource type="Texture2D" path="res://art/home/1_mountains.svg" id="7"]
+[ext_resource type="Texture2D" path="res://art/home/2_hills.svg" id="8"]
+[ext_resource type="Texture2D" path="res://art/home/3_forest_far.svg" id="9"]
+[ext_resource type="Texture2D" path="res://art/home/4_forest_near.svg" id="10"]
+[ext_resource type="Texture2D" path="res://art/home/5_hilltop.svg" id="11"]
+
+[node name="Backdrop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="DaySky" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("3")
+expand_mode = 1
+
+[node name="NightSky" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+
+[node name="Sun" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 200.0
+offset_right = 500.0
+offset_bottom = 400.0
+mouse_filter = 2
+texture = ExtResource("5")
+expand_mode = 1
+
+[node name="Moon" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 1100.0
+offset_top = 200.0
+offset_right = 1300.0
+offset_bottom = 400.0
+mouse_filter = 2
+texture = ExtResource("6")
+expand_mode = 1
+
+[node name="Layers" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Mountains" type="TextureRect" parent="Layers"]
+modulate = Color(0.66, 0.75, 0.82, 1)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("7")
+expand_mode = 1
+script = ExtResource("2")
+parallax = 0.04
+night_brightness = 0.55
+
+[node name="Hills" type="TextureRect" parent="Layers"]
+modulate = Color(0.58, 0.72, 0.62, 1)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("8")
+expand_mode = 1
+script = ExtResource("2")
+parallax = 0.08
+
+[node name="ForestFar" type="TextureRect" parent="Layers"]
+modulate = Color(0.44, 0.6, 0.47, 1)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("9")
+expand_mode = 1
+script = ExtResource("2")
+parallax = 0.14
+
+[node name="ForestNear" type="TextureRect" parent="Layers"]
+modulate = Color(0.32, 0.49, 0.36, 1)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("10")
+expand_mode = 1
+script = ExtResource("2")
+parallax = 0.22
+
+[node name="Hilltop" type="TextureRect" parent="Layers"]
+modulate = Color(0.24, 0.38, 0.28, 1)
+layout_mode = 0
+offset_right = 1600.0
+offset_bottom = 1000.0
+mouse_filter = 2
+texture = ExtResource("11")
+expand_mode = 1
+script = ExtResource("2")
+parallax = 0.34

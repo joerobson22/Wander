@@ -1,49 +1,251 @@
 class_name CharacterView
 extends Node2D
-## The player's character (or a friend's), drawn from simple shapes until
-## real art exists. The origin is at the feet and it faces right.
+## The player's character (or a friend's): Joe's own art when there is some
+## (art/character/character.tscn, see art/README.md), else drawn from simple
+## shapes. The origin is at the feet and it faces right.
 ## `look` is {skin_tone, hair_tone, cosmetics: {slot: item id}}; leave it
 ## empty to follow the player's own profile. `face_only` draws just the head
 ## and shoulders, centred on the face, for avatars. `part` draws just one
 ## slot's item on its own (see part_rect()), for the customise list.
 
 const STICK := Color("#7a5236")
+const ART_ROOT := "res://art/"
+const SHADER := "res://art/animal_colours.gdshader"
+## The rig's limbs (node names, found anywhere in the rig) and the file name
+## each cosmetic uses for its piece on that limb.
+const LIMBS := {"Torso": "torso", "Head": "head", "ArmBack": "arm_back", "ArmFront": "arm_front", "LegBack": "leg_back", "LegFront": "leg_front"}
+## Cosmetics stack on a limb in this order, first at the bottom.
+const DRESS_ORDER := ["trousers", "shoes", "gloves", "top", "neckwear", "face", "facial_hair", "hair", "hat", "walking_stick"]
+const EXTENSIONS := ["png", "svg", "webp"]
 ## Where the head sits, standing still.
 const HEAD := Vector2(2, -124)
 
-@export var walking: bool = false
-@export var speed: float = 1.0
+@export var walking: bool = false:
+	set(v):
+		walking = v
+		_animate()
+@export var speed: float = 1.0:
+	set(v):
+		speed = v
+		_animate()
+## Where the art lives (the folder holding character/ and cosmetics/).
+var art_root := ART_ROOT:
+	set(v):
+		art_root = v
+		_load_rig()
 
 var look: Dictionary = {}:
 	set(v):
 		look = v
 		queue_redraw()
+		_dress()
 var face_only := false:
 	set(v):
 		face_only = v
 		queue_redraw()
+		_dress()
 ## A slot id ("hat", "top"...) to draw only what's worn there, or "" for
 ## the whole character.
 var part := "":
 	set(v):
 		part = v
 		queue_redraw()
+		_dress()
 ## Reaching forward for the lead on a walk; arms down for portraits.
 var holding_lead := true
+## Wears a holiday's hat (the party hat on your birthday) over the look's
+## own: always for you (no look of its own), and for a look of yours being
+## changed (the customise preview).
+var holiday_hat := false:
+	set(v):
+		holiday_hat = v
+		_dress()
 ## Hand position in local space, so the walk screen can draw the lead.
 var hand := Vector2(22, -78)
 ## 0 normally, up to 1 when they're dejected: shoulders down, head hung,
 ## a frown, and a sigh now and then.
 var sad := 0.0:
 	set(v):
+		var changed := (v > 0.5) != (sad > 0.5)
 		sad = v
 		queue_redraw()
+		if changed:
+			_dress()
 
 var _phase: float = 0.0
 var _sigh: float = 0.0
+## The art rig, its animations, each limb's node and rest pose (in the rig's
+## space), the pieces of clothing laid on the limbs, and the rig's own sprites.
+var _rig: Node2D
+var _player: AnimationPlayer
+var _limbs := {}
+var _dressing: Array[Node] = []
+var _body: Array[Sprite2D] = []
+var _materials := {}
+var _rig_base := Vector2.ZERO
+static var _textures := {}
+
+
+func _ready() -> void:
+	_load_rig()
+
+
+## The scene holding the character's art, or "" if it has none yet.
+static func rig_path(root: String = ART_ROOT) -> String:
+	var path := root + "character/character.tscn"
+	return path if ResourceLoader.exists(path) else ""
+
+
+func has_art() -> bool:
+	return _rig != null
+
+
+func _load_rig() -> void:
+	if _rig:
+		_rig.free()
+		_rig = null
+		_player = null
+		_limbs.clear()
+		_dressing.clear()
+		_body.clear()
+	var path := rig_path(art_root)
+	if path == "":
+		queue_redraw()
+		return
+	_rig = (load(path) as PackedScene).instantiate() as Node2D
+	if _rig == null:
+		return
+	add_child(_rig)
+	_player = _rig.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	for limb in LIMBS:
+		var node := _rig.find_child(limb, true, false) as Node2D
+		if node:
+			_limbs[limb] = {"node": node, "rest": _rest_in_rig(node)}
+	for sprite in _rig.find_children("*", "Sprite2D", true, false):
+		_body.append(sprite)
+	queue_redraw()
+	_dress()
+	_animate()
+
+
+## A node's transform in the rig's space as the scene has it (the standing
+## pose, before any animation moves it).
+func _rest_in_rig(node: Node2D) -> Transform2D:
+	var t := node.transform
+	var up := node.get_parent()
+	while up != _rig and up is Node2D:
+		t = (up as Node2D).transform * t
+		up = up.get_parent()
+	return t
+
+
+func _animate() -> void:
+	if _player == null:
+		return
+	var anim := "walk" if walking else "idle"
+	_player.speed_scale = 1.4 * speed
+	if part != "" or not _player.has_animation(anim):
+		_player.stop()
+	elif _player.current_animation != anim or not _player.is_playing():
+		_player.play(anim)
+
+
+static func _texture(path_no_ext: String) -> Texture2D:
+	if not _textures.has(path_no_ext):
+		_textures[path_no_ext] = null
+		for ext in EXTENSIONS:
+			var path: String = path_no_ext + "." + ext
+			if ResourceLoader.exists(path):
+				_textures[path_no_ext] = load(path)
+				break
+	return _textures[path_no_ext]
+
+
+## Red, green and blue paint become a colour, a shade of it and a light one.
+func _tone_material(colour: Color) -> ShaderMaterial:
+	var key := colour.to_html()
+	if not _materials.has(key):
+		var m := ShaderMaterial.new()
+		m.shader = load(SHADER) as Shader
+		m.set_shader_parameter("colour_r", colour)
+		m.set_shader_parameter("colour_g", colour.darkened(0.2))
+		m.set_shader_parameter("colour_b", colour.lightened(0.2))
+		_materials[key] = m
+	return _materials[key]
+
+
+## Puts the look on the rig: skin on its own sprites, then each worn item's
+## pieces on the limbs they belong to. An item <id> has a folder
+## cosmetics/<id>/ with a full-canvas image per limb (torso.png, head.png,
+## arm_front.png...), `_behind` after the name to go under the limb's art
+## and `_sad` to replace it when they're sad. Starter items with a colour
+## and hair take the colour (red, green and blue paint as for animals);
+## wearable gifts show as drawn. An item with no art isn't shown.
+func _dress() -> void:
+	if _rig == null:
+		return
+	for n in _dressing:
+		if is_instance_valid(n):
+			n.free()
+	_dressing.clear()
+	var skin := _tone_material(_skin())
+	for sprite in _body:
+		sprite.material = skin
+		# Seen on their own, items hide the body, head and all: hair, a face
+		# or facial hair show just themselves.
+		sprite.visible = part == ""
+	for limb in ["ArmBack", "ArmFront", "LegBack", "LegFront"]:
+		if _limbs.has(limb):
+			(_limbs[limb]["node"] as Node2D).visible = not face_only
+	_rig_base = Vector2.ZERO
+	if face_only and _limbs.has("Head"):
+		_rig_base = -(_limbs["Head"]["rest"] as Transform2D).origin
+	_rig.position = _rig_base
+	var slots: Array = [part] if part != "" else DRESS_ORDER
+	for slot in slots:
+		var item := _item(slot)
+		var id := str(item.get("id", ""))
+		if id == "":
+			continue
+		var tint: ShaderMaterial = null
+		if slot == "hair":
+			tint = _tone_material(_hair())
+		elif item.has("colour") and not item.has("rarity"):
+			tint = _tone_material(Color.from_string(item["colour"], Color.WHITE))
+		for limb in _limbs:
+			var stem: String = LIMBS[limb]
+			var dir: String = art_root + "cosmetics/" + id + "/"
+			var above: Texture2D = _texture(dir + stem + "_sad") if sad > 0.5 else null
+			if above == null:
+				above = _texture(dir + stem)
+			_attach(limb, above, false, tint)
+			_attach(limb, _texture(dir + stem + "_behind"), true, tint)
+	_animate()
+
+
+func _attach(limb: String, tex: Texture2D, behind: bool, tint: Material) -> void:
+	if tex == null:
+		return
+	var node: Node2D = _limbs[limb]["node"]
+	var sprite := Sprite2D.new()
+	sprite.texture = tex
+	sprite.centered = false
+	# The image is a whole canvas with the feet at the bottom middle; the limb
+	# moves, so lay the canvas back where it was when the limb was at rest.
+	sprite.offset = Vector2(-tex.get_width() * 0.5, -tex.get_height())
+	sprite.transform = (_limbs[limb]["rest"] as Transform2D).affine_inverse()
+	sprite.material = tint
+	node.add_child(sprite)
+	if behind:
+		sprite.show_behind_parent = true
+		node.move_child(sprite, 0)
+	_dressing.append(sprite)
 
 
 func _process(delta: float) -> void:
+	if _rig:
+		_process_rig(delta)
+		return
 	if walking:
 		_phase += delta * TAU * 1.4 * speed
 		queue_redraw()
@@ -52,9 +254,22 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+## The slump when they're sad (a hung head, sinking shoulders), on top of
+## the animation, and the hand where the lead clips on.
+func _process_rig(delta: float) -> void:
+	if sad > 0.0:
+		_sigh += delta
+	var drop := 4.0 * sad + (sin(_sigh * 1.3) * 0.5 + 0.5) * 1.5 * sad if sad > 0.0 else 0.0
+	_rig.position = _rig_base + Vector2(0, 0.0 if face_only else drop)
+	var marker := _rig.find_child("Hand", true, false) as Node2D
+	if marker and is_inside_tree():
+		hand = global_transform.affine_inverse() * marker.global_position
+
+
 ## Redraws after the look it follows has changed.
 func refresh() -> void:
 	queue_redraw()
+	_dress()
 
 
 func _look() -> Dictionary:
@@ -64,6 +279,9 @@ func _look() -> Dictionary:
 func _item(slot: String) -> Dictionary:
 	var cosmetics: Dictionary = _look().get("cosmetics", {})
 	var id := str(cosmetics.get(slot, ""))
+	# Your own hat on a holiday that picks it (the party hat on your birthday).
+	if slot == "hat" and (look.is_empty() or holiday_hat) and App.holiday_hat() != "":
+		id = App.holiday_hat()
 	var item := Content.cosmetic(id) if id != "" else {}
 	return item if not item.is_empty() else Content.default_cosmetic(slot)
 
@@ -77,11 +295,17 @@ static func _style(item: Dictionary) -> String:
 static func part_rect(slot: String, item: Dictionary) -> Rect2:
 	match slot:
 		"hat":
-			var tops := {"witch": 48, "bunny_ears": 44, "pot": 38, "alpine": 36, "tophat": 34, "feather_cap": 32, "ears": 28, "beanie": 26, "nest": 26}
+			var tops := {"witch": 48, "party": 48, "bunny_ears": 44, "antlers": 42, "pot": 38, "alpine": 36, "tophat": 34, "feather_cap": 32, "ears": 28, "beanie": 26, "nest": 26}
 			var top := float(tops.get(_style(item), 22))
+			if _style(item) == "pumpkin":
+				return Rect2(HEAD.x - 25, HEAD.y - 28, 50, 52)
 			return Rect2(HEAD.x - 24, HEAD.y - top, 50, top + 2)
-		"hair", "face":
-			return Rect2(HEAD.x - 21, HEAD.y - 25, 42, 50 if _style(item) == "long" else 42)
+		"hair":
+			return Rect2(HEAD.x - 21, HEAD.y - 25, 42, 50 if _style(item) == "long" else 30)
+		"face":
+			return Rect2(HEAD.x + 1, HEAD.y - 8, 16, 18)
+		"facial_hair":
+			return Rect2(HEAD.x - 2, HEAD.y - 2, 22, 24)
 		"neckwear":
 			match _style(item):
 				"bowtie":
@@ -103,14 +327,16 @@ static func part_rect(slot: String, item: Dictionary) -> Rect2:
 
 
 func _skin() -> Color:
-	return Content.skin_tones[clampi(int(_look().get("skin_tone", 0)), 0, Content.skin_tones.size() - 1)]
+	return Content.skin_of(_look())
 
 
 func _hair() -> Color:
-	return Content.hair_tones[clampi(int(_look().get("hair_tone", 0)), 0, Content.hair_tones.size() - 1)]
+	return Content.hair_of(_look())
 
 
 func _draw() -> void:
+	if _rig:
+		return
 	var skin := _skin()
 	var hair := _hair()
 	if part != "":
@@ -185,8 +411,15 @@ func _draw_part(skin: Color, hair: Color) -> void:
 	match part:
 		"hat":
 			_draw_hat(HEAD)
-		"hair", "face":
-			_draw_head(HEAD, skin, hair, false)
+		"hair":
+			# Just the hair, with no head under it.
+			var colour := _hair_colour(hair)
+			_draw_hair(HEAD, colour, true)
+			_draw_hair(HEAD, colour, false)
+		"face":
+			_draw_face(HEAD)
+		"facial_hair":
+			_draw_facial_hair(HEAD, _hair_colour(hair))
 		"neckwear":
 			_draw_neckwear(0.0)
 		"top":
@@ -234,6 +467,20 @@ func _draw_top_flat(top: Dictionary, skin: Color) -> void:
 			draw_line(Vector2(3, -108), Vector2(3, -98), UI.SURFACE, 1.5, true)
 		"tee":
 			draw_arc(Vector2(0, -110), 5, 0, PI, 10, body.darkened(0.15), 2.0, true)
+		"tree":
+			_tree_costume(Vector2.ZERO, body)
+
+
+## A Christmas tree costume: three tiers of branches over the body, hung
+## with baubles.
+func _tree_costume(at: Vector2, colour: Color) -> void:
+	for k in 3:
+		var top := -116.0 + 20.0 * k
+		var half := 13.0 + 6.0 * k
+		draw_colored_polygon(PackedVector2Array([at + Vector2(-half, top + 28), at + Vector2(0, top), at + Vector2(half, top + 28)]), colour.darkened(0.08 * (2 - k)))
+	var baubles := [[Vector2(-6, -94), "#e8483c"], [Vector2(7, -82), "#f2c53d"], [Vector2(-10, -66), "#4a8fd9"], [Vector2(9, -60), "#e8483c"], [Vector2(0, -74), "#f2c53d"]]
+	for b in baubles:
+		draw_circle(at + b[0], 2.6, Color(b[1]), true, -1.0, true)
 
 
 ## Trousers laid flat: a waistband and two legs a little apart (shorts stop
@@ -261,6 +508,8 @@ func _draw_torso(top: Dictionary, sleeve: Color, bob: float) -> void:
 			draw_line(Vector2(6, -104 - bob), Vector2(7, -92 - bob), UI.SURFACE, 1.5, true)
 		"tee":
 			draw_rect(Rect2(-14, -108 - bob, 28, 4), sleeve.darkened(0.1))
+		"tree":
+			_tree_costume(Vector2(0, -bob), sleeve)
 
 
 ## The walking stick, if they carry one, held in `hand`.
@@ -328,30 +577,75 @@ func _draw_neckwear(bob: float) -> void:
 			draw_circle(Vector2(9, y + 6), 3, colour.lightened(0.3), true, -1.0, true)
 
 
-func _draw_head(h: Vector2, skin: Color, hair_tone: Color, with_hat: bool = true) -> void:
-	var hair := _item("hair")
-	var hair_colour := Content.cosmetic_colour(hair, hair_tone) if hair.has("rarity") else hair_tone
-	var style := _style(hair)
-	if style == "long":
-		draw_rect(Rect2(h.x - 17, h.y - 6, 17, 30), hair_colour)
+func _draw_head(h: Vector2, skin: Color, hair_tone: Color) -> void:
+	var colour := _hair_colour(hair_tone)
+	_draw_hair(h, colour, true)
 	draw_circle(h, 16, skin, true, -1.0, true)
 	draw_circle(h + Vector2(-3, 2), 4, skin.darkened(0.08), true, -1.0, true)
 	_draw_face(h)
+	_draw_facial_hair(h, colour)
+	_draw_hair(h, colour, false)
+	_draw_hat(h)
+
+
+## The hair's colour: the player's, or a hair gift's own.
+func _hair_colour(hair_tone: Color) -> Color:
+	var hair := _item("hair")
+	return Content.cosmetic_colour(hair, hair_tone) if hair.has("rarity") else hair_tone
+
+
+## The hairstyle: what hangs behind the head (`behind`) or sits on top.
+## Bald draws nothing.
+func _draw_hair(h: Vector2, colour: Color, behind: bool) -> void:
+	var style := _style(_item("hair"))
+	if behind:
+		if style == "long":
+			draw_rect(Rect2(h.x - 17, h.y - 6, 17, 30), colour)
+		return
 	match style:
+		"none":
+			pass
 		"buzz":
-			draw_arc(h, 15, PI * 1.02, TAU * 0.99, 16, hair_colour, 4, true)
+			draw_arc(h, 15, PI * 1.02, TAU * 0.99, 16, colour, 4, true)
 		"curly":
 			for i in 8:
 				var a := PI + PI * i / 7.0
-				draw_circle(h + Vector2(cos(a), sin(a)) * 14.5, 6.5, hair_colour, true, -1.0, true)
+				draw_circle(h + Vector2(cos(a), sin(a)) * 14.5, 6.5, colour, true, -1.0, true)
 		"bun":
-			draw_arc(h, 12, PI, TAU, 16, hair_colour, 9, true)
-			draw_circle(h + Vector2(-9, -17), 7, hair_colour, true, -1.0, true)
+			draw_arc(h, 12, PI, TAU, 16, colour, 9, true)
+			draw_circle(h + Vector2(-9, -17), 7, colour, true, -1.0, true)
 		_:
-			draw_arc(h, 12, PI, TAU, 16, hair_colour, 9, true)
-			draw_circle(h + Vector2(11, -9), 4.5, hair_colour, true, -1.0, true)
-	if with_hat:
-		_draw_hat(h)
+			draw_arc(h, 12, PI, TAU, 16, colour, 9, true)
+			draw_circle(h + Vector2(11, -9), 4.5, colour, true, -1.0, true)
+
+
+## Stubble, a moustache or a beard on the face's lower half (it faces
+## right), in the hair colour.
+func _draw_facial_hair(h: Vector2, colour: Color) -> void:
+	match _style(_item("facial_hair")):
+		"stubble":
+			var dot := Color(colour, 0.55)
+			for i in 9:
+				var a := 0.15 + 1.9 * i / 8.0
+				for ring in [12.5, 14.5]:
+					draw_circle(h + Vector2(cos(a), sin(a)) * ring, 0.8, dot, true, -1.0, true)
+		"moustache":
+			draw_line(h + Vector2(4, 4), h + Vector2(13, 3.5), colour, 3.0, true)
+			draw_circle(h + Vector2(4, 4.5), 1.6, colour, true, -1.0, true)
+		"short_beard":
+			draw_arc(h, 14, 0.05, 2.3, 16, colour, 4.5, true)
+			draw_line(h + Vector2(4, 4), h + Vector2(12, 3.5), colour, 2.6, true)
+		"full_beard":
+			var pts := PackedVector2Array()
+			for i in 13:
+				var a := -0.1 + 2.5 * i / 12.0
+				pts.append(h + Vector2(cos(a), sin(a)) * (16.5 + 3.0 * sin(a)))
+			for i in 13:
+				var a := 2.4 - 2.5 * i / 12.0
+				pts.append(h + Vector2(cos(a), sin(a)) * 9.0 + Vector2(1.5, 2.5))
+			draw_colored_polygon(pts, colour)
+			# The mouth shows through.
+			draw_arc(h + Vector2(8, 7), 2.5, 0.2, PI - 0.6, 8, colour.darkened(0.45), 1.4, true)
 
 
 func _draw_face(h: Vector2) -> void:
@@ -428,6 +722,32 @@ func _draw_hat(h: Vector2) -> void:
 		"tophat":
 			draw_rect(Rect2(h.x - 20, h.y - 16, 40, 5), c)
 			draw_rect(Rect2(h.x - 12, h.y - 34, 24, 18), c)
+		"party":
+			var tip := h + Vector2(3, -46)
+			draw_colored_polygon(PackedVector2Array([h + Vector2(-12, -12), tip, h + Vector2(14, -12)]), c)
+			for k in 2:
+				var t := 0.35 + 0.3 * k
+				draw_line(h + Vector2(-12, -12).lerp(tip - h, t), h + Vector2(14, -12).lerp(tip - h, t), c.lightened(0.45), 3.0, true)
+			draw_circle(tip, 4.5, Color("#f2c53d"), true, -1.0, true)
+		"antlers":
+			draw_arc(h, 16, PI * 1.12, TAU * 0.94, 16, c.darkened(0.2), 3.0, true)
+			for side in [-1.0, 1.0]:
+				var base := h + Vector2(9 * side, -14)
+				var top := base + Vector2(7 * side, -26)
+				draw_line(base, top, c, 3.5, true)
+				draw_line(base.lerp(top, 0.45), base.lerp(top, 0.45) + Vector2(9 * side, -6), c, 3.0, true)
+				draw_line(base.lerp(top, 0.75), base.lerp(top, 0.75) + Vector2(-5 * side, -8), c, 2.5, true)
+		"pumpkin":
+			# The whole head inside a carved pumpkin.
+			var at := h + Vector2(0, 2)
+			_ellipse(at + Vector2(-9, 0), Vector2(14, 21), c.darkened(0.12))
+			_ellipse(at + Vector2(9, 0), Vector2(14, 21), c.darkened(0.12))
+			_ellipse(at, Vector2(15, 22), c)
+			draw_line(at + Vector2(1, -21), at + Vector2(4, -29), Color("#5b7a34"), 4.0, true)
+			var glow := Color("#ffd25e")
+			draw_colored_polygon(PackedVector2Array([at + Vector2(-1, -9), at + Vector2(4, -14), at + Vector2(6, -7)]), glow)
+			draw_colored_polygon(PackedVector2Array([at + Vector2(9, -9), at + Vector2(14, -14), at + Vector2(15, -6)]), glow)
+			draw_colored_polygon(PackedVector2Array([at + Vector2(-2, 5), at + Vector2(17, 4), at + Vector2(12, 11), at + Vector2(3, 11)]), glow)
 
 
 func _cap_dome(h: Vector2, c: Color) -> void:

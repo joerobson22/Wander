@@ -1,14 +1,18 @@
 class_name GiftButton
 extends Button
-## The round button in the corner of a walk: a pie chart of what your pet
-## will bring back. For the first ten minutes a dark green slice sweeps
-## round as the first gift gets closer. At ten minutes it dings, pops and
-## fills from the middle with bright green: a gift is on its way. From then
-## on blue, purple and gold slices show the chance of a rare, epic or
-## legendary gift, growing as the walk goes on; once a rarity is certain the
-## ones below it drop out, with another pop. Pressing it ends the walk.
+## The "End focus" pill in the corner of a walk, with a small pie chart on
+## its right of what your pet will bring back. For the first ten minutes a
+## dark green slice sweeps round as the first gift gets closer. At ten
+## minutes it dings, pops and fills from the middle with bright green: a
+## gift is on its way. From then on blue, purple and gold slices show the
+## chance of a rare, epic or legendary gift, growing as the walk goes on;
+## once a rarity is certain the ones below it drop out, with another pop.
+## Pressing it ends the walk.
 
-const DIAMETER := 76.0
+const HEIGHT := 52.0
+## The pie's size, and how far it sits in from the pill's right end.
+const PIE := 36.0
+const PIE_INSET := 8.0
 ## How long the bright green takes to fill from the middle, in seconds.
 const REVEAL := 0.5
 ## Rarest first, clockwise from the top.
@@ -24,17 +28,24 @@ var _reveal := 0.0
 var _from := {}
 var _to := {}
 var _blend := 1.0
+## The pie's size against its resting size, for its pops.
+var _pie_scale := 1.0
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(DIAMETER, DIAMETER)
-	size = custom_minimum_size
-	flat = true
+	text = Text.t("walk.end_focus")
+	custom_minimum_size.y = HEIGHT
 	focus_mode = Control.FOCUS_ALL
 	mouse_default_cursor_shape = Cursor.HOVER
+	UI.style_button(self, UI.SURFACE, UI.INK, 999, true)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
-		add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	resized.connect(func(): pivot_offset = size * 0.5)
+		var sb := get_theme_stylebox(state)
+		if sb is StyleBoxFlat:
+			sb.content_margin_left = 22
+			sb.content_margin_right = PIE_INSET + PIE + 12
+	add_theme_font_override("font", UI.font(false, 800))
+	add_theme_font_size_override("font_size", 17)
+	size_flags_vertical = Control.SIZE_SHRINK_END
 
 
 ## Updates the button for a walk this long, with a fanfare when it earns its
@@ -54,8 +65,8 @@ func set_seconds(seconds: int) -> void:
 	elif reached > _level and _level < 0:
 		_first_gift(odds)
 	elif reached > _level:
-		Motion.pop(self, 0.22, 0.45)
-		Audio.play("pop", 1.0 + 0.12 * reached)
+		_pop(0.22)
+		Audio.play("gift_odds_up", 1.0 + 0.12 * reached, 0.0, "pop")
 		_blend_to(odds)
 	else:
 		_to = odds
@@ -80,13 +91,27 @@ func shown() -> Dictionary:
 ## Ten minutes: a ding and a pop, the bright green fills from the middle,
 ## then the rarer slices grow in.
 func _first_gift(odds: Dictionary) -> void:
-	Audio.play("ding", 1.0, -2.0)
-	Motion.pop(self, 0.25, 0.45)
+	Audio.play("first_gift", 1.0, -2.0, "ding")
+	_pop(0.25)
 	_from = {"common": 1.0}
 	_to = {"common": 1.0}
 	_reveal = 0.0
 	var t := Motion.method(self, "reveal", _set_reveal, 0.0, 1.0, REVEAL)
 	t.tween_callback(_blend_to.bind(odds))
+
+
+## The pie grows a little and settles back.
+func _pop(amount: float) -> void:
+	if Motion.reduced() or Motion.still:
+		return
+	var t := Motion.tween(self, "pie")
+	t.tween_method(_set_pie_scale, 1.0, 1.0 + amount, 0.45 * 0.45)
+	t.tween_method(_set_pie_scale, 1.0 + amount, 1.0, 0.45 * 0.55)
+
+
+func _set_pie_scale(v: float) -> void:
+	_pie_scale = v
+	queue_redraw()
 
 
 func _blend_to(odds: Dictionary) -> void:
@@ -107,10 +132,9 @@ func _set_blend(v: float) -> void:
 
 
 func _draw() -> void:
-	var c := size * 0.5
-	var r := minf(size.x, size.y) * 0.5
+	var r := PIE * 0.5 * _pie_scale
+	var c := Vector2(size.x - PIE_INSET - PIE * 0.5, size.y * 0.5)
 	var green := Content.rarity_colour("common")
-	draw_circle(c + Vector2(0, 3), r, Color(0, 0, 0, 0.18), true, -1.0, true)
 	draw_circle(c, r, UI.NEUTRAL, true, -1.0, true)
 	if _reveal < 1.0:
 		# The first ten minutes sweeping round, then the green filling in.
@@ -130,11 +154,9 @@ func _draw() -> void:
 		for rarity in SLICES:
 			var share := float(shares.get(rarity, 0.0))
 			if share > 0.002 and share < 0.998:
-				draw_line(c, c + Vector2(cos(at), sin(at)) * r, Color(1, 1, 1, 0.45), 1.5, true)
+				draw_line(c, c + Vector2(cos(at), sin(at)) * r, Color(UI.SURFACE, 0.6), 1.0, true)
 			at += TAU * share
-	draw_arc(c, r - 1.5, 0, TAU, 48, Color(1, 1, 1, 0.35), 3.0, true)
-	if is_hovered() or has_focus():
-		draw_circle(c, r, Color(1, 1, 1, 0.08), true, -1.0, true)
+	draw_arc(c, r - 1.0, 0, TAU, 40, Color(UI.EDGE, 0.8), 2.0, true)
 
 
 ## A slice of the pie from `from` (radians, clockwise) round `sweep`.

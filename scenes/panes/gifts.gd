@@ -1,11 +1,11 @@
-class_name GiftsPane
 extends Pane
 ## Gifts, to the left of the focus screen. At the top, three rings for how
 ## your collection's coming along: gifts discovered, animals whose whole gift
 ## table you've found, and cosmetics unlocked from gifts. Under them, every
 ## gift you have, with how many on each and a "Sort by" menu (shared with
-## the shelf editor); only the gifts scroll. Gifts grow under the pointer;
-## tap one for a closer look and its trade-in. Your shelf is on your profile.
+## the shelf editor); only the gifts scroll. Gifts grow under the pointer
+## and show a card with their trade-in progress (GiftInfo); click one with
+## enough to trade it in. Your shelf is on your profile.
 
 var _stats: StatPanel
 var _grid: GiftGrid
@@ -16,7 +16,7 @@ func build() -> void:
 	_grid = null
 	var col := frame(760, 16)
 	col.add_child(title_row(Text.t("gifts.title")))
-	var counts := Collection.progress(App.state.inventory, Content.gifts, Content.animals)
+	var counts := Collection.progress(App.state.inventory, Content.gifts)
 	col.add_child(_progress(counts))
 
 	var section := UI.vbox(8)
@@ -51,12 +51,11 @@ func _on_shown() -> void:
 		_stats.sweep()
 
 
-## One gift in the collection: its picture and how many you have; tap it
-## for a closer look.
+## One gift in the collection: its picture and how many you have; hover
+## for its card, click to trade it in.
 func _tile(id: String) -> GiftTile:
 	var tile := GiftTile.new(id, App.state.gift_count(id))
-	tile.tappable = true
-	tile.tapped.connect(GiftDetails.open)
+	tile.trades = true
 	return tile
 
 
@@ -70,7 +69,7 @@ func _progress(counts: Dictionary) -> Control:
 	var diameter := clampf(size.y * 0.12, 64.0, 104.0)
 	var stats := [
 		[Text.t("gifts.discovered"), Text.t("gifts.discovered_note", {"have": counts["found"], "total": counts["gifts"]}), counts["found"], counts["gifts"], "common"],
-		[Text.t("gifts.pet_tables"), Text.t("gifts.pet_tables_note", {"have": counts["tables"], "total": counts["animals"]}), counts["tables"], counts["animals"], "rare"],
+		[Text.t("gifts.pet_tables"), Text.t("gifts.pet_tables_note", {"have": counts["tables"], "total": counts["total_tables"]}), counts["tables"], counts["total_tables"], "rare"],
 		[Text.t("gifts.cosmetics"), Text.t("gifts.cosmetics_note", {"have": counts["cosmetics"], "total": counts["wearables"]}), counts["cosmetics"], counts["wearables"], "epic"],
 	]
 	for s in stats:

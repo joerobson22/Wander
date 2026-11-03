@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_pink.svg" id="2"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_blue.svg" id="3"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_yellow.svg" id="4"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_green.svg" id="5"]
+
+[node name="HomeDecor" type="Node2D"]
+
+[node name="Hilltop" type="Node2D" parent="."]
+
+[node name="Egg1" type="Sprite2D" parent="Hilltop"]
+position = Vector2(232, 839)
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("2")
+offset = Vector2(0, -50.0)
+
+[node name="Egg2" type="Sprite2D" parent="Hilltop"]
+position = Vector2(408, 850)
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("3")
+offset = Vector2(0, -50.0)
+
+[node name="Egg3" type="Sprite2D" parent="Hilltop"]
+position = Vector2(566, 884)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("4")
+offset = Vector2(0, -50.0)
+
+[node name="Egg4" type="Sprite2D" parent="Hilltop"]
+position = Vector2(1420, 930)
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("5")
+offset = Vector2(0, -50.0)
+
+[node name="Egg5" type="Sprite2D" parent="Hilltop"]
+position = Vector2(1588, 912)
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("2")
+offset = Vector2(0, -50.0)
+
+[node name="ForestNear" type="Node2D" parent="."]
+
+[node name="Egg6" type="Sprite2D" parent="ForestNear"]
+position = Vector2(262, 804)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("5")
+offset = Vector2(0, -50.0)
+
+[node name="Egg7" type="Sprite2D" parent="ForestNear"]
+position = Vector2(930, 846)
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("3")
+offset = Vector2(0, -50.0)
+

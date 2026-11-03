@@ -1,0 +1,65 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Tundra" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Mountains" type="Node2D" parent="."]
+position = Vector2(0, 360.0)
+script = ExtResource("2_layer")
+kind = "mountains"
+parallax = 0.05
+y = 0.5
+height = 0.3
+colour = Color(0.6627, 0.7216, 0.8, 1)
+pattern = 31
+spacing = 210
+snow = true
+
+[node name="Mountains2" type="Node2D" parent="."]
+position = Vector2(0, 403.2)
+script = ExtResource("2_layer")
+kind = "mountains"
+parallax = 0.12
+y = 0.56
+height = 0.22
+colour = Color(0.5412, 0.6157, 0.7098, 1)
+pattern = 32
+spacing = 160
+snow = true
+
+[node name="Pines" type="Node2D" parent="."]
+position = Vector2(0, 475.2)
+script = ExtResource("2_layer")
+kind = "pines"
+parallax = 0.32
+y = 0.66
+height = 0.18
+colour = Color(0.2471, 0.3725, 0.3843, 1)
+pattern = 33
+spacing = 58
+snow = true
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.9137, 0.9373, 0.9608, 1)
+pattern = 34
+path_colour = Color(0.8118, 0.851, 0.8941, 1)
+
+[node name="Drifts" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "drifts"
+parallax = 1.4
+y = 0.97
+height = 0.06
+colour = Color(0.9647, 0.9765, 0.9882, 1)
+pattern = 35
+spacing = 90

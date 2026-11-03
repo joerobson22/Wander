@@ -5,6 +5,8 @@ extends Node
 ## sunrise and sunset there (SunTimes), and checks the weather every half
 ## hour (Open-Meteo). The places you walk follow both. Without it, or while
 ## offline, the sun keeps the day cycle's own hours and the weather is fair.
+## A weather picked on the walk screen wins over the real one until you
+## pick the real weather again.
 
 signal changed
 
@@ -17,13 +19,6 @@ const WEATHER_EVERY := 30 * 60
 ## Weather older than this is forgotten (fair weather again).
 const WEATHER_KEEPS := 3 * 3600
 const CHECK_EVERY := 5 * 60.0
-
-## A weather kind to show instead of the real one (the debug picker); ""
-## follows the real weather.
-var override := "":
-	set(v):
-		override = v
-		changed.emit()
 
 var _locate := HTTPRequest.new()
 var _forecast := HTTPRequest.new()
@@ -100,11 +95,28 @@ func sun_hours() -> Vector2:
 	return _sun_cache["sun"]
 
 
-## The weather kind where you are (see Weather.KINDS): the debug override,
-## else the latest real weather, else "sunny".
+## The weather you picked on the walk (see Weather.KINDS), kept in the
+## settings; "" follows the real weather.
+func choice() -> String:
+	var kind := str(App.state.settings.get("weather", ""))
+	return kind if kind in Weather.KINDS else ""
+
+
+func set_choice(kind: String) -> void:
+	App.state.settings["weather"] = kind if kind in Weather.KINDS else ""
+	App.save()
+	changed.emit()
+
+
+## The weather kind the places show (see Weather.KINDS): a holiday's (it
+## always snows at Christmas), else the one you picked, else the latest real
+## weather, else "sunny".
 func weather() -> String:
-	if override != "":
-		return override
+	var look := App.holiday_look()
+	if look and look.weather in Weather.KINDS:
+		return look.weather
+	if choice() != "":
+		return choice()
 	var w := _cached("weather_cache")
 	if enabled() and w.has("kind") and App.now() - int(w.get("at", 0)) < WEATHER_KEEPS:
 		return str(w["kind"])

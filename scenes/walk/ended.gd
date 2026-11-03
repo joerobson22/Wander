@@ -25,7 +25,7 @@ var _home: Button
 
 func _ready() -> void:
 	var session: FocusSession = params.get("session")
-	var project := App.state.project(session.project_id) if session else null
+	var pet := App.state.pet(session.pet_id) if session else null
 	Audio.ambience("")
 
 	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -41,10 +41,10 @@ func _ready() -> void:
 	_walker = CharacterView.new()
 	_walker.holding_lead = false
 	_actors.add_child(_walker)
-	if project:
+	if pet:
 		_animal = AnimalView.new()
-		_animal.animal_id = project.animal_id
-		_animal.colours = project.colours
+		_animal.animal_id = pet.animal_id
+		_animal.colours = pet.colours
 		_actors.add_child(_animal)
 	_scenery.front_into(_stage)
 	_sheet.color = Color(0, 0, 0, 0)
@@ -52,7 +52,7 @@ func _ready() -> void:
 	_sheet.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_sheet)
 
-	_build_words(session, project)
+	_build_words(session, pet)
 	resized.connect(_layout)
 	_layout()
 	_play.call_deferred()
@@ -86,7 +86,7 @@ func _zoomed_position() -> Vector2:
 	return Vector2(size.x * 0.5, size.y * 0.66) - focus * ZOOM
 
 
-func _build_words(session: FocusSession, project: ProjectData) -> void:
+func _build_words(session: FocusSession, pet_data: PetData) -> void:
 	var insets := UI.safe_insets(self)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -101,7 +101,7 @@ func _build_words(session: FocusSession, project: ProjectData) -> void:
 	margin.add_child(col)
 
 	var seconds := session.focus_seconds if session else 0
-	var pet := Content.pet_called(project) if project else Text.t("pet.fallback")
+	var pet := Content.pet_called(pet_data)
 	var title := _word(UI.label(Text.t("ended.title"), 40, UI.ON_DARK, true, 600))
 	col.add_child(title)
 	var time := _word(UI.label(SessionClock.format(seconds), 24, UI.ON_DARK_SOFT, true, 500))

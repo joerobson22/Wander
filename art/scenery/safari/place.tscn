@@ -1,0 +1,84 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Safari" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 360.0)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.04
+y = 0.5
+height = 0.1
+colour = Color(0.851, 0.7255, 0.5412, 1)
+pattern = 91
+wavelength = 820
+
+[node name="Mountains" type="Node2D" parent="."]
+position = Vector2(0, 396.0)
+script = ExtResource("2_layer")
+kind = "mountains"
+parallax = 0.08
+y = 0.55
+height = 0.12
+colour = Color(0.7059, 0.6039, 0.4784, 1)
+pattern = 92
+spacing = 420
+
+[node name="Acacias" type="Node2D" parent="."]
+position = Vector2(0, 432.0)
+script = ExtResource("2_layer")
+kind = "acacias"
+parallax = 0.2
+y = 0.6
+height = 0.2
+colour = Color(0.4353, 0.5412, 0.2902, 1)
+pattern = 93
+spacing = 260
+
+[node name="Hills2" type="Node2D" parent="."]
+position = Vector2(0, 432.0)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.3
+y = 0.6
+height = 0.07
+colour = Color(0.8392, 0.7059, 0.4157, 1)
+pattern = 94
+wavelength = 500
+
+[node name="Acacias2" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "acacias"
+parallax = 0.55
+y = 0.72
+height = 0.3
+colour = Color(0.3098, 0.4157, 0.1882, 1)
+pattern = 95
+spacing = 420
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.851, 0.7137, 0.3961, 1)
+pattern = 96
+path_colour = Color(0.7882, 0.6353, 0.4157, 1)
+
+[node name="Reeds" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "reeds"
+parallax = 1.4
+y = 0.97
+height = 0.1
+colour = Color(0.7216, 0.5882, 0.2471, 1)
+pattern = 97
+spacing = 40

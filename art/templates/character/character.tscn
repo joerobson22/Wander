@@ -1,0 +1,162 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://art/templates/character/leg_back.png" id="1_leg_back"]
+[ext_resource type="Texture2D" path="res://art/templates/character/leg_front.png" id="2_leg_front"]
+[ext_resource type="Texture2D" path="res://art/templates/character/torso.png" id="3_torso"]
+[ext_resource type="Texture2D" path="res://art/templates/character/head.png" id="4_head"]
+[ext_resource type="Texture2D" path="res://art/templates/character/arm_back.png" id="5_arm_back"]
+[ext_resource type="Texture2D" path="res://art/templates/character/arm_front.png" id="6_arm_front"]
+
+[sub_resource type="Animation" id="Animation_walk"]
+resource_name = "walk"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("LegBack:rotation")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.4, -0.4, 0.4]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("LegFront:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.4, 0.4, -0.4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Torso/ArmBack:rotation")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.3, 0.3, -0.3]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Torso/ArmFront:rotation")
+tracks/3/interp = 2
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.9, -0.65, -0.9]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Torso:position")
+tracks/4/interp = 2
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6000000000000001, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, -56), Vector2(0, -58), Vector2(0, -56), Vector2(0, -58), Vector2(0, -56)]
+}
+
+[sub_resource type="Animation" id="Animation_idle"]
+resource_name = "idle"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Torso:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, -56), Vector2(0, -57), Vector2(0, -56)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_main"]
+_data = {
+"idle": SubResource("Animation_idle"),
+"walk": SubResource("Animation_walk")
+}
+
+[node name="Rig" type="Node2D"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_main")
+}
+
+[node name="LegBack" type="Node2D" parent="."]
+position = Vector2(0, -56)
+
+[node name="Art" type="Sprite2D" parent="LegBack"]
+position = Vector2(-0.0000, 56.0000)
+texture = ExtResource("1_leg_back")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="LegFront" type="Node2D" parent="."]
+position = Vector2(0, -56)
+
+[node name="Art" type="Sprite2D" parent="LegFront"]
+position = Vector2(-0.0000, 56.0000)
+texture = ExtResource("2_leg_front")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="Torso" type="Node2D" parent="."]
+position = Vector2(0, -56)
+
+[node name="Art" type="Sprite2D" parent="Torso"]
+position = Vector2(-0.0000, 56.0000)
+texture = ExtResource("3_torso")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="Head" type="Node2D" parent="Torso"]
+position = Vector2(2, -68)
+
+[node name="Art" type="Sprite2D" parent="Torso/Head"]
+position = Vector2(-2.0000, 124.0000)
+texture = ExtResource("4_head")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="ArmBack" type="Node2D" parent="Torso"]
+position = Vector2(0, -44)
+
+[node name="Art" type="Sprite2D" parent="Torso/ArmBack"]
+position = Vector2(-0.0000, 100.0000)
+texture = ExtResource("5_arm_back")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="ArmFront" type="Node2D" parent="Torso"]
+position = Vector2(0, -44)
+rotation = -0.785
+
+[node name="Art" type="Sprite2D" parent="Torso/ArmFront"]
+position = Vector2(-70.6825, 70.7388)
+rotation = 0.785
+texture = ExtResource("6_arm_front")
+centered = false
+offset = Vector2(-128, -256)
+
+[node name="Hand" type="Marker2D" parent="Torso/ArmFront"]
+position = Vector2(0, 31)

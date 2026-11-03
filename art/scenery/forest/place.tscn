@@ -1,0 +1,99 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Forest" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 288.0)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.06
+y = 0.4
+height = 0.14
+colour = Color(0.6392, 0.7255, 0.6471, 1)
+pattern = 11
+wavelength = 480
+
+[node name="Pines" type="Node2D" parent="."]
+position = Vector2(0, 388.8)
+script = ExtResource("2_layer")
+kind = "pines"
+parallax = 0.14
+y = 0.54
+height = 0.2
+colour = Color(0.4353, 0.5725, 0.4784, 1)
+pattern = 12
+spacing = 34
+
+[node name="Pines2" type="Node2D" parent="."]
+position = Vector2(0, 460.8)
+script = ExtResource("2_layer")
+kind = "pines"
+parallax = 0.3
+y = 0.64
+height = 0.28
+colour = Color(0.2706, 0.4353, 0.3137, 1)
+pattern = 13
+spacing = 52
+
+[node name="Broadleaf" type="Node2D" parent="."]
+position = Vector2(0, 525.6)
+script = ExtResource("2_layer")
+kind = "broadleaf"
+parallax = 0.55
+y = 0.73
+height = 0.26
+colour = Color(0.2471, 0.4314, 0.251, 1)
+pattern = 14
+spacing = 110
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.4353, 0.6039, 0.298, 1)
+pattern = 15
+path_colour = Color(0.7882, 0.7059, 0.5412, 1)
+
+[node name="Fronds" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "fronds"
+parallax = 1.4
+y = 0.97
+height = 0.09
+colour = Color(0.3098, 0.4784, 0.2275, 1)
+pattern = 16
+spacing = 62
+
+[node name="Undergrowth" type="Node2D" parent="."]
+position = Vector2(0, 720.0)
+script = ExtResource("2_layer")
+kind = "undergrowth"
+parallax = 1.7
+y = 1.0
+height = 0.15
+colour = Color(0.1843, 0.3529, 0.1961, 1)
+pattern = 17
+spacing = 150
+skip = 0.5
+front = true
+
+[node name="Stalks" type="Node2D" parent="."]
+position = Vector2(0, 720.0)
+script = ExtResource("2_layer")
+kind = "stalks"
+parallax = 2.1
+y = 1.0
+height = 0.42
+colour = Color(0.1569, 0.2941, 0.1686, 1)
+pattern = 18
+spacing = 560
+skip = 0.55
+front = true

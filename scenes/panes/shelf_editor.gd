@@ -108,7 +108,7 @@ func _lift(tile: GiftTile, from: int) -> void:
 	_off_shelf = false
 	_move_ghost()
 	Motion.pop(_ghost, 0.15)
-	Audio.play("pop", 0.85, -8.0)
+	Audio.play("shelf_pick_up", 0.85, -8.0, "pop")
 	_update_hover()
 
 
@@ -172,7 +172,7 @@ func _drop() -> void:
 		t.chain().tween_callback(func():
 			ghost.queue_free()
 			App.place_on_shelf(id, target))
-		Audio.play("pop", 1.1, -4.0)
+		Audio.play("shelf_place", 1.1, -4.0, "pop")
 	elif from >= 0 and _off_shelf:
 		# Dragged off the shelf: take it down.
 		t.tween_property(ghost, "modulate:a", 0.0, Motion.time(Motion.FAST))
@@ -180,7 +180,7 @@ func _drop() -> void:
 		t.chain().tween_callback(func():
 			ghost.queue_free()
 			App.remove_from_shelf(from))
-		Audio.play("pop", 0.7, -8.0)
+		Audio.play("shelf_remove", 0.7, -8.0, "pop")
 	else:
 		# Dropped nowhere: float back to where it came from.
 		var source := _drag_source

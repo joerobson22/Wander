@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="HolidayLook" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/holiday_look.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+hour = 0.0
+fireworks = true
+firework_colours = PackedColorArray(1, 0.824, 0.369, 1, 1, 0.435, 0.569, 1, 0.498, 0.827, 1, 1, 0.714, 0.949, 0.478, 1, 1, 1, 1, 1)
+orb_colours = PackedColorArray(1, 0.788, 0.235, 1, 1, 0.31, 0.639, 1, 0.247, 0.824, 1, 1, 0.608, 0.361, 1, 1, 1, 0.941, 0.659, 1, 1, 0.478, 0.235, 1)

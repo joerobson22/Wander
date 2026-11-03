@@ -1,118 +1,111 @@
 {
-	"_doc": "Each place is a stack of parallax layers drawn back to front. 'kind' picks a placeholder drawer: hills, mountains, trees, pines, broadleaf, canopy, palms, mesas, cacti, water, ground, reeds, fronds, drifts, planet, and for growth right in front of the walker undergrowth (leaves up from the bottom edge), vines (hanging from the top) and stalks (tall leafy plants). 'parallax' is how fast the layer scrolls relative to the ground (1.0). 'y' and 'height' are fractions of the screen height. Optional per layer: 'snow' (white tips), 'foam' (surf on water), 'path' (the path colour on ground), 'craters', 'skip' (the share of slots left empty) and 'front' (drawn in front of the walker and pet). Per place: 'icon' for its button, 'ambience' (a sound name), 'fx' (snow, wind, fireflies, stars), 'weather' (how the real weather shows there, see weathers below), 'sky' to fix the sky instead of following the clock (see day_cycle below), and 'fixed_light' to ignore the light's tint. Which level unlocks each place is in levels.json. Real art will replace the drawers with sprite chunks per layer.",
+	"_doc": "Places, in the order the place picker shows them. 'unlock' is what it takes to walk there, written as in animals.json ({} or none = from the start; {\"level\": 3}; {\"hours\": 20}; {\"hours\": 10, \"place\": \"forest\"}; {\"table\": \"cat\"}; {\"all_tables\": true}). 'where' finishes \"Focus for 10 hours ...\" in unlock hints. 'icon' is the drawn icon on its button; a white-on-transparent art/places/<id>.png replaces it. Each place's scenery (its parallax layers: hills, trees, water, the ground and path...) is a scene you open and change in the Godot editor: art/scenery/<id>/place.tscn (see assets/README.md). Per place here: 'icon' for its button, 'ambience' (a sound name), 'fx' (snow, wind, fireflies, stars), 'weather' (how the real weather shows there, see weathers below), 'sky' to fix the sky instead of following the clock (see day_cycle below), and 'fixed_light' to ignore the light's tint. Which level unlocks each place is in levels.json.",
 	"biomes": [
 		{
 			"id": "lake",
+			"where": "by the lake",
 			"name": "Lakeside",
 			"icon": "place_lake",
+			"unlock": {},
 			"ambience": "lake",
-			"fx": ["fireflies", "stars"],
-			"layers": [
-				{"kind": "hills", "parallax": 0.08, "y": 0.42, "height": 0.16, "colour": "#9fb4a8", "wavelength": 520, "seed": 1},
-				{"kind": "hills", "parallax": 0.15, "y": 0.50, "height": 0.12, "colour": "#7f9c86", "wavelength": 360, "seed": 2},
-				{"kind": "trees", "parallax": 0.25, "y": 0.58, "height": 0.16, "colour": "#55765c", "spacing": 70, "seed": 3},
-				{"kind": "water", "parallax": 0.35, "y": 0.60, "height": 0.12, "colour": "#7fb2c9", "seed": 4},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#8fae5e", "path": "#d9c49a", "seed": 5},
-				{"kind": "reeds", "parallax": 1.4, "y": 0.96, "height": 0.08, "colour": "#6e8f45", "spacing": 46, "seed": 6}
-			]
+			"fx": ["fireflies", "stars"]
+		},
+		{
+			"id": "farm",
+			"where": "on the farm",
+			"name": "Farm",
+			"icon": "place_farm",
+			"unlock": {},
+			"ambience": "day",
+			"fx": ["fireflies", "stars"]
 		},
 		{
 			"id": "forest",
+			"where": "in the forest",
 			"name": "Forest",
 			"icon": "place_forest",
+			"unlock": {"level": 3},
 			"ambience": "day",
-			"fx": ["fireflies", "stars"],
-			"layers": [
-				{"kind": "hills", "parallax": 0.06, "y": 0.40, "height": 0.14, "colour": "#a3b9a5", "wavelength": 480, "seed": 11},
-				{"kind": "pines", "parallax": 0.14, "y": 0.54, "height": 0.20, "colour": "#6f927a", "spacing": 34, "seed": 12},
-				{"kind": "pines", "parallax": 0.30, "y": 0.64, "height": 0.28, "colour": "#456f50", "spacing": 52, "seed": 13},
-				{"kind": "broadleaf", "parallax": 0.55, "y": 0.73, "height": 0.26, "colour": "#3f6e40", "spacing": 110, "seed": 14},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#6f9a4c", "path": "#c9b48a", "seed": 15},
-				{"kind": "fronds", "parallax": 1.4, "y": 0.97, "height": 0.09, "colour": "#4f7a3a", "spacing": 62, "seed": 16},
-				{"kind": "undergrowth", "front": true, "parallax": 1.7, "y": 1.0, "height": 0.15, "colour": "#2f5a32", "spacing": 150, "skip": 0.5, "seed": 17},
-				{"kind": "stalks", "front": true, "parallax": 2.1, "y": 1.0, "height": 0.42, "colour": "#284b2b", "spacing": 560, "skip": 0.55, "seed": 18}
-			]
-		},
-		{
-			"id": "jungle",
-			"name": "Jungle",
-			"icon": "place_jungle",
-			"ambience": "day",
-			"weather": {"snowy": "sunny"},
-			"fx": ["fireflies", "stars"],
-			"layers": [
-				{"kind": "hills", "parallax": 0.05, "y": 0.38, "height": 0.16, "colour": "#86ab90", "wavelength": 420, "seed": 21},
-				{"kind": "canopy", "parallax": 0.2, "y": 0.60, "height": 0.42, "colour": "#3f7a52", "spacing": 110, "seed": 22},
-				{"kind": "palms", "parallax": 0.38, "y": 0.70, "height": 0.34, "colour": "#2f6a40", "spacing": 150, "seed": 23},
-				{"kind": "canopy", "parallax": 0.55, "y": 0.73, "height": 0.30, "colour": "#24563a", "spacing": 170, "seed": 24},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#5b8a3a", "path": "#b49a6c", "seed": 25},
-				{"kind": "fronds", "parallax": 1.45, "y": 0.98, "height": 0.13, "colour": "#2f6b34", "spacing": 54, "seed": 26},
-				{"kind": "vines", "front": true, "parallax": 1.8, "y": 0.0, "height": 0.34, "colour": "#2c5e36", "spacing": 110, "skip": 0.25, "seed": 27},
-				{"kind": "stalks", "front": true, "parallax": 2.0, "y": 1.0, "height": 0.5, "colour": "#1d4a2a", "spacing": 240, "skip": 0.3, "seed": 28},
-				{"kind": "undergrowth", "front": true, "parallax": 1.75, "y": 1.0, "height": 0.18, "colour": "#1f4f2d", "spacing": 75, "skip": 0.1, "seed": 29}
-			]
-		},
-		{
-			"id": "tundra",
-			"name": "Tundra",
-			"icon": "place_tundra",
-			"ambience": "wind",
-			"weather": {"rainy": "snowy", "stormy": "blizzard"},
-			"fx": ["snow", "wind", "stars"],
-			"layers": [
-				{"kind": "mountains", "parallax": 0.05, "y": 0.50, "height": 0.30, "colour": "#a9b8cc", "spacing": 210, "snow": true, "seed": 31},
-				{"kind": "mountains", "parallax": 0.12, "y": 0.56, "height": 0.22, "colour": "#8a9db5", "spacing": 160, "snow": true, "seed": 32},
-				{"kind": "pines", "parallax": 0.32, "y": 0.66, "height": 0.18, "colour": "#3f5f62", "spacing": 58, "snow": true, "seed": 33},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#e9eff5", "path": "#cfd9e4", "seed": 34},
-				{"kind": "drifts", "parallax": 1.4, "y": 0.97, "height": 0.06, "colour": "#f6f9fc", "spacing": 90, "seed": 35}
-			]
-		},
-		{
-			"id": "desert",
-			"name": "Desert",
-			"icon": "place_desert",
-			"ambience": "wind",
-			"weather": {"rainy": "sunny", "stormy": "sunny", "snowy": "sunny"},
-			"fx": ["stars"],
-			"layers": [
-				{"kind": "hills", "parallax": 0.05, "y": 0.47, "height": 0.10, "colour": "#e6c995", "wavelength": 760, "seed": 41},
-				{"kind": "mesas", "parallax": 0.12, "y": 0.56, "height": 0.16, "colour": "#c98b5a", "spacing": 300, "seed": 42},
-				{"kind": "hills", "parallax": 0.25, "y": 0.64, "height": 0.08, "colour": "#e2b574", "wavelength": 540, "seed": 43},
-				{"kind": "cacti", "parallax": 0.5, "y": 0.73, "height": 0.16, "colour": "#6c9658", "spacing": 170, "seed": 44},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#e8c68c", "path": "#d6b077", "seed": 45},
-				{"kind": "reeds", "parallax": 1.4, "y": 0.98, "height": 0.05, "colour": "#b49a5c", "spacing": 120, "seed": 46}
-			]
+			"fx": ["fireflies", "stars"]
 		},
 		{
 			"id": "beach",
+			"where": "on the beach",
 			"name": "Beach",
 			"icon": "place_beach",
+			"unlock": {"level": 6},
 			"ambience": "lake",
-			"fx": ["stars"],
-			"layers": [
-				{"kind": "hills", "parallax": 0.03, "y": 0.50, "height": 0.05, "colour": "#9db7b0", "wavelength": 900, "seed": 51},
-				{"kind": "water", "parallax": 0.12, "y": 0.50, "height": 0.22, "colour": "#5aa6c8", "foam": true, "seed": 52},
-				{"kind": "palms", "parallax": 0.6, "y": 0.75, "height": 0.36, "colour": "#3f7a4a", "spacing": 230, "seed": 53},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#f0dcae", "path": "#e2c993", "seed": 54},
-				{"kind": "reeds", "parallax": 1.4, "y": 0.97, "height": 0.07, "colour": "#a7b36a", "spacing": 80, "seed": 55}
-			]
+			"fx": ["stars"]
+		},
+		{
+			"id": "city",
+			"where": "in the city",
+			"name": "City",
+			"icon": "place_city",
+			"unlock": {"level": 8},
+			"ambience": "day",
+			"fx": ["stars"]
+		},
+		{
+			"id": "desert",
+			"where": "in the desert",
+			"name": "Desert",
+			"icon": "place_desert",
+			"unlock": {"level": 10},
+			"ambience": "wind",
+			"weather": {"rainy": "sunny", "stormy": "sunny", "snowy": "sunny"},
+			"fx": ["stars"]
+		},
+		{
+			"id": "jungle",
+			"where": "in the jungle",
+			"name": "Jungle",
+			"icon": "place_jungle",
+			"unlock": {"level": 12},
+			"ambience": "day",
+			"weather": {"snowy": "sunny"},
+			"fx": ["fireflies", "stars"]
+		},
+		{
+			"id": "tundra",
+			"where": "on the tundra",
+			"name": "Tundra",
+			"icon": "place_tundra",
+			"unlock": {"level": 14},
+			"ambience": "wind",
+			"weather": {"rainy": "snowy", "stormy": "blizzard"},
+			"fx": ["snow", "wind", "stars"]
+		},
+		{
+			"id": "blossom",
+			"where": "in the cherry blossom forest",
+			"name": "Cherry Blossom Forest",
+			"icon": "place_blossom",
+			"unlock": {"hours": 10, "place": "forest"},
+			"ambience": "day",
+			"fx": ["petals", "fireflies", "stars"]
+		},
+		{
+			"id": "safari",
+			"where": "on safari",
+			"name": "Safari",
+			"icon": "place_safari",
+			"unlock": {"hours": 10, "place": "desert"},
+			"ambience": "day",
+			"weather": {"snowy": "sunny"},
+			"fx": ["stars"]
 		},
 		{
 			"id": "moon",
+			"where": "on the Moon",
 			"name": "Moon",
 			"icon": "place_moon",
+			"unlock": {"all_tables": true},
 			"ambience": "",
 			"weather": {"*": "sunny"},
 			"fx": ["stars"],
 			"sky": {"top": "#04050b", "bottom": "#161a2b"},
-			"fixed_light": true,
-			"layers": [
-				{"kind": "planet", "parallax": 0.01, "y": 0.2, "height": 0.09, "colour": "#4f8fd6", "seed": 61},
-				{"kind": "hills", "parallax": 0.08, "y": 0.52, "height": 0.14, "colour": "#7d808a", "wavelength": 300, "seed": 62},
-				{"kind": "hills", "parallax": 0.2, "y": 0.62, "height": 0.10, "colour": "#9a9da6", "wavelength": 220, "seed": 63},
-				{"kind": "ground", "parallax": 1.0, "y": 0.72, "height": 0.28, "colour": "#b7b9c0", "path": "#c8cad0", "craters": true, "seed": 64},
-				{"kind": "drifts", "parallax": 1.4, "y": 0.98, "height": 0.04, "colour": "#9a9da6", "spacing": 140, "seed": 65}
-			]
+			"fixed_light": true
 		}
 	],
 	"weathers": {

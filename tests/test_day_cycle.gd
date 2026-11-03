@@ -64,3 +64,17 @@ func test_arc_wraps_midnight() -> void:
 	eq(DayCycle.arc(2.0, 20.0, 4.0), 0.75)
 	eq(DayCycle.arc(12.0, 20.0, 4.0), -1.0)
 	eq(DayCycle.arc(-1.0 + 24.0, 6.0, 18.0), -1.0)
+
+
+## The app turns dark at sunset and light at sunrise, easing over about
+## 40 minutes of twilight round each.
+func test_night_follows_sunset_and_sunrise() -> void:
+	eq(DayCycle.night_at(12.0, 6.0, 18.0), 0.0, "midday")
+	eq(DayCycle.night_at(0.0, 6.0, 18.0), 1.0, "midnight")
+	check(is_equal_approx(DayCycle.night_at(18.0, 6.0, 18.0), 0.5), "halfway at sunset")
+	check(is_equal_approx(DayCycle.night_at(6.0, 6.0, 18.0), 0.5), "halfway at sunrise")
+	eq(DayCycle.night_at(18.0 + 0.34, 6.0, 18.0), 1.0, "dark 20 minutes after sunset")
+	eq(DayCycle.night_at(18.0 - 0.34, 6.0, 18.0), 0.0, "light 20 minutes before")
+	var dusk := DayCycle.night_at(18.1, 6.0, 18.0)
+	check(dusk > 0.5 and dusk < 1.0, "getting darker in the twilight (%.2f)" % dusk)
+	eq(DayCycle.night_at(1.0, 21.0, 3.5), 0.0, "a day that runs over midnight")

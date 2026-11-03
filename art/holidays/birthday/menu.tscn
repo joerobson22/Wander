@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/holidays/festoon.gd" id="1"]
+
+[node name="MenuDecor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Bunting" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -4.0
+offset_bottom = 6.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("1")
+kind = 1
+swag_width = 260.0
+spacing = 24.0
+bulb = 13.0
+colours = PackedColorArray(0.878, 0.333, 0.604, 1, 0.949, 0.773, 0.239, 1, 0.31, 0.69, 0.427, 1, 0.29, 0.561, 0.851, 1, 0.494, 0.31, 0.839, 1)
+twinkle = false

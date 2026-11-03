@@ -17,10 +17,15 @@ extends Control
 ## cross it, and every layer is tinted to match through its node's
 ## modulate, so a change of light costs no redrawing. The real weather
 ## shows too, the way this place shows it (Weather): clouds, rain and
-## lightning, snow, a blizzard. Real art will replace each layer's drawer with
-## sprite chunks; the data stays.
+## lightning, snow, a blizzard. A layer with "art" repeats that scene instead
+## of drawing its kind (see art/README.md).
+## A holiday (App.holiday_look()) dresses it up: dead trees and midnight at
+## Halloween, snow everywhere at Christmas (piling up at the bottom as you
+## walk), fireworks at New Year, eggs in the grass at Easter.
 
-const CHUNK := 384.0
+const CHUNK := SceneryPainter.CHUNK
+## The screen height (in pixels) that layer art scenes are drawn for.
+const ART_HEIGHT := 720.0
 ## Layers that move with the time and so redraw every frame.
 const ANIMATED := ["water", "reeds", "fronds", "undergrowth", "vines", "stalks"]
 ## How often the light catches up with the clock, in seconds.
@@ -32,6 +37,9 @@ const STORM_EVERY := 7.0
 ## Layers that grow up from the bottom of the screen (or hang from the top),
 ## so stand nearer than anyone on the path.
 const NEAREST := ["reeds", "fronds", "drifts", "undergrowth", "stalks", "vines"]
+## Layers with lights that come on after dark (lit windows, street lamps):
+## they're drawn again as night falls and as day breaks.
+const LIGHTS := ["buildings", "lamps"]
 
 ## Ground-layer pixels walked so far; every layer scrolls by this × its parallax.
 var scroll: float = 0.0
@@ -49,6 +57,8 @@ var weather := "":
 		_update_light()
 
 var _time: float = 0.0
+## Whether the lights (LIGHTS) were last drawn on.
+var _lights_on := false
 ## DayCycle.at() for the hour shown, with the weather's cloud cover, plus
 ## "glow": how much of the sun or moon shows through it.
 var _light: Dictionary = {}
@@ -61,11 +71,16 @@ var _look: Dictionary = {}
 var _flash := 0.0
 var _bolt := -1
 var _thunder_for := -1
-## One entry per layer: {data, node, chunks: {index: _Chunk}, animated}.
+## One entry per layer: {data, node, chunks: {index: SceneryPainter}, animated}.
 var _layers: Array = []
 var _sky: _Sky
 var _clouds: _Clouds
 var _fx: _Fx
+## The holiday's look the chunks were drawn with (null for none), its
+## fireworks, and the snow piling up at the bottom.
+var _holiday: HolidayLook
+var _fireworks: Fireworks
+var _pile: _Pile
 ## The growth in front of everything else. It's the scenery's own top child
 ## until a host moves it with front_into(); it then keeps following the
 ## scenery's place, size and fade.
@@ -95,6 +110,9 @@ func _ready() -> void:
 	_clouds.scenery = self
 	_clouds.set_meta("foot", -INF)
 	add_child(_clouds)
+	_fireworks = Fireworks.new()
+	_fireworks.set_meta("foot", -INF)
+	add_child(_fireworks)
 	front = Control.new()
 	front.name = "SceneryFront"
 	front.add_to_group(FRONT_GROUP)
@@ -109,15 +127,24 @@ func _ready() -> void:
 			front.add_child(node)
 		else:
 			add_child(node)
-		_layers.append({"data": layer, "node": node, "chunks": {}, "animated": ANIMATED.has(str(layer["kind"]))})
+		var tile = _art_tile(layer)
+		_layers.append({"data": layer, "node": node, "chunks": {}, "animated": ANIMATED.has(str(layer["kind"])), "tile": tile})
 	_fx = _Fx.new()
 	_fx.scenery = self
 	add_child(_fx)
+	_pile = _Pile.new()
+	_pile.scenery = self
+	front.add_child(_pile)
 	add_child(front)
+	_holiday = App.holiday_look()
 	resized.connect(_rebuild)
 	Outdoors.changed.connect(_update_light)
 	_update_light()
 	_update_shade()
+	# Drawn from its very first frame, not one later: a place that pops in
+	# blank (only the sky) for a frame reads as a flash.
+	if size.x > 0.0:
+		_place_chunks()
 
 
 func _notification(what: int) -> void:
@@ -165,6 +192,14 @@ func _process(delta: float) -> void:
 		_flash = 0.0
 		_bolt = -1
 	_fx.queue_redraw()
+	_fireworks.visible = _holiday != null and _holiday.fireworks
+	if _fireworks.visible:
+		_fireworks.size = Vector2(size.x, horizon_y())
+		if not _holiday.firework_colours.is_empty():
+			_fireworks.colours = _holiday.firework_colours
+	_pile.visible = _holiday != null and _holiday.snow
+	if _pile.visible:
+		_pile.queue_redraw()
 	if not is_instance_valid(front):
 		return
 	if front.get_parent() != self:
@@ -177,14 +212,28 @@ func _process(delta: float) -> void:
 		front.modulate = front_tint * shade
 
 
-## The hour of the day shown.
+## The hour of the day shown: the clock's, unless a holiday pins it
+## (midnight all Halloween).
 func hour() -> float:
-	return clock if clock >= 0.0 else DayCycle.hour_now()
+	if clock >= 0.0:
+		return clock
+	var look := App.holiday_look()
+	return look.hour if look and look.hour >= 0.0 else DayCycle.hour_now()
 
 
 func _update_light() -> void:
 	_light_check = LIGHT_EVERY
-	_weather_kind = Weather.for_place(weather if weather != "" else Outdoors.weather(), biome)
+	# A new holiday (or the end of one) draws everything again.
+	var look := App.holiday_look()
+	if look != _holiday:
+		_holiday = look
+		if is_inside_tree():
+			_rebuild()
+	# A holiday's weather shows the same everywhere (snow even in the desert).
+	if weather == "" and look and look.weather in Weather.KINDS:
+		_weather_kind = look.weather
+	else:
+		_weather_kind = Weather.for_place(weather if weather != "" else Outdoors.weather(), biome)
 	_look = Weather.look(_weather_kind, Content.weathers)
 	var sun := Outdoors.sun_hours()
 	_light = DayCycle.at(DayCycle.solar_hour(hour(), sun.x, sun.y, Content.day_cycle), Content.day_cycle)
@@ -197,6 +246,13 @@ func _update_light() -> void:
 			_light[key] = c.lerp(Color(grey * 0.96, grey, grey * 1.04), o * 0.85).darkened(o * 0.2)
 		_light["tint"] = (_light["tint"] as Color).lerp((_light["tint"] as Color) * Color(0.8, 0.82, 0.86), o)
 	_light["glow"] = 1.0 - clampf(o * 1.15, 0.0, 1.0)
+	var lit := darkness() > 0.3
+	if lit != _lights_on:
+		_lights_on = lit
+		for layer in _layers:
+			if LIGHTS.has(str(layer["data"]["kind"])):
+				for chunk in layer["chunks"].values():
+					chunk.queue_redraw()
 	_update_shade()
 	if _sky:
 		_sky.queue_redraw()
@@ -294,10 +350,6 @@ func darkness() -> float:
 	return float(_light.get("dark", 0.0))
 
 
-func is_dark() -> bool:
-	return darkness() >= 0.5
-
-
 func time() -> float:
 	return _time
 
@@ -321,6 +373,9 @@ func ambience() -> String:
 func _place_chunks() -> void:
 	for layer in _layers:
 		var offset := scroll * float(layer["data"]["parallax"])
+		if layer["tile"] != null:
+			_place_tiles(layer, offset)
+			continue
 		var first := floori(offset / CHUNK) - 1
 		var last := floori((offset + size.x) / CHUNK) + 1
 		var chunks: Dictionary = layer["chunks"]
@@ -329,9 +384,9 @@ func _place_chunks() -> void:
 				chunks[i].queue_free()
 				chunks.erase(i)
 		for i in range(first, last + 1):
-			var chunk: _Chunk = chunks.get(i)
+			var chunk: SceneryPainter = chunks.get(i)
 			if chunk == null:
-				chunk = _Chunk.new()
+				chunk = SceneryPainter.new()
 				chunk.scenery = self
 				chunk.layer = layer["data"]
 				chunk.index = i
@@ -340,6 +395,53 @@ func _place_chunks() -> void:
 			chunk.position.x = i * CHUNK - offset
 			if layer["animated"]:
 				chunk.queue_redraw()
+
+
+## The layer's art as {scene, width}, or null: a layer with "art" (a scene
+## path in biomes.json) repeats that scene instead of drawing its kind.
+## The scene is drawn for a screen ART_HEIGHT tall, its origin on the line
+## the layer stands on (its "y"), and is as wide as its ReferenceRect named
+## "TileBounds" (else the layer's "tile_width", else 768).
+func _art_tile(layer: Dictionary) -> Variant:
+	# Sprites drawn straight into the place's scene, inside the layer.
+	if layer.has("art_tile"):
+		return layer["art_tile"]
+	var path := str(layer.get("art", ""))
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	var scene := load(path) as PackedScene
+	if scene == null:
+		return null
+	var probe := scene.instantiate()
+	var bounds := probe.get_node_or_null("TileBounds") as Control
+	var width := bounds.size.x if bounds and bounds.size.x > 0.0 else float(layer.get("tile_width", 768))
+	probe.free()
+	return {"scene": scene, "width": width}
+
+
+## Lays copies of a layer's art scene side by side, making ones that scroll
+## into view and freeing ones that leave, like the drawn chunks.
+func _place_tiles(layer: Dictionary, offset: float) -> void:
+	var k := size.y / ART_HEIGHT
+	var width: float = layer["tile"]["width"] * k
+	if width <= 1.0:
+		return
+	var first := floori(offset / width) - 1
+	var last := floori((offset + size.x) / width) + 1
+	var tiles: Dictionary = layer["chunks"]
+	for i in tiles.keys():
+		if i < first or i > last:
+			tiles[i].queue_free()
+			tiles.erase(i)
+	for i in range(first, last + 1):
+		var tile: Node2D = tiles.get(i)
+		if tile == null:
+			var source: Dictionary = layer["tile"]
+			tile = (source["node"] as Node).duplicate() if source.has("node") else (source["scene"] as PackedScene).instantiate()
+			tile.scale = Vector2(k, k)
+			layer["node"].add_child(tile)
+			tiles[i] = tile
+		tile.position = Vector2(i * width - offset, size.y * float(layer["data"]["y"]))
 
 
 func _rebuild() -> void:
@@ -352,335 +454,41 @@ func _rebuild() -> void:
 
 
 static func _noise(t: float, sd: float) -> float:
-	return 0.55 * sin(t * TAU + sd) + 0.3 * sin(t * TAU * 2.3 + sd * 1.7) + 0.15 * sin(t * TAU * 5.1 + sd * 2.9)
+	return SceneryPainter._noise(t, sd)
 
 
 ## Stable pseudo-random 0..1 for an integer slot.
 static func _hash(i: int, sd: float) -> float:
-	return fposmod(sin(i * 12.9898 + sd * 78.233) * 43758.5453, 1.0)
+	return SceneryPainter._hash(i, sd)
 
 
-## One stretch of one layer, drawn in its own space: x runs 0..CHUNK across it.
-class _Chunk extends Node2D:
+## Snow piling up along the bottom of the screen as you walk at Christmas:
+## nothing at first, as high as the look's snow_pile_height once you've
+## walked its snow_pile_minutes. It moves with the ground as you go.
+class _Pile extends Node2D:
 	var scenery: Scenery
-	var layer: Dictionary
-	var index: int
 
 	func _draw() -> void:
-		var size := scenery.size
-		var colour := Color.from_string(layer["colour"], Color.WHITE)
-		var y := size.y * float(layer["y"])
-		var h := size.y * float(layer["height"])
-		var sd := float(layer.get("seed", 0))
-		var spacing := float(layer.get("spacing", 70))
-		var snow := bool(layer.get("snow", false))
-		# World x where this chunk starts, in the layer's own scrolling space.
-		var x0 := index * CHUNK
-		match str(layer["kind"]):
-			"hills":
-				_hills(x0, y, h, float(layer.get("wavelength", 400)), sd, colour, size)
-			"water":
-				_water(x0, y, h, sd, colour)
-			"ground":
-				_ground(x0, y, h, sd, colour, size)
-			"reeds":
-				_slots(x0, spacing, sd, 0.35, func(x, r, _i): _reed_tuft(x, y, h * r, colour, r, size))
-			"fronds":
-				_slots(x0, spacing, sd, 0.3, func(x, r, _i): _frond(x, h * (0.6 + 0.6 * r), colour, r, size))
-			"trees":
-				_slots(x0, spacing, sd, 0.25, func(x, r, i): _tree(x, y, h * (0.6 + 0.6 * r), colour.darkened(0.1 * Scenery._hash(i + 3, sd))))
-			"pines":
-				_slots(x0, spacing, sd, 0.2, func(x, r, i): _pine(x, y, h * (0.55 + 0.6 * r), colour.darkened(0.12 * Scenery._hash(i + 3, sd)), snow))
-			"broadleaf":
-				_slots(x0, spacing, sd, 0.3, func(x, r, i): _broadleaf(x, y, h * (0.7 + 0.4 * r), colour.darkened(0.12 * Scenery._hash(i + 5, sd))))
-			"canopy":
-				_slots(x0, spacing, sd, 0.0, func(x, r, i): _canopy(x, y, h * (0.75 + 0.35 * r), colour, i, sd))
-			"palms":
-				_slots(x0, spacing, sd, 0.35, func(x, r, _i): _palm(x, y, h * (0.7 + 0.4 * r), colour, r))
-			"mountains":
-				_slots(x0, spacing, sd, 0.0, func(x, r, i): _mountain(x, y, h * (0.6 + 0.5 * r), spacing * (0.9 + 0.6 * Scenery._hash(i + 9, sd)), colour.darkened(0.08 * Scenery._hash(i + 2, sd)), snow))
-			"mesas":
-				_slots(x0, spacing, sd, 0.3, func(x, r, _i): _mesa(x, y, h * (0.6 + 0.5 * r), spacing * (0.35 + 0.3 * r), colour))
-			"cacti":
-				_slots(x0, spacing, sd, 0.35, func(x, r, _i): _cactus(x, y, h * (0.55 + 0.5 * r), colour, r))
-			"drifts":
-				_slots(x0, spacing, sd, 0.3, func(x, r, _i): _drift(x, size.y, h * (0.5 + r), colour))
-			"undergrowth":
-				_slots(x0, spacing, sd, float(layer.get("skip", 0.15)), func(x, r, i): _undergrowth(x, y, h * (0.6 + 0.5 * r), colour.darkened(0.15 * Scenery._hash(i + 4, sd)), r))
-			"vines":
-				_slots(x0, spacing, sd, float(layer.get("skip", 0.3)), func(x, r, _i): _vine(x, y, h * (0.4 + 0.7 * r), colour, r))
-			"stalks":
-				_slots(x0, spacing, sd, float(layer.get("skip", 0.4)), func(x, r, i): _stalk(x, y, h * (0.7 + 0.4 * r), colour.darkened(0.1 * Scenery._hash(i + 6, sd)), r))
-
-	## Calls `item(x, r, i)` for each slot starting in this chunk, skipping
-	## a share `skip` of them; `r` is the slot's random 0..1. An item belongs
-	## to the chunk its slot starts in, so none is drawn twice.
-	func _slots(x0: float, spacing: float, sd: float, skip: float, item: Callable) -> void:
-		for i in range(floori(x0 / spacing), floori((x0 + CHUNK) / spacing) + 1):
-			var slot_x := i * spacing
-			if slot_x < x0 or slot_x >= x0 + CHUNK:
-				continue
-			var r := Scenery._hash(i, sd)
-			if r < skip:
-				continue
-			item.call(slot_x - x0 + spacing * 0.5 * Scenery._hash(i + 7, sd), r, i)
-
-	func _hills(x0: float, y: float, h: float, wavelength: float, sd: float, colour: Color, size: Vector2) -> void:
-		var pts := PackedVector2Array()
-		var x := 0.0
-		while x <= CHUNK + 0.5:
-			pts.append(Vector2(x, y - h * (0.5 + 0.5 * Scenery._noise((x0 + x) / wavelength, sd))))
-			x += 16.0
-		# Overlap the neighbours by a pixel so no seam shows between chunks.
-		pts[0] = Vector2(-1.0, pts[0].y)
-		pts[pts.size() - 1] = Vector2(CHUNK + 1.0, pts[pts.size() - 1].y)
-		pts.append(Vector2(CHUNK + 1.0, size.y))
-		pts.append(Vector2(-1.0, size.y))
-		draw_colored_polygon(pts, colour)
-
-	func _water(x0: float, y: float, h: float, sd: float, colour: Color) -> void:
-		draw_rect(Rect2(-1.0, y, CHUNK + 2.0, h), colour)
-		var shimmer := Color(1, 1, 1, 0.35)
-		var spacing := 38.0
-		var t := scenery.time()
-		for i in range(floori(x0 / spacing), floori((x0 + CHUNK) / spacing) + 1):
-			var r := Scenery._hash(i, sd)
-			var x := i * spacing - x0
-			var ly := y + h * (0.15 + 0.7 * r)
-			var a := 0.5 + 0.5 * sin(t * 1.5 + r * TAU)
-			draw_line(Vector2(x, ly), Vector2(x + 10 + 14 * r, ly), Color(shimmer, shimmer.a * a), 2.0)
-		if layer.get("foam", false):
-			# Surf rolling up the sand, in and out.
-			var pts := PackedVector2Array()
-			var x := 0.0
-			var reach := sin(t * 0.8) * 4.0
-			while x <= CHUNK + 0.5:
-				pts.append(Vector2(x, y + h - 3.0 + reach + 3.0 * Scenery._noise((x0 + x) / 90.0, sd + t * 0.05)))
-				x += 12.0
-			draw_polyline(pts, Color(1, 1, 1, 0.8), 4.0, true)
-
-	func _ground(x0: float, y: float, h: float, sd: float, colour: Color, size: Vector2) -> void:
-		# A bank with a gently uneven top edge, then the path.
-		var pts := PackedVector2Array()
-		var x := 0.0
-		while x <= CHUNK + 0.5:
-			pts.append(Vector2(x, y - 6.0 * Scenery._noise((x0 + x) / 220.0, sd)))
-			x += 16.0
-		pts[0] = Vector2(-1.0, pts[0].y)
-		pts[pts.size() - 1] = Vector2(CHUNK + 1.0, pts[pts.size() - 1].y)
-		pts.append(Vector2(CHUNK + 1.0, size.y))
-		pts.append(Vector2(-1.0, size.y))
-		draw_colored_polygon(pts, colour)
-		var py := scenery.path_y()
-		var path_colour := Color.from_string(layer.get("path", "#d9c49a"), Color.TAN)
-		draw_rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
-		if layer.get("craters", false):
-			for i in range(floori(x0 / 140.0), floori((x0 + CHUNK) / 140.0) + 1):
-				var r := Scenery._hash(i, sd + 3.0)
-				var c := Vector2(i * 140.0 - x0 + 60.0 * r, y + h * (0.12 + 0.75 * Scenery._hash(i, sd + 8.0)))
-				if absf(c.y - py) < h * 0.12:
-					continue
-				draw_set_transform(c, 0.0, Vector2(1.0, 0.35))
-				draw_circle(Vector2.ZERO, 10.0 + 22.0 * r, colour.darkened(0.12), true, -1.0, true)
-				draw_circle(Vector2(0, 3), 8.0 + 18.0 * r, colour.darkened(0.2), true, -1.0, true)
-				draw_set_transform(Vector2.ZERO)
-		# Pebbles on the path so movement reads even with flat placeholder art.
-		var spacing := 54.0
-		for i in range(floori(x0 / spacing), floori((x0 + CHUNK) / spacing) + 1):
-			var r := Scenery._hash(i, sd + 11.0)
-			draw_circle(Vector2(i * spacing - x0 + 20.0 * r, py - h * 0.08 + h * 0.16 * Scenery._hash(i, sd + 5.0)), 2.0 + 3.0 * r, path_colour.darkened(0.15))
-
-	func _reed_tuft(x: float, top: float, h: float, colour: Color, r: float, size: Vector2) -> void:
-		var sway := sin(scenery.time() * 1.2 + r * 6.0) * 6.0
-		for k in 3:
-			var bx := x + k * 6.0
-			draw_line(Vector2(bx, size.y), Vector2(bx + sway + (k - 1) * 5.0, top - h), colour.darkened(0.1 * k), 3.0, true)
-
-	## A broad leaf on a stem, bending in the breeze (forest and jungle floor).
-	func _frond(x: float, h: float, colour: Color, r: float, size: Vector2) -> void:
-		var sway := sin(scenery.time() * 1.1 + r * 5.0) * 0.12
-		for k in 3:
-			var angle := -PI * 0.5 + (k - 1) * 0.55 + sway
-			var tip := Vector2(x, size.y) + Vector2(cos(angle), sin(angle)) * h
-			var mid := Vector2(x, size.y).lerp(tip, 0.55)
-			var side := Vector2(-sin(angle), cos(angle)) * h * 0.16
-			draw_colored_polygon(PackedVector2Array([Vector2(x, size.y), mid + side, tip, mid - side]), colour.darkened(0.08 * k))
-
-	func _tree(x: float, y: float, th: float, colour: Color) -> void:
-		var w := th * 0.38
-		draw_rect(Rect2(x - w * 0.07, y - th * 0.25, w * 0.14, th * 0.3), colour.darkened(0.35))
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(x - w * 0.5, y - th * 0.2), Vector2(x, y - th), Vector2(x + w * 0.5, y - th * 0.2)]), colour)
-
-	## A tall, layered conifer, with snow on its tiers in the tundra.
-	func _pine(x: float, y: float, th: float, colour: Color, snow: bool) -> void:
-		var w := th * 0.42
-		draw_rect(Rect2(x - w * 0.06, y - th * 0.18, w * 0.12, th * 0.2), colour.darkened(0.4))
-		for k in 3:
-			var top := y - th * (0.45 + 0.27 * k) - th * 0.1
-			var bottom := y - th * (0.12 + 0.24 * k)
-			var half := w * (0.5 - 0.12 * k)
-			draw_colored_polygon(PackedVector2Array([Vector2(x - half, bottom), Vector2(x, top), Vector2(x + half, bottom)]), colour)
-			if snow:
-				var s := Color(0.95, 0.97, 1.0)
-				draw_colored_polygon(PackedVector2Array([Vector2(x - half * 0.45, top + (bottom - top) * 0.45), Vector2(x, top), Vector2(x + half * 0.45, top + (bottom - top) * 0.45)]), s)
-
-	## A round-topped deciduous tree.
-	func _broadleaf(x: float, y: float, th: float, colour: Color) -> void:
-		draw_rect(Rect2(x - th * 0.04, y - th * 0.45, th * 0.08, th * 0.45), colour.darkened(0.45))
-		for k in 4:
-			var a := TAU * k / 4.0 + 0.4
-			draw_circle(Vector2(x, y - th * 0.7) + Vector2(cos(a), sin(a) * 0.6) * th * 0.13, th * 0.22, colour.darkened(0.06 * k), true, -1.0, true)
-		draw_circle(Vector2(x, y - th * 0.82), th * 0.2, colour.lightened(0.05), true, -1.0, true)
-
-	## Dense jungle: big overlapping leaf clusters with vines hanging down.
-	func _canopy(x: float, y: float, th: float, colour: Color, i: int, sd: float) -> void:
-		draw_rect(Rect2(x - th * 0.035, y - th * 0.6, th * 0.07, th * 0.6), colour.darkened(0.5))
-		for k in 5:
-			var a := TAU * k / 5.0 + Scenery._hash(i, sd + 4.0) * 3.0
-			var c := Vector2(x, y - th * 0.78) + Vector2(cos(a) * th * 0.22, sin(a) * th * 0.1)
-			draw_circle(c, th * (0.16 + 0.05 * Scenery._hash(i + k, sd)), colour.darkened(0.07 * (k % 3)), true, -1.0, true)
-		for k in 2:
-			var vx := x + (k - 0.5) * th * 0.3
-			draw_line(Vector2(vx, y - th * 0.72), Vector2(vx + 4.0, y - th * (0.3 + 0.15 * k)), colour.lightened(0.15), 2.0, true)
-
-	func _palm(x: float, y: float, th: float, colour: Color, r: float) -> void:
-		var lean := (r - 0.5) * th * 0.25
-		var top := Vector2(x + lean, y - th)
-		var trunk := PackedVector2Array()
-		for k in 9:
-			var t := k / 8.0
-			trunk.append(Vector2(x, y).lerp(top, t) + Vector2(sin(t * PI) * th * 0.05, 0))
-		draw_polyline(trunk, Color("#8a6a45"), maxf(3.0, th * 0.05), true)
-		for k in 7:
-			var angle := -PI + PI * k / 6.0 + 0.15 * sin(scenery.time() * 0.6 + r * 4.0)
-			# Each frond arcs up then droops at the tip.
-			var dir := Vector2(cos(angle), sin(angle) * 0.45 + 0.3)
-			var tip := top + dir * th * 0.36 + Vector2(0, th * 0.08)
-			var mid := top + dir * th * 0.2 + Vector2(0, -th * 0.05)
-			# A thick curved stroke rather than a filled shape: at some angles
-			# a four-point leaf folds over itself and can't be filled.
-			var shade := colour.darkened(0.08 * (k % 2))
-			draw_polyline(PackedVector2Array([top, mid, tip]), shade, th * 0.075, true)
-			draw_polyline(PackedVector2Array([top.lerp(mid, 0.5), mid, mid.lerp(tip, 0.6)]), shade, th * 0.11, true)
-		draw_circle(top, th * 0.035, Color("#6b4f33"), true, -1.0, true)
-
-	func _mountain(x: float, y: float, th: float, w: float, colour: Color, snow: bool) -> void:
-		var peak := Vector2(x, y - th)
-		draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.6, y + 2.0), peak, Vector2(x + w * 0.6, y + 2.0)]), colour)
-		draw_colored_polygon(PackedVector2Array([peak, Vector2(x + w * 0.6, y + 2.0), Vector2(x + w * 0.12, y + 2.0)]), colour.darkened(0.1))
-		if snow:
-			var s := Color(0.96, 0.98, 1.0)
-			var k := 0.3
-			# A jagged lower edge, with every point inside the slopes so the
-			# outline never crosses itself.
-			draw_colored_polygon(PackedVector2Array([
-				peak, peak + Vector2(w * 0.6 * k, th * k), peak + Vector2(w * 0.1, th * k * 0.8),
-				peak + Vector2(0, th * k), peak + Vector2(-w * 0.08, th * k * 0.78), peak + Vector2(-w * 0.6 * k, th * k)]), s)
-
-	## A flat-topped desert rock.
-	func _mesa(x: float, y: float, th: float, w: float, colour: Color) -> void:
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(x - w * 0.7, y + 2.0), Vector2(x - w * 0.45, y - th), Vector2(x + w * 0.45, y - th), Vector2(x + w * 0.7, y + 2.0)]), colour)
-		draw_rect(Rect2(x - w * 0.45, y - th, w * 0.9, th * 0.12), colour.lightened(0.12))
-		draw_rect(Rect2(x - w * 0.6, y - th * 0.45, w * 1.2, th * 0.06), colour.darkened(0.12))
-
-	func _cactus(x: float, y: float, th: float, colour: Color, r: float) -> void:
-		var w := th * 0.16
-		var body := UI.box(colour, Color.TRANSPARENT, int(w * 0.5))
-		draw_style_box(body, Rect2(x - w * 0.5, y - th, w, th))
-		var arm_y := y - th * (0.45 + 0.2 * r)
-		draw_style_box(body, Rect2(x - w * 1.5, arm_y - th * 0.3, w * 0.7, th * 0.32))
-		draw_rect(Rect2(x - w * 1.5, arm_y - w * 0.35, w * 1.2, w * 0.6), colour)
-		draw_style_box(body, Rect2(x + w * 0.8, arm_y - th * 0.15, w * 0.7, th * 0.25))
-		draw_rect(Rect2(x + w * 0.3, arm_y + th * 0.02, w * 1.2, w * 0.6), colour)
-
-	## A low mound along the bottom edge (snow drifts, moon dust).
-	## Whether something at `x` (this chunk's space), `reach` wide either
-	## side, would stand in the scenery's front_gap.
-	func _in_gap(x: float, reach: float) -> bool:
-		var gap := scenery.front_gap
-		if gap.y <= gap.x:
-			return false
-		var at := position.x + x
-		return at + reach > gap.x and at - reach < gap.y
-
-	## A leaf from `base` along `angle`, `length` long and `width` across at
-	## its widest, curving sideways by `bend` (a share of its length). Both
-	## edges run steadily from base to tip, so the outline never crosses.
-	func _leaf(base: Vector2, angle: float, length: float, width: float, bend: float, colour: Color) -> void:
-		var dir := Vector2(cos(angle), sin(angle))
-		var side := Vector2(-dir.y, dir.x)
-		var left := PackedVector2Array()
-		var right := PackedVector2Array()
-		var spine := PackedVector2Array([base])
-		for k in range(1, 8):
-			var t := k / 8.0
-			var c := base + dir * length * t + side * length * bend * t * t
-			var half := width * 0.5 * sin(t * PI) * (1.0 - 0.25 * t)
-			left.append(c + side * half)
-			right.append(c - side * half)
-			spine.append(c)
-		var tip := base + dir * length + side * length * bend
-		spine.append(tip)
-		var pts := PackedVector2Array([base])
-		pts.append_array(left)
-		pts.append(tip)
-		right.reverse()
-		pts.append_array(right)
-		draw_colored_polygon(pts, colour)
-		draw_polyline(spine, colour.lightened(0.16), maxf(1.0, width * 0.05), true)
-
-	## A clump of big leaves fanning up from the bottom edge.
-	func _undergrowth(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
-		var t := scenery.time()
-		var count := 4 + int(r * 3.0)
-		for k in count:
-			var share := (k + 0.5) / count - 0.5
-			var sway := sin(t * 0.9 + r * 5.0 + k * 1.3) * 0.06
-			var length := h * (0.75 + 0.35 * Scenery._hash(k, r * 10.0))
-			_leaf(Vector2(x + share * h * 0.5, bottom + h * 0.08), -PI * 0.5 + share * 1.9 + sway, length, length * 0.4, share * 0.25,
-				colour.darkened(0.08 * (k % 2)))
-
-	## A vine hanging from the top edge with leaves down its length.
-	func _vine(x: float, top: float, length: float, colour: Color, r: float) -> void:
-		var sway := sin(scenery.time() * 0.7 + r * 4.0) * length * 0.05
-		var pts := PackedVector2Array()
-		for k in 13:
-			var t := k / 12.0
-			pts.append(Vector2(x + sin(t * 3.0 + r * 6.0) * length * 0.05 + sway * t * t, top - 2.0 + length * t))
-		draw_polyline(pts, colour.darkened(0.2), maxf(2.0, length * 0.012), true)
-		var leaf := clampf(length * 0.14, 14.0, 48.0)
-		for k in range(2, 13, 2):
-			var out := 1.0 if k % 4 == 0 else -1.0
-			_leaf(pts[k], PI * 0.5 - out * 0.95, leaf, leaf * 0.48, out * 0.1, colour.darkened(0.06 * (k % 3)))
-		_leaf(pts[12], PI * 0.5 + 0.3, leaf * 1.1, leaf * 0.5, -0.08, colour)
-		_leaf(pts[12], PI * 0.5 - 0.35, leaf, leaf * 0.48, 0.08, colour.darkened(0.08))
-
-	## A tall leafy plant growing up from the bottom edge, close enough to
-	## pass in front of the walker (but never inside the front_gap).
-	func _stalk(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
-		if _in_gap(x, h * 0.45):
+		var look := scenery._holiday
+		if look == null:
 			return
-		var lean := (r - 0.5) * h * 0.3 + sin(scenery.time() * 0.8 + r * 5.0) * h * 0.03
-		var stem := PackedVector2Array()
-		for k in 11:
-			var t := k / 10.0
-			stem.append(Vector2(x + lean * t * t, bottom + 10.0 - (h + 10.0) * t))
-		draw_polyline(stem, colour.darkened(0.15), maxf(4.0, h * 0.025), true)
-		for k in 4:
-			var at := stem[3 + k * 2]
-			var out := 1.0 if k % 2 == 0 else -1.0
-			var length := h * (0.34 - 0.04 * k)
-			_leaf(at, -PI * 0.5 + out * (1.15 - 0.1 * k), length, length * 0.42, out * 0.14, colour.darkened(0.05 * k))
-		_leaf(stem[10], -PI * 0.5 + (r - 0.5) * 0.5, h * 0.22, h * 0.09, 0.05, colour)
-
-	func _drift(x: float, bottom: float, h: float, colour: Color) -> void:
-		draw_set_transform(Vector2(x, bottom), 0.0, Vector2(1.0, h / 40.0))
-		draw_circle(Vector2.ZERO, 40.0, colour, true, -1.0, true)
-		draw_circle(Vector2(34, 8), 30.0, colour, true, -1.0, true)
-		draw_set_transform(Vector2.ZERO)
-
+		var size := scenery.size
+		var walked := float(App.state.active.elapsed(App.now())) if App.state.active else scenery.time()
+		var depth := clampf(walked / maxf(60.0, look.snow_pile_minutes * 60.0), 0.0, 1.0)
+		var high := size.y * look.snow_pile_height * (0.15 + 0.85 * depth)
+		var g := scenery.ground_layer()
+		var moved := scenery.scroll * float(g.get("parallax", 1.0))
+		var pts := PackedVector2Array()
+		var x := -16.0
+		while x <= size.x + 16.0:
+			pts.append(Vector2(x, size.y - high * (0.7 + 0.3 * Scenery._noise((x + moved) / 260.0, 5.0))))
+			x += 16.0
+		var top := pts.duplicate()
+		pts.append(Vector2(size.x + 16.0, size.y + 2.0))
+		pts.append(Vector2(-16.0, size.y + 2.0))
+		var light := scenery.tint().lightened(0.25)
+		draw_colored_polygon(pts, Color(0.93, 0.95, 1.0) * Color(light, 1.0))
+		draw_polyline(top, Color(1, 1, 1) * Color(light, 1.0), 3.0, true)
 
 
 ## The sky behind everything, with the sun or moon on its way across:
@@ -821,6 +629,16 @@ class _Fx extends Node2D:
 				var glow := (0.4 + 0.6 * absf(sin(t * 1.3 + i * 2.1))) * flies
 				draw_circle(base + drift, 6.0, Color(1.0, 0.92, 0.5, 0.15 * glow))
 				draw_circle(base + drift, 2.2, Color(1.0, 0.95, 0.6, glow))
+		# Cherry blossom petals drifting down and across.
+		if fx.has("petals"):
+			var petal := Color("#f6c6d4") * Color(scenery.tint(), 1.0)
+			for i in 40:
+				var fall := fposmod(Scenery._hash(i, 21.0) * size.y + t * (24.0 + 20.0 * Scenery._hash(i, 22.0)), size.y + 20.0) - 10.0
+				var x := fposmod(Scenery._hash(i, 23.0) * size.x - t * 30.0 + sin(t * 1.2 + i) * 16.0, size.x + 20.0) - 10.0
+				var spin := t * 2.0 + i
+				draw_set_transform(Vector2(x, fall), spin, Vector2(1.0, 0.55 + 0.45 * absf(sin(spin))))
+				draw_circle(Vector2.ZERO, 3.2, petal, true, -1.0, true)
+			draw_set_transform(Vector2.ZERO)
 		var gust := 0.6 + 0.4 * sin(t * 0.45)
 		var area := clampf(size.x * size.y / (720.0 * 720.0), 0.5, 3.0)
 		var unit := minf(size.x, size.y) / 720.0

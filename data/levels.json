@@ -1,23 +1,12 @@
 {
-	"_doc": "Levels and what they unlock. XP comes from the walk log: 'xp_per_minute' for every minute focused, plus 'gift_bonus' for the gift a walk brought. Going from level n to n+1 takes xp_base + xp_growth * (n - 1) XP, so level 2 is at 60 XP (an hour), level 3 at 140, and so on; levels carry on past the last reward. Each reward unlocks an animal or a place at that level. Animals and places not listed are unlocked from the start.",
+	"_doc": "Levels. 'xp_per_minute' XP for every minute focused, plus 'gift_bonus' for the gift a walk brought; your XP total is saved, so a change here counts from the next walk. Going from level n to n+1 takes xp_base + xp_growth * (n - 1) XP, so level 2 is at 60 XP (an hour), level 3 at 140, and so on; your level is worked out from these each time, so changing them moves everyone's level at once. What each level unlocks is the 'unlock' on each animal (animals.json) and place (biomes.json).",
 	"xp_per_minute": 1,
-	"gift_bonus": {"common": 5, "rare": 10, "epic": 20, "legendary": 40},
+	"gift_bonus": {
+		"common": 5,
+		"rare": 15,
+		"epic": 45,
+		"legendary": 60
+	},
 	"xp_base": 60,
-	"xp_growth": 20,
-	"rewards": [
-		{"level": 2,  "type": "animal", "id": "spaniel"},
-		{"level": 3,  "type": "place",  "id": "forest"},
-		{"level": 4,  "type": "animal", "id": "bird"},
-		{"level": 5,  "type": "animal", "id": "cockapoo"},
-		{"level": 6,  "type": "place",  "id": "beach"},
-		{"level": 7,  "type": "animal", "id": "black_cat"},
-		{"level": 8,  "type": "animal", "id": "snail"},
-		{"level": 9,  "type": "place",  "id": "desert"},
-		{"level": 10, "type": "animal", "id": "labrador"},
-		{"level": 11, "type": "place",  "id": "jungle"},
-		{"level": 12, "type": "animal", "id": "bernese"},
-		{"level": 13, "type": "place",  "id": "tundra"},
-		{"level": 14, "type": "animal", "id": "bear"},
-		{"level": 15, "type": "place",  "id": "moon"}
-	]
+	"xp_growth": 30
 }

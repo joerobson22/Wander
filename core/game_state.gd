@@ -4,13 +4,21 @@ extends RefCounted
 
 ## Character slots, in the order the customise popup lists them (data/cosmetics.json).
 const COSMETIC_SLOTS: Array[String] = [
-	"hat", "hair", "face", "neckwear", "top", "gloves", "walking_stick", "trousers", "shoes",
+	"hat", "hair", "face", "facial_hair", "neckwear", "top", "gloves", "walking_stick", "trousers", "shoes",
 ]
 const SHELF_SIZE := 3
 
 var profile: Dictionary = default_profile()
 var projects: Array[ProjectData] = []
-var sessions: Array[FocusSession] = []
+## Every pet ever adopted, rehomed ones too (they still show on projects).
+var pets: Array[PetData] = []
+## Focus time by local day (Stats.local_day): {day: {"projects": {project id:
+## seconds}, "pets": {pet id: seconds}, "places": {place id: seconds}}}.
+## Every stat is worked out from these; walks aren't kept one by one.
+var days: Dictionary = {}
+## Every XP point earned. Levels are worked out from it (Levels.level_for),
+## so changing the level thresholds moves everyone's level at once.
+var xp: int = 0
 ## gift_id -> how many the player has. A gift stays listed at 0 once traded
 ## away, so it still shows as found.
 var inventory: Dictionary = {}
@@ -26,20 +34,23 @@ static func default_profile() -> Dictionary:
 	return {
 		"username": "",
 		"institution": "",
+		# Date of birth, "YYYY-MM-DD" ("" for accounts made before it was asked).
+		"dob": "",
+		# When the privacy policy and terms were agreed to (0 = before they were asked).
+		"agreed_unix": 0,
 		"created_unix": 0,
 		"skin_tone": 0,
 		"hair_tone": 0,
+		# A picked colour (hex) used instead of the swatch; "" for none.
+		"skin_colour": "",
+		"hair_colour": "",
 		# slot -> equipped item id ("" = the slot's default look).
 		"cosmetics": cosmetics,
 		# Favourite gifts on the gift shelf, left to right ("" = empty spot).
 		"shelf": empty_shelf(),
 		"walks_since_epic": 0,
-		# Totals carried over from a v1 save, which kept no session history.
-		"legacy_total_seconds": 0,
-		"legacy_longest_seconds": 0,
-		"legacy_best_week_seconds": 0,
-		# A new save slot asks for a name and where you study first.
-		"setup_pending": false,
+		# Walks finished, so the home screen can pick a new line after each.
+		"walks": 0,
 	}
 
 
@@ -48,10 +59,9 @@ static func default_settings() -> Dictionary:
 		"sound": true,
 		"ambience": true,
 		"reduce_motion": false,
-		"theme": "auto",
+		# UI.VISIONS: colours for colour blindness.
+		"vision": "off",
 		"keep_screen_on": true,
-		# 0 = open-ended walk.
-		"walk_goal_seconds": 0,
 		"walk_biome": "lake",
 	}
 
@@ -82,24 +92,67 @@ func completed_projects() -> Array[ProjectData]:
 	return out
 
 
+func pet(id: String) -> PetData:
+	for p in pets:
+		if p.id == id:
+			return p
+	return null
+
+
+## The pets that are still yours (not rehomed), oldest first.
+func active_pets() -> Array[PetData]:
+	var out: Array[PetData] = []
+	out.assign(pets.filter(func(p): return not p.is_rehomed()))
+	return out
+
+
+## Adds `seconds` of focus on a project, with a pet, in a place, to day `day`.
+func log_focus(day: int, project_id: String, pet_id: String, place_id: String, seconds: int) -> void:
+	if seconds <= 0:
+		return
+	if not days.has(day):
+		days[day] = {"projects": {}, "pets": {}, "places": {}}
+	var d: Dictionary = days[day]
+	for part in [["projects", project_id], ["pets", pet_id], ["places", place_id]]:
+		d[part[0]][part[1]] = int(d[part[0]].get(part[1], 0)) + seconds
+
+
+func total_seconds() -> int:
+	var total := 0
+	for d in days.values():
+		for s in d["projects"].values():
+			total += int(s)
+	return total
+
+
 func project_seconds(id: String) -> int:
 	var total := 0
-	var p := project(id)
-	if p:
-		total += p.legacy_seconds
-	for s in sessions:
-		if s.project_id == id:
-			total += s.focus_seconds
+	for d in days.values():
+		total += int(d["projects"].get(id, 0))
 	return total
+
+
+## Seconds walked with a pet, ever.
+func pet_seconds(id: String) -> int:
+	var total := 0
+	for d in days.values():
+		total += int(d["pets"].get(id, 0))
+	return total
+
+
+## {place id: seconds} focused in each place, ever.
+func place_seconds() -> Dictionary:
+	var out := {}
+	for d in days.values():
+		for id in d["places"]:
+			out[id] = int(out.get(id, 0)) + int(d["places"][id])
+	return out
 
 
 ## gift_id -> how many walks on this project brought that gift.
 func project_gifts(id: String) -> Dictionary:
-	var out := {}
-	for s in sessions:
-		if s.project_id == id and s.gift_id != "":
-			out[s.gift_id] = int(out.get(s.gift_id, 0)) + 1
-	return out
+	var p := project(id)
+	return p.gifts if p else {}
 
 
 func gift_count(gift_id: String) -> int:

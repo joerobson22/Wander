@@ -42,7 +42,7 @@ func test_lists() -> void:
 
 
 func test_filling_in() -> void:
-	eq(Text.t("choose_focus.say_hello", {"pet": "Biscuit"}), "Say hello to Biscuit")
+	eq(Text.t("choose_focus.rehomed", {"pet": "Biscuit"}), "Biscuit has a new home")
 	eq(Text.count("stats.days", 1), "1 day")
 	eq(Text.count("stats.days", 3), "3 days")
 	eq(Text.count("walk.minutes", 1), "1 minute")

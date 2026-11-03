@@ -73,23 +73,15 @@ static func chances(seconds: int, table: Dictionary) -> Dictionary:
 	return out
 
 
-## The chances as whole percentages.
-static func percentages_for(seconds: int, table: Dictionary) -> Dictionary:
-	var c := chances(seconds, table)
-	var out := {}
-	for r in RARITIES:
-		out[r] = roundi(100.0 * float(c[r]))
-	return out
-
-
 static func is_pity_ready(seconds: int, walks_since_epic: int, table: Dictionary) -> bool:
 	return seconds >= int(table.get("pity_min_seconds", 1800)) \
 		and walks_since_epic >= int(table.get("pity_walks", 8))
 
 
 ## Returns {"rarity", "gift_id", "pity"} or an empty Dictionary when no gift is earned.
+## The gift comes from `gift_table` (the walking animal's, Content.table_of);
 ## `gifts` is the list of gift dictionaries from data/gifts.json.
-static func roll(seconds: int, animal_id: String, walks_since_epic: int, table: Dictionary,
+static func roll(seconds: int, gift_table: String, walks_since_epic: int, table: Dictionary,
 		gifts: Array, rng: RandomNumberGenerator) -> Dictionary:
 	var weights := weights_for(seconds, table)
 	if weights.is_empty():
@@ -107,7 +99,7 @@ static func roll(seconds: int, animal_id: String, walks_since_epic: int, table: 
 		weights = {floor_rarity: 1}
 
 	var rarity := _weighted_pick(candidates, weights, rng)
-	var pool: Array = gifts.filter(func(g): return g["animal"] == animal_id and g["rarity"] == rarity)
+	var pool: Array = gifts.filter(func(g): return g["table"] == gift_table and g["rarity"] == rarity)
 	if pool.is_empty():
 		return {}
 	var gift: Dictionary = pool[rng.randi_range(0, pool.size() - 1)]
@@ -123,7 +115,7 @@ static func next_pity_count(current: int, seconds: int, rolled_rarity: String, t
 	return current
 
 
-## Swaps `cost` of a gift for one of the next rarity from the same animal,
+## Swaps `cost` of a gift for one of the next rarity from the same table,
 ## changing `inventory`. Returns the new gift's id, or "" if it can't trade.
 static func trade(inventory: Dictionary, gift_id: String, gifts: Array, cost: int) -> String:
 	if cost <= 0 or int(inventory.get(gift_id, 0)) < cost:
@@ -135,7 +127,7 @@ static func trade(inventory: Dictionary, gift_id: String, gifts: Array, cost: in
 	var i := RARITIES.find(str(g["rarity"]))
 	if i < 0 or i >= RARITIES.size() - 1:
 		return ""
-	var next: Array = gifts.filter(func(x): return x["animal"] == g["animal"] and x["rarity"] == RARITIES[i + 1])
+	var next: Array = gifts.filter(func(x): return x["table"] == g["table"] and x["rarity"] == RARITIES[i + 1])
 	if next.is_empty():
 		return ""
 	var new_id: String = next[0]["id"]

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="HolidayLook" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/holiday_look.gd" id="1"]
+[ext_resource type="PackedScene" path="res://art/holidays/birthday/menu.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+menu_scene = ExtResource("2")
+hat = "party_hat"
+orb_colours = PackedColorArray(1, 0.353, 0.431, 1, 1, 0.604, 0.235, 1, 1, 0.831, 0.278, 1, 0.373, 0.812, 0.416, 1, 0.247, 0.706, 0.949, 1, 0.478, 0.424, 0.941, 1, 0.831, 0.416, 0.91, 1)

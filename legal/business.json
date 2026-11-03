@@ -1,0 +1,12 @@
+{
+	"_doc": "Who runs the app and how to reach them. Shown in the privacy policy, the terms and the Data popup: {name} in legal/*.md is replaced by the value of \"name\" here. Fill these in before release; see legal/README.md.",
+	"name": "Joe",
+	"trading_as": "",
+	"email": "hello@example.com",
+	"address": "Street, Town, Postcode, United Kingdom",
+	"country": "England and Wales",
+	"website": "https://example.com",
+	"company_number": "",
+	"vat_number": "",
+	"policy_updated": "1 November 2026"
+}

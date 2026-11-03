@@ -1,0 +1,62 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="Moon" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Planet" type="Node2D" parent="."]
+position = Vector2(0, 144.0)
+script = ExtResource("2_layer")
+kind = "planet"
+parallax = 0.01
+y = 0.2
+height = 0.09
+colour = Color(0.3098, 0.5608, 0.8392, 1)
+pattern = 61
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 374.4)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.08
+y = 0.52
+height = 0.14
+colour = Color(0.4902, 0.502, 0.5412, 1)
+pattern = 62
+wavelength = 300
+
+[node name="Hills2" type="Node2D" parent="."]
+position = Vector2(0, 446.4)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.2
+y = 0.62
+height = 0.1
+colour = Color(0.6039, 0.6157, 0.651, 1)
+pattern = 63
+wavelength = 220
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.7176, 0.7255, 0.7529, 1)
+pattern = 64
+craters = true
+path_colour = Color(0.7843, 0.7922, 0.8157, 1)
+
+[node name="Drifts" type="Node2D" parent="."]
+position = Vector2(0, 705.6)
+script = ExtResource("2_layer")
+kind = "drifts"
+parallax = 1.4
+y = 0.98
+height = 0.04
+colour = Color(0.6039, 0.6157, 0.651, 1)
+pattern = 65
+spacing = 140

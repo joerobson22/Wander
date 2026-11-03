@@ -72,24 +72,30 @@ func test_remove_deletes_the_save_but_never_the_current_slot() -> void:
 func test_summary() -> void:
 	var s := GameState.new()
 	s.profile["username"] = "Joe"
-	s.profile["legacy_total_seconds"] = 600
-	var f := FocusSession.new()
-	f.focus_seconds = 3000
-	s.sessions.append(f)
+	s.log_focus(100, "a", "pet", "lake", 3000)
+	s.log_focus(101, "b", "pet", "forest", 600)
 	var rows := [{"earned": true}, {"earned": false}, {"earned": false}]
 	var out := SaveSlots.summary(s, rows)
 	eq(out["name"], "Joe")
-	eq(out["focused_seconds"], 3600, "walks plus v1 time")
+	eq(out["focused_seconds"], 3600, "every day's focus")
 	eq(out["achievements"], 33, "whole percent earned")
 	eq(SaveSlots.summary(s, [])["achievements"], 0, "no achievements")
 
 
-func test_setup_flag_survives_a_save() -> void:
-	var s := GameState.new()
-	check(not s.profile["setup_pending"], "off by default")
-	s.profile["setup_pending"] = true
-	check(SaveSystem.from_dict(SaveSystem.to_dict(s)).profile["setup_pending"] == true)
-	check(SaveSystem.from_dict({"profile": {}}).profile["setup_pending"] == false, "old saves aren't new accounts")
+## Logging out is remembered, so the create account screen is still up
+## next time the app opens.
+func test_logged_out_survives_a_restart() -> void:
+	_cleanup()
+	check(not SaveSlots.read_index(INDEX)["signed_out"], "logged in by default")
+	eq(SaveSlots.write_index({"current": "main", "slots": ["main"], "signed_out": true}, INDEX), OK)
+	check(SaveSlots.read_index(INDEX)["signed_out"], "then logged out")
+	SaveSlots.write_index({"current": "main", "slots": ["main"]}, INDEX)
+	check(not SaveSlots.read_index(INDEX)["signed_out"], "an index without it is logged in")
+
+
+func test_old_half_made_accounts_lose_their_flag() -> void:
+	var s := SaveSystem.from_dict({"version": SaveSystem.CURRENT_VERSION, "profile": {"setup_pending": true}})
+	check(not s.profile.has("setup_pending"))
 
 
 func test_no_friends_means_an_empty_leaderboard() -> void:

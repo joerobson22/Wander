@@ -41,7 +41,7 @@ func refresh() -> void:
 static func ids() -> Array:
 	var have: Array = App.state.inventory.keys().filter(func(id): return not Content.gift(id).is_empty() and App.state.gift_count(id) > 0)
 	return Collection.sort_gifts(have, str(App.state.settings.get(SETTING, DEFAULT)), bool(App.state.settings.get(SETTING + "_reversed", false)),
-		Content.gifts, Content.animals)
+		Content.gifts, Content.tables)
 
 
 ## The "Sort by" menu for it. A new order just re-fills the grids (every

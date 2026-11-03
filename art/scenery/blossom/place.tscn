@@ -1,0 +1,74 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="CherryBlossomForest" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Mountains" type="Node2D" parent="."]
+position = Vector2(0, 360.0)
+script = ExtResource("2_layer")
+kind = "mountains"
+parallax = 0.04
+y = 0.5
+height = 0.24
+colour = Color(0.7216, 0.7059, 0.8, 1)
+pattern = 101
+spacing = 260
+snow = true
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 403.2)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.1
+y = 0.56
+height = 0.1
+colour = Color(0.6588, 0.749, 0.6275, 1)
+pattern = 102
+wavelength = 460
+
+[node name="Blossoms" type="Node2D" parent="."]
+position = Vector2(0, 460.8)
+script = ExtResource("2_layer")
+kind = "blossoms"
+parallax = 0.22
+y = 0.64
+height = 0.24
+colour = Color(0.9373, 0.7216, 0.7843, 1)
+pattern = 103
+spacing = 120
+
+[node name="Blossoms2" type="Node2D" parent="."]
+position = Vector2(0, 525.6)
+script = ExtResource("2_layer")
+kind = "blossoms"
+parallax = 0.5
+y = 0.73
+height = 0.27
+colour = Color(0.9059, 0.6039, 0.698, 1)
+pattern = 104
+spacing = 260
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.5608, 0.6902, 0.4157, 1)
+pattern = 105
+path_colour = Color(0.8863, 0.8039, 0.7059, 1)
+
+[node name="Fronds" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "fronds"
+parallax = 1.4
+y = 0.97
+height = 0.08
+colour = Color(0.3725, 0.5412, 0.2902, 1)
+pattern = 106
+spacing = 70

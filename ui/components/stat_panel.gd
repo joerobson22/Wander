@@ -3,7 +3,7 @@ extends PanelContainer
 ## A card of headline numbers side by side, each in an equal-width cell: a
 ## picture on top (a ProgressRing, or a badge() for a number that isn't a
 ## share of anything), an optional big value, a name, and one muted line
-## under it. Gifts and Completed both use it, so their stats always match.
+## under it. Gifts and Projects both use it, so their stats always match.
 ## On a narrow screen `columns` can wrap the cells onto more rows.
 
 var _grid: GridContainer

@@ -28,6 +28,14 @@ jobs:
 
       - name: Smoke run (every screen)
         run: |
-          ./godot --headless --path . -s tests/smoke.gd 2>&1 | tee smoke.log
+          # A script error mid-run stops the smoke script without quitting
+          # Godot, so cap it rather than wait for the job to time out.
+          timeout 600 ./godot --headless --path . -s tests/smoke.gd 2>&1 | tee smoke.log
           grep -q "SMOKE OK" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error|triangulation failed" smoke.log
+
+      - name: Main screens in light and dark
+        run: |
+          timeout 300 ./godot --headless --path . -s tests/style_shots.gd 2>&1 | tee styles.log
+          grep -q "STYLE SHOTS OK" styles.log
+          ! grep -E "SCRIPT ERROR|Parse Error" styles.log

@@ -127,8 +127,8 @@ static func _row(r: Dictionary) -> Control:
 
 ## An achievement's disc: in colour once earned (green for hours, gold for
 ## every gift, blue for an animal's set), grey before, with a ring round it
-## showing how far along you are. Hours and gifts have an icon; animal sets
-## show the animal.
+## showing how far along you are. Hours and gifts have an icon (or your own
+## assets/icons/achievements/<id>.svg, as drawn); animal sets show the animal.
 class Disc extends Control:
 	var info: Dictionary
 	var diameter := 52.0
@@ -150,6 +150,12 @@ class Disc extends Control:
 		else:
 			var px := int(side * 0.46)
 			var icon := UI.icon_rect(str(row["icon"]), px, Color.WHITE if row["earned"] else UI.INK_FAINT)
+			# Your own full-colour picture for it, if you've drawn one.
+			var own := Icons.drawn("achievements/" + str(row["id"]), int(side * 0.62))
+			if own:
+				px = int(side * 0.62)
+				icon.texture = own
+				icon.modulate = Color.WHITE if row["earned"] else Color(1, 1, 1, 0.4)
 			icon.position = Vector2(side - px, side - px) * 0.5
 			add_child(icon)
 		UI.ignore_mouse(self)
@@ -161,7 +167,7 @@ class Disc extends Control:
 			var fill := UI.ACCENT
 			if info["kind"] == "all_gifts":
 				fill = Content.rarity_colour("legendary")
-			elif info["kind"] == "animal":
+			elif info["kind"] == "table":
 				fill = Content.rarity_colour("rare").lerp(Color.WHITE, 0.55)
 			draw_circle(c, r, fill, true, -1.0, true)
 			draw_arc(c, r - 3.0, 0, TAU, 40, Color(1, 1, 1, 0.6), 2.0, true)
@@ -245,6 +251,6 @@ class Bar extends Control:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
-		draw_style_box(UI.box(UI.SURFACE_SOFT, Color.TRANSPARENT, 3), Rect2(Vector2.ZERO, size))
+		draw_style_box(UI.bar_box(UI.SURFACE_SOFT, 3), Rect2(Vector2.ZERO, size))
 		if share > 0.0:
 			draw_style_box(UI.box(UI.ACCENT, Color.TRANSPARENT, 3), Rect2(Vector2.ZERO, Vector2(maxf(size.y, size.x * share), size.y)))

@@ -84,7 +84,7 @@ func animate_to(to_xp: int) -> void:
 		var t := Motion.method(self, "fill", _set_xp, _xp, float(target), clampf(1.8 * share, 0.3, 1.8))
 		await t.finished
 		if target == boundary:
-			Audio.play("levelup", 1.0, -4.0)
+			Audio.play("level_up", 1.0, -4.0, "levelup")
 			Motion.pop(_bar, 0.12, 0.4)
 			Motion.pop(_badge, 0.35, 0.5)
 			await get_tree().create_timer(Motion.time(0.45)).timeout

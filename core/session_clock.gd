@@ -4,27 +4,23 @@ extends RefCounted
 ## timestamps, so backgrounding, sleep or the app being killed can't corrupt it.
 ## Every method takes `now` (unix seconds) so it can be tested deterministically.
 
-## A walk left running (e.g. the app was killed overnight) is capped at this.
-const MAX_SESSION_SECONDS := 12 * 60 * 60
-
 var project_id: String = ""
+var pet_id: String = ""
 var start_unix: int = 0
 var paused_total: int = 0
 ## 0 while running.
 var pause_started_unix: int = 0
-## How long the player meant to walk; 0 for an open-ended walk.
-var goal_seconds: int = 0
 var biome_id: String = "lake"
 ## The last moment the app was known to be open during this walk (kept up
 ## to date while it runs); 0 if never recorded.
 var last_seen_unix: int = 0
 
 
-static func begin(p_project_id: String, now: int, p_goal_seconds: int = 0, p_biome_id: String = "lake") -> SessionClock:
+static func begin(p_project_id: String, p_pet_id: String, now: int, p_biome_id: String = "lake") -> SessionClock:
 	var c := SessionClock.new()
 	c.project_id = p_project_id
+	c.pet_id = p_pet_id
 	c.start_unix = now
-	c.goal_seconds = p_goal_seconds
 	c.biome_id = p_biome_id
 	return c
 
@@ -47,7 +43,7 @@ func resume(now: int) -> void:
 func elapsed(now: int) -> int:
 	var end := pause_started_unix if is_paused() else now
 	# Clamp so a clock that jumps backwards never produces negative time.
-	return clampi(end - start_unix - paused_total, 0, MAX_SESSION_SECONDS)
+	return maxi(0, end - start_unix - paused_total)
 
 
 ## When a walk found still running at launch really stopped: the last time
@@ -63,10 +59,10 @@ func left_at(saved_unix: int, now: int) -> int:
 func to_dict() -> Dictionary:
 	return {
 		"project_id": project_id,
+		"pet_id": pet_id,
 		"start_unix": start_unix,
 		"paused_total": paused_total,
 		"pause_started_unix": pause_started_unix,
-		"goal_seconds": goal_seconds,
 		"biome_id": biome_id,
 		"last_seen_unix": last_seen_unix,
 	}
@@ -75,15 +71,19 @@ func to_dict() -> Dictionary:
 static func from_dict(d: Dictionary) -> SessionClock:
 	var c := SessionClock.new()
 	c.project_id = str(d.get("project_id", ""))
+	c.pet_id = str(d.get("pet_id", ""))
 	c.start_unix = int(d.get("start_unix", 0))
 	c.paused_total = int(d.get("paused_total", 0))
 	c.pause_started_unix = int(d.get("pause_started_unix", 0))
-	c.goal_seconds = int(d.get("goal_seconds", 0))
 	c.biome_id = str(d.get("biome_id", "lake"))
 	c.last_seen_unix = int(d.get("last_seen_unix", 0))
 	return c
 
 
+## "01:02:05", and from a day on "1d 02:13:05".
 static func format(seconds: int) -> String:
 	@warning_ignore("integer_division")
-	return "%02d:%02d:%02d" % [seconds / 3600, (seconds / 60) % 60, seconds % 60]
+	var days := seconds / 86400
+	@warning_ignore("integer_division")
+	var clock := "%02d:%02d:%02d" % [(seconds / 3600) % 24, (seconds / 60) % 60, seconds % 60]
+	return "%dd %s" % [days, clock] if days > 0 else clock

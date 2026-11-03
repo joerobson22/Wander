@@ -16,10 +16,10 @@ static func file(id: String, index_path: String = INDEX_PATH) -> String:
 	return dir.path_join(SaveSystem.SAVE_PATH.get_file() if id == FIRST else "save_%s.json" % id)
 
 
-## {current: slot id, slots: [slot ids, oldest first]}. With no index yet,
-## just the first slot.
+## {current: slot id, slots: [slot ids, oldest first], signed_out: whether
+## you logged out}. With no index yet, just the first slot.
 static func read_index(index_path: String = INDEX_PATH) -> Dictionary:
-	var out := {"current": FIRST, "slots": [FIRST]}
+	var out := {"current": FIRST, "slots": [FIRST], "signed_out": false}
 	if not FileAccess.file_exists(index_path):
 		return out
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(index_path))
@@ -35,6 +35,7 @@ static func read_index(index_path: String = INDEX_PATH) -> Dictionary:
 	var current := str(parsed.get("current", ""))
 	out["slots"] = slots
 	out["current"] = current if slots.has(current) else slots[0]
+	out["signed_out"] = bool(parsed.get("signed_out", false))
 	return out
 
 
@@ -42,7 +43,7 @@ static func write_index(index: Dictionary, index_path: String = INDEX_PATH) -> E
 	var f := FileAccess.open(index_path, FileAccess.WRITE)
 	if f == null:
 		return FileAccess.get_open_error()
-	f.store_string(JSON.stringify({"current": index["current"], "slots": index["slots"]}, "\t"))
+	f.store_string(JSON.stringify({"current": index["current"], "slots": index["slots"], "signed_out": bool(index.get("signed_out", false))}, "\t"))
 	f.close()
 	return OK
 
@@ -62,7 +63,7 @@ static func remove(index: Dictionary, id: String, index_path: String = INDEX_PAT
 		return false
 	(index["slots"] as Array).erase(id)
 	var path := file(id, index_path)
-	for p in [path, path + ".bak", path + ".tmp"]:
+	for p in [path, path + ".bak", path + ".tmp", path + ".old", path + ".bak.old"]:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(p)
 	return true
@@ -75,7 +76,7 @@ static func summary(state: GameState, achievement_rows: Array) -> Dictionary:
 	var earned := achievement_rows.filter(func(r): return r["earned"]).size()
 	return {
 		"name": str(p.get("username", "")),
-		"look": {"skin_tone": p.get("skin_tone", 0), "hair_tone": p.get("hair_tone", 0), "cosmetics": p.get("cosmetics", {})},
-		"focused_seconds": Stats.total_seconds(state.sessions) + int(p.get("legacy_total_seconds", 0)),
+		"look": {"skin_tone": p.get("skin_tone", 0), "hair_tone": p.get("hair_tone", 0), "skin_colour": p.get("skin_colour", ""), "hair_colour": p.get("hair_colour", ""), "cosmetics": p.get("cosmetics", {})},
+		"focused_seconds": state.total_seconds(),
 		"achievements": roundi(100.0 * earned / achievement_rows.size()) if not achievement_rows.is_empty() else 0,
 	}

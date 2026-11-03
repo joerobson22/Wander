@@ -1,11 +1,10 @@
 class_name AccountSwitcher
 extends RefCounted
-## The "Switch account" popup, opened from settings: every save slot on this
-## device as a card, oldest first, with its face, name, total focus,
-## achievements earned and a red bin to delete it. Tap a card anywhere else
-## to carry on in that slot. The title stays at the top and the + for a new
-## slot at the bottom while the cards scroll between them. A new slot opens
-## on its profile screen, which you can't leave until it's filled in.
+## The "I have an account" popup, opened from the create account screen:
+## every account on this device as a card, oldest first, with its face,
+## name, total focus, achievements earned and a red bin to delete it. Tap a
+## card anywhere else to log back into it, as it was left. The title stays
+## at the top while the cards scroll under it.
 
 const CARD_HEIGHT := 64
 
@@ -16,9 +15,7 @@ static func open() -> Modal:
 	var list := UI.vbox(10)
 	m.body.add_child(list)
 	_fill(list)
-	var add := UI.round_button("plus", Text.t("accounts.new"), _add, UI.ACCENT, UI.ON_COLOUR, 52, false)
-	add.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	m.footer.add_child(add)
+	m.footer.hide()
 	return m
 
 
@@ -29,13 +26,19 @@ static func _fill(list: VBoxContainer) -> void:
 		c.queue_free()
 	var narrow := list.get_viewport_rect().size.x < 480.0 if list.is_inside_tree() else false
 	for row in App.slots():
-		list.add_child(_card(row, narrow, list))
+		# A blank account (a first launch's) has nothing to log back into.
+		if str(row["name"]).strip_edges() != "":
+			list.add_child(_card(row, narrow, list))
+	if list.get_child_count() == 0 and list.is_inside_tree():
+		# The last one's gone: back to creating one.
+		var m := Modal.top()
+		if m:
+			m.close()
 
 
-## One slot: face | name | total focus | achievements | bin (a tick on the
-## one you're in, which can't be deleted). The columns line up card to card.
+## One account: face | name | total focus | achievements | bin. The columns
+## line up card to card.
 static func _card(row: Dictionary, narrow: bool, list: VBoxContainer) -> Control:
-	var current: bool = row["current"]
 	var name := str(row["name"])
 	var card := PanelContainer.new()
 	card.custom_minimum_size.y = CARD_HEIGHT
@@ -44,7 +47,7 @@ static func _card(row: Dictionary, narrow: bool, list: VBoxContainer) -> Control
 	var styles := {}
 	for state in ["normal", "hover"]:
 		var fill: Color = UI.SURFACE_SOFT if state == "normal" else (UI.button_styles(UI.SURFACE_SOFT, 18)["hover"] as StyleBoxFlat).bg_color
-		var b := UI.box(fill, UI.ACCENT if current else Color.TRANSPARENT, 18)
+		var b := UI.box(fill, Color.TRANSPARENT, 18)
 		b.set_border_width_all(2)
 		b.content_margin_left = 10
 		b.content_margin_right = 12
@@ -72,21 +75,8 @@ static func _card(row: Dictionary, narrow: bool, list: VBoxContainer) -> Control
 	UI.ignore_mouse(card)
 
 	var end_size := 32 if narrow else 36
-	if current:
-		var here := UI.panel(UI.ACCENT, 999, 0)
-		here.custom_minimum_size = Vector2.ONE * end_size
-		here.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		here.accessibility_name = Text.t("accounts.current")
-		here.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var tick := UI.icon_rect("check", int(end_size * 0.5), UI.ON_COLOUR)
-		tick.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		tick.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		here.add_child(tick)
-		line.add_child(here)
-	else:
-		line.add_child(UI.round_button("bin", Text.t("accounts.delete", {"who": name if name != "" else Text.t("accounts.this_one")}),
-			_delete.bind(row, list), UI.DANGER, UI.ON_COLOUR, end_size, false))
+	line.add_child(UI.round_button("bin", Text.t("accounts.delete", {"who": name if name != "" else Text.t("accounts.this_one")}),
+		_delete.bind(row, list), UI.DANGER, UI.ON_COLOUR, end_size, false))
 	Press.attach(card).tapped.connect(_switch.bind(row["id"]))
 	return card
 
@@ -107,15 +97,9 @@ static func _stat(icon: String, text: String, width: int, narrow: bool, label: S
 
 
 static func _switch(id: String) -> void:
-	App.switch_slot(id)
+	App.log_in(id)
 	Modal.close_all()
-	App.go("profile")
-
-
-static func _add() -> void:
-	App.add_slot()
-	Modal.close_all()
-	App.go("profile")
+	App.go("focus")
 
 
 static func _delete(row: Dictionary, list: VBoxContainer) -> void:
