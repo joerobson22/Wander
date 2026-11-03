@@ -65,6 +65,14 @@ func _run() -> void:
 	# Long enough for the first frames to settle on a slow machine (CI), so
 	# the map is laid out before the pointer moves over it.
 	await _wait(70)
+	# A first run (no save yet, as on CI) opens on the create account screen;
+	# filling in the sample account leaves it, playing the arrival intro.
+	# The map comes in once that's done.
+	for i in 120:
+		if not main._arriving:
+			break
+		await _wait(5)
+	await _wait(50)
 	if _holidays_only:
 		await _holidays(main)
 		print("SMOKE OK" if not _failed else "SMOKE FAILED")
@@ -1116,7 +1124,8 @@ func _run() -> void:
 	check(arriving._animal.animal_id == setting_off.animal_id and arriving._scenery.biome["id"] == setting_place, "with that pet, in the place picked")
 	await _wait(30)
 	await _shot("set_off_walking_in")
-	check(arriving._walker.position.x < arriving._animal.position.x - 100.0, "you walk in from the left")
+	var home_x: float = _class("res://scenes/choose_focus/choose_focus.gd").walk_spots(arriving.size, arriving._scenery.path_y())["walker"].x
+	check(arriving._walking_in and arriving._walker.position.x < home_x - 1.0, "you walk in from the left (%.0f, on the way to %.0f)" % [arriving._walker.position.x, home_x])
 	for i in 40:
 		if arriving._lead_alpha > 0.9 or app.state.active != null:
 			break
@@ -2025,9 +2034,12 @@ func _accounts(main: Node) -> void:
 			break
 		await _wait(3)
 	check(home_pane._orb.scale.x > 0.99 and main._minimap.modulate.a < 0.05, "the orb grows in once the view's up")
-	await _wait(20)
-	check(home_pane._greeting.modulate.a > 0.5 and home_pane._greeting.visible_characters >= 0 and home_pane._greeting.visible_characters < home_pane._greeting.text.length(),
-		"then the greeting types itself out (%d of %d)" % [home_pane._greeting.visible_characters, home_pane._greeting.text.length()])
+	for i in 120:
+		if home_pane._greeting.modulate.a > 0.3:
+			break
+		await process_frame
+	check(home_pane._greeting.modulate.a > 0.3 and home_pane._hint.modulate.a < 0.05,
+		"then the greeting drops in, before Tap to focus (stage %d)" % home_pane._intro_stage)
 	await _shot("arriving_greeting")
 	check(home_pane._greeting.text.contains("Sam") or not home_pane._greeting.text.contains("{"), "greeting you by your new name")
 	for i in 120:

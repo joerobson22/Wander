@@ -45,6 +45,8 @@ var _buttons: Array[Control] = []
 ## True until you've walked in and set off (see _intro()).
 var _arriving := false
 var _walking_in := false
+## True once you've started walking in (see begin()).
+var _began := false
 var _blocker: Control
 var _pause: Button
 var _sound: Button
@@ -125,6 +127,8 @@ func _intro() -> void:
 	_blocker.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_blocker.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_blocker)
+	# (Still to walk in: a resize keeps you off the edge.)
+	_walking_in = true
 	_walker.position.x = -90.0 * _unit()
 
 
@@ -132,9 +136,9 @@ func _intro() -> void:
 ## the project's name, and a second later you set off together and the
 ## clock starts. (Main calls this when a walk built out of sight comes on.)
 func begin() -> void:
-	if not _arriving or _walking_in or not is_instance_valid(_blocker):
+	if not _arriving or _began:
 		return
-	_walking_in = true
+	_began = true
 	_walker.walking = true
 	# From just off the left edge to your place by your pet, worked out each
 	# frame so a resize mid-way still ends in the right spot.
