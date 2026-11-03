@@ -20,48 +20,61 @@
 		"morning": [
 			"Good morning, {name}",
 			"Morning, {name}. Fresh start.",
-			"Rise and shine, {name}",
-			"Good morning",
+			"Rise and shine, {name}!",
+			"Good morning!",
 			"Morning! The day's wide open.",
 			"Early start? Your pet's already up.",
 			"Morning light, clear head.",
 			"Coffee, then one good hour?",
-			"A quiet morning is a gift. Use it well."
+			"A quiet morning is a gift. Use it well.",
+			"Let's get started.",
+			"How do you want to start today?",
+			"What did you have for breakfast?",
+			"Well rested?",
+			"The sun's up, and so are you."
 		],
 		"afternoon": [
-			"Good afternoon, {name}",
-			"Afternoon, {name}",
-			"Good afternoon",
+			"Good afternoon, {name}.",
+			"Afternoon, {name}.",
+			"Good afternoon.",
 			"Post-lunch focus? Let's go.",
 			"Halfway through the day. Keep the pace.",
 			"Afternoon walks are the best walks.",
 			"Still plenty of daylight left.",
-			"The afternoon is yours, {name}"
+			"The afternoon is yours, {name}.",
+			"Keep it up, {name}.",
+			"Remember your goals.",
+			"You're on the right track."
 		],
 		"evening": [
-			"Good evening, {name}",
-			"Evening, {name}",
-			"Good evening",
+			"Good evening, {name}.",
+			"Evening, {name}.",
+			"Good evening.",
 			"One more stretch before you rest?",
 			"Evening light, steady focus.",
 			"The day's nearly done. Finish it well.",
 			"Wind down with one calm session.",
-			"A gentle evening walk, {name}?"
+			"A gentle evening walk, {name}?",
+			"Almost time for dinner!",
+			"Had a good day, {name}?",
+			"Finish what you've started. Let's do this."
 		],
 		"night": [
 			"Burning the midnight oil, {name}?",
 			"Late one tonight?",
-			"Hello, night owl",
+			"Hello, night owl.",
 			"Quiet hours, clear thinking.",
 			"Night walk, {name}? Bring a torch.",
 			"Don't forget to sleep after this one.",
-			"The stars are out. So are you."
+			"The stars are out. So are you.",
+			"Late sessions are the best.",
+			"Get ready for tomorrow!"
 		],
 		"anytime": [
-			"Welcome back, {name}",
+			"Welcome back, {name}.",
 			"Hi, {name}. Ready when you are.",
-			"Good to see you, {name}",
-			"Ready when you are",
+			"Good to see you, {name}.",
+			"Ready when you are.",
 			"What are we working on today?",
 			"One focus at a time.",
 			"Small steps still get you up the hill.",
@@ -83,7 +96,7 @@
 			"Every walk ends with a gift.",
 			"Somewhere out there is a gift with your name on it.",
 			"Breathe in. Focus. Begin.",
-			"Let's make some progress, {name}",
+			"Let's make some progress, {name}.",
 			"Your streak is rooting for you.",
 			"Phone down, paws up.",
 			"The best walks start with one step.",
@@ -97,33 +110,41 @@
 			"Let the work be easy for a while.",
 			"Mess first, polish later.",
 			"Clear the noise. Find the path.",
-			"Your companion believes in you."
+			"Your companion believes in you.",
+			"Ready to wander?",
+			"It's time to wander.",
+			"Let's explore."
 		],
 		"holidays": {
 			"halloween": [
-				"Happy Halloween, {name}",
+				"Happy Halloween, {name}!",
 				"Happy Halloween!",
 				"Spooky focus, anyone?",
 				"The pumpkins are watching. Better get to work.",
 				"Not even the skeletons skip focus time.",
-				"Trick or treat? Treat yourself to an hour of focus."
+				"Trick or treat?"
 			],
 			"christmas": [
-				"Merry Christmas, {name}",
+				"Merry Christmas, {name}!",
 				"Merry Christmas!",
 				"Snow's settling. Stay cosy and focused.",
 				"A little focus, then back to the mince pies.",
 				"Season's greetings from the hilltop.",
-				"Even the reindeer put in the hours."
+				"Even the reindeer put in the hours.",
+				"Focus time on Christmas day?!",
+				"I hope you were on Santa's nice list!",
+				"Get ahead while the competition are snoozing!",
+				"Focus first, family second."
 			],
 			"new_year": [
 				"Happy New Year, {name}!",
 				"Happy New Year!",
 				"A brand new year. Start it well.",
-				"Fireworks first. Resolutions after."
+				"Focus first, fireworks second. Resolutions... another time",
+				"Here to check your yearly stats?"
 			],
 			"easter": [
-				"Happy Easter, {name}",
+				"Happy Easter, {name}!",
 				"Happy Easter!",
 				"Eggs hidden everywhere. Focus first, hunt later.",
 				"Hop to it.",
@@ -137,7 +158,7 @@
 				"Party hat on. Let's go."
 			]
 		},
-		"fallback": "Ready when you are"
+		"fallback": "Ready when you are."
 	},
 	"quotes": [
 		"Small steps still get you up the hill.",
@@ -165,7 +186,13 @@
 		"One more stretch, then a well-earned rest.",
 		"Done is a lovely word. Let's get there.",
 		"Curiosity first, perfection later.",
-		"Trust the process; enjoy the walk."
+		"Trust the process; enjoy the walk.",
+		"Keep doing what you're doing.",
+		"Walk your own path, nobody can walk it for you.",
+		"Believe!",
+		"Head up. Keep walking.",
+		"One step at a time.",
+		"Take a break when you need it."
 	],
 	"nav": {
 		"left": "Go left",

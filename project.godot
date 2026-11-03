@@ -10,17 +10,17 @@ config_version=5
 
 [application]
 
-config/name="Paws & Progress"
+config/name="Wander"
 config/description="Walk your animals through beautiful scenery while you work."
 config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.6", "Mobile")
-config/icon="res://icon.svg"
 config/quit_on_go_back=false
+config/features=PackedStringArray("4.6", "Mobile")
 run/low_processor_mode=true
-boot_splash/bg_color=Color(0.960784, 0.952941, 0.933333, 1)
+boot_splash/bg_color=Color(0.37254903, 0.56078434, 0.3529412, 1)
 boot_splash/stretch_mode=0
-boot_splash/image="res://assets/brand/splash.png"
+boot_splash/image="uid://cqt5cppn0sn2e"
+config/icon="uid://cqt5cppn0sn2e"
 
 [autoload]
 
@@ -35,14 +35,10 @@ window/size/viewport_width=720
 window/size/viewport_height=720
 window/size/window_width_override=1280
 window/size/window_height_override=720
+window/energy_saving/keep_screen_on=false
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=5
-window/energy_saving/keep_screen_on=false
-
-[gui]
-
-common/snap_controls_to_pixels=true
 
 [input_devices]
 
@@ -51,6 +47,5 @@ pointing/emulate_touch_from_mouse=true
 [rendering]
 
 renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.960784, 0.952941, 0.933333, 1)

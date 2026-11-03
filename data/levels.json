@@ -3,10 +3,10 @@
 	"xp_per_minute": 1,
 	"gift_bonus": {
 		"common": 5,
-		"rare": 10,
-		"epic": 20,
-		"legendary": 40
+		"rare": 15,
+		"epic": 45,
+		"legendary": 60
 	},
 	"xp_base": 60,
-	"xp_growth": 20
+	"xp_growth": 30
 }
