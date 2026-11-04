@@ -68,7 +68,9 @@ func build() -> void:
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	words.add_child(bar)
 	var hint := Text.t({"ongoing": "projects.hint_ongoing", "completed": "projects.hint_completed", "all": "projects.hint_all"}[_filter()])
-	var how := UI.label(hint, 12, UI.INK_FAINT, false, 700)
+	# (Trimmed, so it never makes the row wider than the screen; it moves
+	# under the title rather than show cut short, below.)
+	var how := UI.trimmed(hint, 12, UI.INK_FAINT, false, 700)
 	how.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	words.add_child(how)
 	# Too narrow for the hint after the title (a phone, beside the sort
@@ -78,11 +80,12 @@ func build() -> void:
 	lines.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lines.add_child(words)
 	var below := UI.label(hint, 12, UI.INK_FAINT, false, 700)
+	below.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	below.visible = false
 	lines.add_child(below)
 	words.resized.connect(func():
 		var need := cap.get_combined_minimum_size().x + bar.get_combined_minimum_size().x \
-			+ how.get_minimum_size().x + 16.0
+			+ how.get_theme_font("font").get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, how.get_theme_font_size("font_size")).x + 18.0
 		var inline := words.size.x >= need
 		if bar.visible != inline:
 			bar.visible = inline
@@ -152,7 +155,7 @@ func _make_room(holder: Control, stats: Control, list_head: Control, inner: VBox
 ## just their biggest unit ("1.5h", Stats.format_short) to fit in a ring.
 func _stats(listed: Array[ProjectData]) -> StatPanel:
 	var panel := StatPanel.new(3)
-	var d := StatPanel.ring_size(size.y)
+	var d := StatPanel.ring_size(size)
 	var total := 0
 	var graded := 0
 	var done := 0
@@ -170,21 +173,22 @@ func _stats(listed: Array[ProjectData]) -> StatPanel:
 			biggest_s = s
 	match _filter():
 		"all":
-			panel.add(ProgressRing.new(float(done) / maxi(listed.size(), 1), UI.SUCCESS, d), Text.t("projects.complete"),
-				Text.t("projects.x_of_y", {"x": done, "y": listed.size()}))
+			panel.add(StatPanel.icon_value("check", "%d%%" % floori(100.0 * done / maxi(listed.size(), 1)), UI.SUCCESS, d),
+				Text.t("projects.complete"), Text.t("projects.x_of_y", {"x": done, "y": listed.size()}))
 		"completed":
-			panel.add(ProgressRing.holding(str(listed.size()), UI.SUCCESS, d), Text.t("projects.completed"),
+			panel.add(StatPanel.icon_value("check", str(listed.size()), UI.SUCCESS, d), Text.t("projects.completed"),
 				Text.t("projects.graded", {"n": graded}))
 		_:
-			panel.add(ProgressRing.holding(str(listed.size()), UI.SERIES[1], d), Text.t("projects.ongoing"))
-	panel.add(ProgressRing.holding(Stats.format_short(total), Content.rarity_colour("rare"), d), Text.t("projects.focus_time"),
+			panel.add(StatPanel.icon_value("hourglass", str(listed.size()), UI.SERIES[1], d), Text.t("projects.ongoing"))
+	panel.add(StatPanel.icon_value("clock", Stats.format_short(total), Content.rarity_colour("rare"), d), Text.t("projects.focus_time"),
 		Text.t("projects.focus_time_note"))
-	panel.add(ProgressRing.holding(Stats.format_short(biggest_s), Content.rarity_colour("epic"), d), Text.t("projects.biggest"),
+	panel.add(StatPanel.icon_value("trophy", Stats.format_short(biggest_s), Content.rarity_colour("epic"), d), Text.t("projects.biggest"),
 		biggest.name)
 	return panel
 
 
-## The rings fill up each time you come to the screen, as on Gifts.
+## The pictures behind the numbers fade in each time you come to the
+## screen, as the rings fill on Gifts.
 func _on_shown() -> void:
 	for c in find_children("*", "StatPanel", true, false):
 		(c as StatPanel).sweep()

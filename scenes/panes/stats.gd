@@ -100,12 +100,13 @@ func build() -> void:
 	_chart.segment_tapped.connect(_show_piece)
 	c.add_child(_chart)
 	var strip := UI.scroll_area(true)
-	strip.custom_minimum_size.y = 34
+	# The chips and their chunky edge under them.
+	strip.custom_minimum_size.y = 34 + UI.DEPTH
 	var strip_room := MarginContainer.new()
 	_legend = UI.hbox(8)
 	strip_room.add_child(_legend)
 	strip.add_child(strip_room)
-	UI.clear_of_bar(strip, strip_room, 4)
+	UI.clear_of_bar(strip, strip_room, 4, UI.DEPTH)
 	c.add_child(strip)
 
 	# The chart and the leaderboard share the room evenly.

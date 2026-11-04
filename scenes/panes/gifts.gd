@@ -63,7 +63,7 @@ func _tile(id: String) -> GiftTile:
 ## cosmetics in purple (the common, rare and epic colours).
 func _progress(counts: Dictionary) -> Control:
 	_stats = StatPanel.new(3)
-	var diameter := StatPanel.ring_size(size.y)
+	var diameter := StatPanel.ring_size(size)
 	var stats := [
 		[Text.t("gifts.discovered"), Text.t("gifts.discovered_note", {"have": counts["found"], "total": counts["gifts"]}), counts["found"], counts["gifts"], "common"],
 		[Text.t("gifts.pet_tables"), Text.t("gifts.pet_tables_note", {"have": counts["tables"], "total": counts["total_tables"]}), counts["tables"], counts["total_tables"], "rare"],
