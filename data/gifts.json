@@ -161,6 +161,11 @@
 			"animal": "red_panda"
 		},
 		{
+			"id": "mammoth",
+			"name": "Mammoth",
+			"animal": "mammoth"
+		},
+		{
 			"id": "skeleton_dog",
 			"name": "Skeleton Dog",
 			"animal": "skeleton_dog",
@@ -1024,6 +1029,38 @@
 			"description": "Pink and donned with flowers. So pretty.",
 			"slot": "hat",
 			"style": "crown"
+		},
+		{
+			"id": "mammoth_common",
+			"table": "mammoth",
+			"rarity": "common",
+			"name": "Woolly Tuft",
+			"description": "A tuft of thick, warm mammoth fur."
+		},
+		{
+			"id": "mammoth_rare",
+			"table": "mammoth",
+			"rarity": "rare",
+			"name": "Ice Chunk",
+			"description": "Something old is frozen inside. Probably."
+		},
+		{
+			"id": "mammoth_epic",
+			"table": "mammoth",
+			"rarity": "epic",
+			"name": "Woolly Scarf",
+			"description": "Knitted from shed mammoth fur. Very cosy.",
+			"slot": "neckwear",
+			"style": "scarf"
+		},
+		{
+			"id": "mammoth_legendary",
+			"table": "mammoth",
+			"rarity": "legendary",
+			"name": "Tusk Helmet",
+			"description": "A placeholder legendary for Joe to rename.",
+			"slot": "hat",
+			"style": "antlers"
 		},
 		{
 			"id": "skeleton_dog_common",

@@ -550,13 +550,15 @@ static func shadow_scroll(content: Control) -> Control:
 ## Keeps `content` (a MarginContainer inside `sc`) clear of `sc`'s scrollbar:
 ## while the bar shows, `gap` more room on its side (the right for a list
 ## that scrolls down, the bottom for a sideways strip), so nothing touches
-## it; none when everything fits.
-static func clear_of_bar(sc: ScrollContainer, content: MarginContainer, gap: int = 10) -> void:
+## it; none when everything fits. `always` is kept clear on that side
+## either way (a strip of chunky buttons needs UI.DEPTH under them for their
+## edge, which the scroll would otherwise cut off).
+static func clear_of_bar(sc: ScrollContainer, content: MarginContainer, gap: int = 10, always: int = 0) -> void:
 	var sideways := sc.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED
 	var bar: ScrollBar = [sc.get_v_scroll_bar(), sc.get_h_scroll_bar()][int(sideways)]
 	var side := "margin_bottom" if sideways else "margin_right"
 	var fit := func():
-		content.add_theme_constant_override(side, gap if bar.visible else 0)
+		content.add_theme_constant_override(side, always + (gap if bar.visible else 0))
 	bar.visibility_changed.connect(fit)
 	fit.call()
 

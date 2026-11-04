@@ -575,6 +575,23 @@ func _run() -> void:
 	app.reopen_project(app.state.completed_projects().filter(func(p): return p.grade == "")[0].id)
 	await _wait(20)
 
+	# On a phone the screen fits across: the stats, the menus and every
+	# project, each with one podium at a time picked from its menu.
+	app.set_setting("debug_phone_view", true)
+	await _wait(40)
+	app.go("projects")
+	await _wait(50)
+	projects_pane = main._panes[Vector2i(1, 0)]
+	var phone_panels: Array = _all(projects_pane, func(n): return _is(n, "project_panel.gd"))
+	var wide: Array = _all(projects_pane, func(n): return n is Control and n.is_visible_in_tree() and n.get_global_rect().end.x > main.size.x + 0.5 \
+		and not (n.get_parent() is ScrollContainer))
+	check(wide.is_empty(), "on a phone nothing on projects reaches past the screen (%s)" % ", ".join(wide.slice(0, 4).map(func(n): return "%s %s" % [n.get_class(), n.get_global_rect()])))
+	check(not phone_panels.is_empty() and phone_panels.all(func(pp): return _all(pp, func(n): return _is(n, "podium.gd")).size() == 1),
+		"and each project shows one podium, with a menu")
+	await _shot("projects_phone")
+	app.set_setting("debug_phone_view", false)
+	await _wait(40)
+
 	app.go("profile")
 	await _wait(50)
 	var profile_pane: Node = main._panes[Vector2i(0, -1)]
@@ -1837,6 +1854,9 @@ func _stats_and_friends(main: Node) -> void:
 	check(chips.size() > 1 and chips.all(func(b): return b.text.split("  ")[0].length() <= 13), "project names in the strip are cut to 10 letters")
 	check(chips.any(func(b): return b.text.begins_with("Dissertati...")), "a long name ends in ...")
 	check(stats_pane._legend.get_parent().get_parent() is ScrollContainer, "the projects scroll sideways")
+	var strip_rect: Rect2 = stats_pane._legend.get_parent().get_parent().get_global_rect()
+	check(chips.all(func(b): return b.get_global_rect().end.y + _class("res://ui/ui.gd").DEPTH <= strip_rect.end.y + 0.5),
+		"the chips' chunky edges aren't cut off at the bottom")
 	var board: Control = _find(stats_pane, func(n): return _is(n, "leaderboard.gd"))
 	check(board != null and board.rows.size() == app.friends.size() + 1, "the leaderboard has you and every friend")
 	if board == null:

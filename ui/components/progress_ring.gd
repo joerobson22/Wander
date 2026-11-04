@@ -6,9 +6,6 @@ extends Control
 
 var value := 0.0
 var colour := Color.WHITE
-## Words to show in the middle instead of the percentage ("1.5h"), for a
-## full ring round a number that isn't a share of anything.
-var words := ""
 var _shown := 0.0
 var _label: Label
 
@@ -27,17 +24,6 @@ func _init(fraction: float, ring_colour: Color, diameter: float) -> void:
 	_set_shown(value)
 
 
-## A full ring with `text` in the middle instead of a percentage.
-static func holding(text: String, ring_colour: Color, diameter: float) -> ProgressRing:
-	var r := ProgressRing.new(1.0, ring_colour, diameter)
-	r.words = text
-	r._set_shown(1.0)
-	# Long words get smaller to stay inside the ring.
-	if text.length() > 4:
-		r._label.add_theme_font_size_override("font_size", int(diameter * 0.24 * 4.0 / text.length()))
-	return r
-
-
 ## Fills it from empty up to its value.
 func sweep() -> void:
 	_set_shown(0.0)
@@ -47,7 +33,7 @@ func sweep() -> void:
 func _set_shown(v: float) -> void:
 	_shown = v
 	# Rounded down, so it only says 100% once it's all there.
-	_label.text = words if words != "" else "%d%%" % floori(v * 100.0 + 0.0001)
+	_label.text = "%d%%" % floori(v * 100.0 + 0.0001)
 	queue_redraw()
 
 
