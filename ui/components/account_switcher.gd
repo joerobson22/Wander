@@ -76,7 +76,7 @@ static func _card(row: Dictionary, narrow: bool, list: VBoxContainer) -> Control
 
 	var end_size := 32 if narrow else 36
 	line.add_child(UI.round_button("bin", Text.t("accounts.delete", {"who": name if name != "" else Text.t("accounts.this_one")}),
-		_delete.bind(row, list), UI.DANGER, UI.ON_COLOUR, end_size, false))
+		_delete.bind(row, list), UI.DANGER, UI.ON_COLOUR, end_size))
 	Press.attach(card).tapped.connect(_switch.bind(row["id"]))
 	return card
 

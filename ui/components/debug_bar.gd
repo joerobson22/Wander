@@ -131,7 +131,7 @@ static func time_buttons() -> HBoxContainer:
 		b.text = Text.t("debug.add_minutes", {"minutes": minutes})
 		b.custom_minimum_size = Vector2(46, 32)
 		b.add_theme_font_size_override("font_size", 13)
-		UI.style_button(b, UI.SURFACE, UI.INK, 999, true)
+		UI.style_button(b, UI.SURFACE, UI.INK, 999)
 		b.pressed.connect(App.debug_add_minutes.bind(minutes))
 		row.add_child(b)
 	return row

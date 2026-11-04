@@ -45,6 +45,12 @@ func add(picture: Control, title: String, sub: String = "", value: String = "") 
 	return cell
 
 
+## How big the rings are on a screen `height` tall, the same on every
+## screen with a stat panel (Gifts, Projects), so the panels match.
+static func ring_size(height: float) -> float:
+	return clampf(height * 0.12, 64.0, 104.0)
+
+
 ## Fills every ring in the panel up from empty.
 func sweep() -> void:
 	for cell in _grid.get_children():

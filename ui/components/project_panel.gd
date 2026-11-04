@@ -51,8 +51,6 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	left.add_child(name_line)
 	name_line.add_child(_status_badge(p.is_complete()))
 	var title := UI.trimmed(p.name, 21, UI.INK, true, 600)
-	title.size_flags_horizontal = Control.SIZE_FILL
-	title.size_flags_stretch_ratio = 0.0
 	# The name takes what it needs (up to the room there is) and the time
 	# follows straight after it.
 	var head := HBoxContainer.new()
@@ -66,10 +64,8 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	var time := UI.label(Stats.format_duration(App.state.project_seconds(p.id)), 17, UI.ACCENT, true, 600)
 	time.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(time)
-	head.resized.connect(func():
-		var room := head.size.x - bar.get_combined_minimum_size().x - time.get_combined_minimum_size().x - 16.0
-		var want := title.get_theme_font("font").get_string_size(p.name, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x + 2.0
-		title.custom_minimum_size.x = clampf(want, 0.0, maxf(room, 0.0)))
+	head.add_child(UI.spacer())
+	UI.fit_name(title, head)
 	name_line.add_child(head)
 	var bias := App.tz_bias()
 	var when := Text.t("project.dates", {"from": Stats.format_date(p.created_unix, bias),
@@ -80,8 +76,14 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	dates.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	dates.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name_line.add_child(dates)
+	# The dates sit beside the name only when the whole name still fits;
+	# otherwise they take a line of their own under it.
+	var whole := func() -> float:
+		var font := title.get_theme_font("font")
+		return name_line.get_child(0).get_combined_minimum_size().x + font.get_string_size(p.name, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x + 2.0 \
+			+ bar.get_combined_minimum_size().x + time.get_combined_minimum_size().x + dates.get_combined_minimum_size().x + 10.0 + 8.0 * 2 + 10.0
 	left.resized.connect(func():
-		var beside := left.size.x >= DATES_BESIDE_NAME
+		var beside := left.size.x >= maxf(DATES_BESIDE_NAME, whole.call())
 		if beside == (dates.get_parent() == name_line):
 			return
 		dates.get_parent().remove_child(dates)
@@ -123,6 +125,13 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	left.add_child(flow)
 
 	col.add_child(UI.divider())
+	if App.phone_layout():
+		col.add_child(_one_podium(p))
+		UI.ignore_mouse(self)
+		for b in [grade_button, close_button, col.get_child(-1).get_child(0).get_child(-1)]:
+			if b:
+				b.mouse_filter = Control.MOUSE_FILTER_STOP
+		return
 	var pair := BoxContainer.new()
 	pair.add_theme_constant_override("separation", 16)
 	pair.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -140,6 +149,54 @@ func _init(p: ProjectData, extra: String = "", gradeable: bool = false, flat: bo
 	for b in [grade_button, close_button]:
 		if b:
 			b.mouse_filter = Control.MOUSE_FILTER_STOP
+
+
+## Phones: one podium at a time, pets or places, picked from a menu in the
+## section's top right (remembered for every panel). The menu says which it
+## is, so the podium has no title of its own.
+func _one_podium(p: ProjectData) -> Control:
+	var section := UI.vbox(6)
+	section.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var head := UI.hbox(8)
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	head.add_child(UI.spacer())
+	var which := str(App.state.settings.get(PODIUM_KEY, "pets"))
+	if which not in ["pets", "places"]:
+		which = "pets"
+	var menu := Dropdown.new([["pets", Text.t("project.pets")], ["places", Text.t("project.places")]], which, false, "", false)
+	menu.accessibility_name = Text.t("project.show")
+	head.add_child(menu)
+	section.add_child(head)
+	var podium := [_podium_for(p, which)]
+	section.add_child(podium[0])
+	# Every panel showing follows the menu, so they all show the same.
+	section.add_to_group(PODIUM_GROUP)
+	section.set_meta("swap", func(option: String):
+		menu.select(option)
+		section.remove_child(podium[0])
+		podium[0].queue_free()
+		podium[0] = _podium_for(p, option)
+		section.add_child(podium[0]))
+	menu.chosen.connect(func(option: String, _r: bool):
+		App.state.settings[PODIUM_KEY] = option
+		App.save()
+		for other in section.get_tree().get_nodes_in_group(PODIUM_GROUP):
+			other.get_meta("swap").call(option))
+	return section
+
+
+const PODIUM_KEY := "panel_podium"
+const PODIUM_GROUP := "project_one_podium"
+
+
+static func _podium_for(p: ProjectData, which: String) -> Podium:
+	var podium: Podium
+	if which == "places":
+		podium = Podium.new("", Podium.place_rows(p.places), Text.t("project.no_walks"))
+	else:
+		podium = Podium.new("", Podium.pet_rows(p.pets), Text.t("project.no_walks"))
+	UI.ignore_mouse(podium)
+	return podium
 
 
 ## A small round badge: an hourglass on amber while a project's going, a

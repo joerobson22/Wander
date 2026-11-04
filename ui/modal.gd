@@ -79,7 +79,8 @@ static func confirm(title: String, text: String, yes: String, tone: String = "da
 
 
 ## Asks for a line of text. Closes with the new text, or null if cancelled.
-static func prompt(title: String, value: String, placeholder: String = "", max_length: int = 40) -> Modal:
+## Only letters and numbers can be typed (TextGuard), and spaces with `spaces`.
+static func prompt(title: String, value: String, placeholder: String = "", max_length: int = 40, spaces: bool = true) -> Modal:
 	var m := open(420)
 	m.body.add_child(m.heading(title))
 	var edit := LineEdit.new()
@@ -89,6 +90,7 @@ static func prompt(title: String, value: String, placeholder: String = "", max_l
 	edit.custom_minimum_size.y = 50
 	edit.select_all_on_focus = true
 	m.body.add_child(edit)
+	TextGuard.attach(edit, spaces)
 	var row := UI.hbox(10)
 	var cancel := UI.button(Text.t("common.cancel"), m.close.bind(null), "quiet")
 	cancel.size_flags_horizontal = Control.SIZE_EXPAND_FILL

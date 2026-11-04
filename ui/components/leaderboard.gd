@@ -21,17 +21,18 @@ var _mine: Control
 
 
 ## `list` is rows from Friends.ranked() (empty with no friends).
-func _init(list: Array) -> void:
+## `can_add` puts a faint add-a-friend button in the top right corner.
+func _init(list: Array, can_add: bool = false) -> void:
 	rows = list
 	var b := UI.with_shadow(UI.box(UI.SURFACE, Color.TRANSPARENT, 24))
 	b.content_margin_left = 20
 	b.content_margin_right = 20
-	b.content_margin_top = 16
+	b.content_margin_top = 12
 	b.content_margin_bottom = 8
 	add_theme_stylebox_override("panel", b)
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var column := UI.vbox(6)
+	var column := UI.vbox(4)
 	add_child(column)
 
 	var head := UI.hbox(10)
@@ -55,6 +56,9 @@ func _init(list: Array) -> void:
 			sb.content_margin_top = 2
 			sb.content_margin_bottom = 2
 		head.add_child(full)
+	if can_add:
+		var add := UI.ghost_button("user_add", Text.t("friends.add"), open_add, UI.INK_SOFT, 34, 22)
+		head.add_child(add)
 	column.add_child(head)
 
 	# The list and your pinned row are placed by hand in here (see _fit), so
@@ -117,6 +121,35 @@ func _whole_rows(room: float) -> float:
 	if all <= room:
 		return all
 	return maxf(0.0, floorf((room + 1.0) / ROW_PITCH) * ROW_PITCH - 1.0)
+
+
+## Find a friend by their username: a search box in a popup. Usernames are
+## one word of letters and numbers (TextGuard). Searching needs the online
+## accounts still to come, so for now it says there's no one by that name.
+static func open_add() -> void:
+	var m := Modal.open(420)
+	m.header.add_child(m.heading_row(Text.t("friends.add")))
+	m.body.add_child(UI.para(Text.t("friends.search_note"), 14))
+	var edit := LineEdit.new()
+	edit.placeholder_text = Text.t("friends.search_placeholder")
+	edit.max_length = 24
+	edit.custom_minimum_size.y = 50
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.right_icon = Icons.texture("search", 20, UI.INK_FAINT)
+	edit.accessibility_name = Text.t("friends.search_placeholder")
+	m.body.add_child(edit)
+	TextGuard.attach(edit, false)
+	var result := UI.label("", 14, UI.INK_SOFT, false, 700)
+	result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	result.visible = false
+	m.body.add_child(result)
+	var search := func(_text: String):
+		var who := edit.text.strip_edges()
+		result.visible = who != ""
+		result.text = Text.t("friends.no_results", {"name": who})
+	edit.text_changed.connect(search)
+	edit.text_submitted.connect(search)
+	edit.grab_focus.call_deferred()
 
 
 ## Everyone in a popup titled "Friend leaderboard". The title stays at the

@@ -41,6 +41,12 @@ var covered := false
 var look_down := 0.0
 ## For tests and the debug bar: 0 day to 1 night. Below 0 works it out.
 var night_override := -1.0
+## The time of day on show, in hours past midnight (it can run past 24 while
+## easing over midnight). It eases to a new time rather than jumping
+## (Motion.catch_up), and stays put while a flow covers the view, so coming
+## back from a long walk shows the sky moving on to now. Below 0 till set.
+var shown_hour := -1.0
+var _was_covered := false
 
 ## How far a layer rises when `look_down` is 1, in screen heights, on top
 ## of its parallax.
@@ -105,18 +111,44 @@ func _all_pictures() -> Array[TextureRect]:
 
 func _process(_dt: float) -> void:
 	visible = not covered
+	if _was_covered and not covered:
+		# Back from a flow: the sky catches up with the time.
+		refresh()
+	_was_covered = covered
 	if visible:
 		_layout()
 
 
 ## Works the time of day out again: the sky, the sun and moon and the
-## layers' brightness. The app calls it every so often and on changes.
+## layers' brightness. The app calls it every so often and on changes. A
+## new time eases in, 0.1s for each hour it moved (Motion.catch_up).
 func refresh() -> void:
 	if not is_inside_tree():
 		return
-	var night := night_override if night_override >= 0.0 else App.night()
-	$NightSky.modulate.a = night
 	_dress(App.holiday())
+	var target := App.day_hour()
+	if shown_hour < 0.0 or Motion.still:
+		_set_hour(target)
+	elif not covered:
+		# The short way round the clock (forwards over midnight).
+		var diff := fposmod(target - shown_hour + 12.0, 24.0) - 12.0
+		if absf(diff) > 0.0001:
+			Motion.method(self, "hour", _set_hour, shown_hour, shown_hour + diff, Motion.catch_up(diff))
+		else:
+			_apply_hour()
+
+
+func _set_hour(v: float) -> void:
+	shown_hour = fposmod(v, 24.0) if v >= 24.0 or v < 0.0 else v
+	_apply_hour()
+
+
+## The sky, the layers' brightness and the wash for the hour on show.
+func _apply_hour() -> void:
+	if not is_inside_tree():
+		return
+	var night := night_override if night_override >= 0.0 else App.night_at(shown_hour)
+	$NightSky.modulate.a = night
 	for i in _layers.size():
 		var dim := _layers[i].night_brightness if _layers[i].night_brightness >= 0.0 else night_brightness
 		var b := lerpf(1.0, dim, night)
@@ -172,7 +204,7 @@ func _layout() -> void:
 	var view := size
 	if view.x <= 0.0 or view.y <= 0.0:
 		return
-	var look := App.sky_look()
+	var look := App.sky_look_at(shown_hour) if shown_hour >= 0.0 else App.sky_look()
 	# Looking down lifts everything up the screen, the sky least.
 	var sky_lift := Vector2(0, -look_down * view.y * LOOK_BASE)
 	_cover($DaySky, view, sky_lift)

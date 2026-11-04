@@ -214,7 +214,7 @@ func _run() -> void:
 		await _drag(sr.position + Vector2(sr.size.x * 0.2, sr.size.y * 0.5), sr.position + Vector2(sr.size.x * 0.9, sr.size.y * 0.5) + Vector2(main.size.x * 0.3, 0))
 		await _wait(30)
 		check(main._at == Vector2i.ZERO, "dragging the time slider stays on the focus screen")
-		app.set_setting("debug_hour", -1.0)
+		await _set_hour(-1.0)
 		await _wait(10)
 
 	# Debug builds get an unlock-everything switch in the top left.
@@ -368,15 +368,16 @@ func _run() -> void:
 
 	# Trading in ten commons for a rare, straight from the collection.
 	var rares: int = app.state.gift_count("dog_rare")
-	app.state.inventory["dog_common"] = 12
+	var cost: int = _content().trade_cost("common")
+	app.state.inventory["dog_common"] = cost + 2
 	gifts_pane.rebuild()
 	await _wait(10)
 	var common_tile = _find(gifts_pane._grid, func(n): return _is(n, "gift_tile.gd") and n.gift_id == "dog_common")
 	common_tile._hover(true)
 	await _wait(20)
 	var ready_info = info_class.showing(common_tile)
-	check(ready_info != null and _find(ready_info, func(n): return n is Label and n.text == "12/10") != null, "the card counts towards a trade (12/10)")
-	check(ready_info != null and _find(ready_info, func(n): return n is Label and n.text == "Click to trade 10 in for a rare!") != null, "and calls you to click once there are enough")
+	check(ready_info != null and _find(ready_info, func(n): return n is Label and n.text == "%d/%d" % [cost + 2, cost]) != null, "the card counts towards a trade (%d/%d)" % [cost + 2, cost])
+	check(ready_info != null and _find(ready_info, func(n): return n is Label and n.text == "Click to trade %d in for a rare!" % cost) != null, "and calls you to click once there are enough")
 	await _shot("gift_ready")
 	common_tile._on_tapped()
 	await _wait(25)
@@ -405,7 +406,7 @@ func _run() -> void:
 	await _wait(20)
 
 	# Trading in every last one of a shelf gift takes it off the shelf.
-	app.state.inventory["dog_common"] = 10
+	app.state.inventory["dog_common"] = cost
 	app.place_on_shelf("dog_common", 0)
 	await _wait(10)
 	common_tile = _find(gifts_pane._grid, func(n): return _is(n, "gift_tile.gd") and n.gift_id == "dog_common")
@@ -442,11 +443,11 @@ func _run() -> void:
 	var ongoing_panels: Array = _all(projects_pane, func(n): return _is(n, "project_panel.gd"))
 	check(ongoing_panels.size() == app.state.active_projects().size(), "one panel per ongoing project (%d)" % ongoing_panels.size())
 	var podiums: Array = _all(ongoing_panels[0], func(n): return _is(n, "podium.gd"))
-	check(podiums.size() == 2, "a podium for pets and one for places")
+	check(podiums.size() == (1 if app.phone_layout() else 2), "a podium for pets and one for places (one at a time on phones)")
 	var top_pets: Array = _class("res://core/stats.gd").ranked(app.state.project(ongoing_panels[0].project_id).pets)
 	var first_name: Label = _find(podiums[0], func(n): return n is Label and n.text == app.state.pet(top_pets[0][0]).name)
 	check(first_name != null, "the pet that walked most is first")
-	check(_find(ongoing_panels[0], func(n): return n is Button) == null, "an ongoing project has no grade button")
+	check(_find(ongoing_panels[0], func(n): return n is Button and not _is(n, "dropdown.gd")) == null, "an ongoing project has no grade button")
 	for panel in ongoing_panels:
 		for pod in _all(panel, func(n): return _is(n, "podium.gd")):
 			for l in _all(pod, func(n): return n is Label):
@@ -550,6 +551,7 @@ func _run() -> void:
 	await _wait(80)
 	check(app.state.project(row_id).is_complete() and app.state.active_projects().size() == going - 1, "a long swipe left completes it")
 	check(main._at == Vector2i(1, 0), "and the screen stays put")
+	check(_find(_class("res://ui/modal.gd").layer, func(n): return n is Button and n.text == "Undo") != null, "completing it offers Undo too")
 	row = _find(projects_pane, func(n): return _is(n, "swipe_row.gd"))
 	row_id = row.content.project_id
 	projects_pane.scroll.ensure_control_visible(row)
@@ -1169,19 +1171,21 @@ func _run() -> void:
 	walk._toggle_sound()
 	check(app.state.settings.get("sound") and app.state.settings.get("ambience"), "and turns it all back on")
 	# The weather picker in the top left: what you pick shows and is kept.
-	var weather_pick: Node = _find(walk, func(n): return _is(n, "dropdown.gd"))
+	var weather_pick: Node = _find(walk, func(n): return _is(n, "weather_picker.gd"))
 	check(weather_pick != null, "the weather picker is on the walk")
 	check(weather_pick.get_global_rect().position.x < main.size.x * 0.3, "in the top left")
+	check(weather_pick.size.x <= 44.0 and is_equal_approx(weather_pick.size.x, weather_pick.size.y), "a small round button")
 	check(weather_pick.get_global_rect().end.x < walk._sound.get_global_rect().position.x - 8.0, "clear of the sound button")
 	weather_pick._open()
 	await _wait(20)
 	await _shot("walk_weather_menu")
-	weather_pick._choose("rainy", null)
+	check(weather_pick._menu != null and _all(weather_pick._menu, func(n): return n is Button).size() == weather_pick._options.size(), "an icon for every kind of weather")
+	weather_pick._choose("rainy")
 	await _wait(20)
 	check(app.state.settings.get("weather") == "rainy", "the weather picked is saved")
 	check(walk._scenery.weather_kind() in ["rainy", "snowy", "sunny"], "and the place shows it its own way")
 	await _shot("walk_rain")
-	weather_pick._choose(weather_pick._options[0][0], null)
+	weather_pick._choose(weather_pick._options[0])
 	await _wait(10)
 	check(str(app.state.settings.get("weather")) in ["", "sunny"], "back to the first choice")
 
@@ -1213,7 +1217,11 @@ func _run() -> void:
 	steps[1].pressed.emit()
 	await _wait(60)
 	await _shot("walk_50min")
-	check(walk._gift.level() == 1, "50 minutes guarantees a rare gift")
+	# Past the time data/drop_table.json guarantees a rare, it's at least rare.
+	var rare_at: int = int(_content().drop_table["guaranteed"]["rare"])
+	app.state.active.start_unix -= maxi(0, rare_at + 60 - app.state.active.elapsed(app.now()))
+	await _wait(60)
+	check(walk._gift.level() == 1, "%d minutes guarantees a rare gift" % floori(rare_at / 60.0))
 	check(walk._gift.shown()["common"] < 0.01, "and common drops out of the pie")
 
 	# Past a day the clock shows days, smaller so it still fits.
@@ -1334,15 +1342,15 @@ func _run() -> void:
 	check(_find(focus_pane, func(n): return _is(n, "theme_toggle.gd")) == null, "no light/dark switch any more")
 	if backdrop:
 		check(backdrop._layers.size() == 5, "five layers")
-		app.set_setting("debug_hour", 12.0)
+		await _set_hour(12.0)
 		await _wait(5)
 		check(backdrop.get_node("Sun").visible and not backdrop.get_node("Moon").visible and backdrop.get_node("NightSky").modulate.a < 0.01, "midday: the sun, no stars")
 		var sun_noon: float = backdrop.get_node("Sun").position.y
-		app.set_setting("debug_hour", 9.0)
+		await _set_hour(9.0)
 		await _wait(5)
 		check(backdrop.get_node("Sun").position.y > sun_noon, "it's lower in the morning")
 		await _shot("backdrop_morning")
-		app.set_setting("debug_hour", 23.0)
+		await _set_hour(23.0)
 		await _wait(5)
 		check(backdrop.get_node("Moon").visible and not backdrop.get_node("Sun").visible and backdrop.get_node("NightSky").modulate.a > 0.99, "at night: the moon and stars")
 		var dimmed: Color = backdrop._layers[4].self_modulate
@@ -1366,7 +1374,7 @@ func _run() -> void:
 		app.go("focus")
 		await _wait(50)
 		check(backdrop.visible and backdrop.modulate.a > 0.99, "back on the focus screen it's there")
-		app.set_setting("debug_hour", -1.0)
+		await _set_hour(-1.0)
 		await _wait(5)
 
 	# Dark mode follows the time of day (the debug bar's time slider moves
@@ -1379,7 +1387,7 @@ func _run() -> void:
 	check(_find(focus_pane, func(n): return n is Button and (n.text in ["Classic", "Glass", "Pixel", "Storybook", "Auto", "Light", "Dark"])) == null,
 		"the debug bar has no style or theme pickers")
 	app.state.settings["debug_theme"] = "auto"
-	app.set_setting("debug_hour", 23.0)
+	await _set_hour(23.0)
 	await _wait(60)
 	check(_class("res://ui/ui.gd").dark, "late at night switches to dark mode")
 	check(focus_pane._orb == orb_before, "the orb carries on through the switch")
@@ -1400,13 +1408,13 @@ func _run() -> void:
 	app.go("focus")
 	await _wait(50)
 	app.set_setting("debug_theme", "auto")
-	app.set_setting("debug_hour", 23.0)
+	await _set_hour(23.0)
 	await _wait(60)
 	check(_class("res://ui/ui.gd").dark, "Auto is dark at night")
-	app.set_setting("debug_hour", 12.0)
+	await _set_hour(12.0)
 	await _wait(60)
 	check(not _class("res://ui/ui.gd").dark, "and light by day")
-	app.set_setting("debug_hour", -1.0)
+	await _set_hour(-1.0)
 	app.set_setting("debug_theme", "light")
 	await _wait(60)
 	# No tooltips anywhere: every pane has been built by now.
@@ -1432,7 +1440,7 @@ func _holidays(main: Node) -> void:
 	var backdrop: Control = main._backdrop
 	app.state.profile["dob"] = "2001-06-14"
 	app.state.profile.erase("holiday_gifts")
-	app.set_setting("debug_hour", 12.0)
+	await _set_hour(12.0)
 	for id in ["halloween", "christmas", "new_year", "easter", "birthday"]:
 		var had: int = app.state.gift_count(str(_content().holiday(id).get("gift", "")))
 		app.set_setting("debug_holiday", id)
@@ -1526,7 +1534,7 @@ func _holidays(main: Node) -> void:
 	# Your birthday's pet: locked until you've focused half an hour on it.
 	check(not app.unlock_progress("animal", "birthday_cake")["done"], "the birthday cake is locked to start with")
 	app.set_setting("debug_holiday", "none")
-	app.set_setting("debug_hour", -1.0)
+	await _set_hour(-1.0)
 	await _wait(30)
 	check(backdrop._dressed == "" and main._decor_layer.get_child_count() == 0, "an ordinary day again")
 
@@ -1691,7 +1699,7 @@ func _fill_sample_data() -> void:
 	app.state.profile["cosmetics"]["hat"] = "bird_epic"
 	app.state.profile["cosmetics"]["face"] = "face_glasses"
 	var now: int = app.now()
-	var animals := ["dog1", "cat1", "snail", "bird", "bear", "rabbit"]
+	var animals := ["dog1", "cat", "snail", "bird", "bear", "rabbit"]
 	var places := ["lake", "forest", "lake", "beach", "farm", "lake"]
 	var names := ["Dissertation", "Spanish", "Portfolio", "Statistics", "Guitar", "Reading"]
 	var pet_names := ["Biscuit", "Mochi", "Snail", "Pip", "Bruno", "Rabbit"]
@@ -1810,6 +1818,22 @@ func _stats_and_friends(main: Node) -> void:
 	check(stats_pane.scroll == null, "stats doesn't scroll as a page")
 	var streak: Label = _find(stats_pane, func(n): return n is Label and n.text.ends_with(" days"))
 	check(streak != null and _find(stats_pane, func(n): return n is Label and n.text == "streak") == null, "the streak just says how many days")
+	if streak:
+		var streak_text := streak.text
+		streak.get_parent().get_meta("press").tapped.emit()
+		await _wait(20)
+		check(streak.text.begins_with("Best "), "tapping the streak shows your best (%s)" % streak.text)
+		await _shot("stats_best_streak")
+		streak.get_parent().get_meta("press").tapped.emit()
+		await _wait(20)
+		check(streak.text == streak_text, "and tapping again goes back")
+	var was_title: String = stats_pane._chart_title.text
+	stats_pane._earlier.pressed.emit()
+	await _wait(20)
+	check(stats_pane._chart_title.text != was_title and not stats_pane._later.disabled, "the back arrow steps to the period before")
+	stats_pane._later.pressed.emit()
+	await _wait(20)
+	check(stats_pane._chart_title.text == was_title and stats_pane._later.disabled, "and forward comes back to now, then stops")
 	var chips: Array = _all(stats_pane._legend, func(n): return n is Button)
 	check(chips.size() > 1 and chips.all(func(b): return b.text.split("  ")[0].length() <= 13), "project names in the strip are cut to 10 letters")
 	check(chips.any(func(b): return b.text.begins_with("Dissertati...")), "a long name ends in ...")
@@ -2026,7 +2050,9 @@ func _accounts(main: Node) -> void:
 	check(main._minimap.modulate.a < 0.05 and main._arriving, "and so do the map and the arrows")
 	check(home_pane._debug == null or home_pane._debug.is_visible_in_tree(), "but the debug switches are there")
 	if main._backdrop:
-		check(main._backdrop.look_down > 0.0 and main._backdrop.look_down < 1.0, "and the view tilts up to the sky (%.2f)" % main._backdrop.look_down)
+		# (Under slow software rendering the tilt can be over by now, so
+		# this only checks it has left the hilltop.)
+		check(main._backdrop.look_down < 1.0, "and the view tilts up to the sky (%.2f)" % main._backdrop.look_down)
 		await _wait(100)
 		check(main._backdrop.look_down < 0.01, "all the way")
 	for i in 60:
@@ -2071,10 +2097,29 @@ func _accounts(main: Node) -> void:
 	check(board != null and board.rows.is_empty(), "with no friends the leaderboard is empty")
 	if board:
 		check(_find(board, func(n): return n is Label and n.text == "No friends yet!" and n.is_visible_in_tree()) != null, "and says so")
-		check(_find(board, func(n): return n.has_meta("press")) == null and _find(board, func(n): return n is Button) == null, "not even your own row")
+		check(_find(board, func(n): return n.has_meta("press")) == null and _find(board, func(n): return n is Button and n.accessibility_name != "Add a friend") == null, "not even your own row")
+		var add: Button = _find(board, func(n): return n is Button and n.accessibility_name == "Add a friend")
+		check(add != null, "but you can still look for a friend")
+		if add:
+			add.pressed.emit()
+			await _wait(25)
+			var search: LineEdit = _find(modal_class.top(), func(n): return n is LineEdit) if modal_class.is_open() else null
+			check(search != null, "which asks for a username")
+			if search:
+				# (Typing emits text_changed; inserting from code doesn't.)
+				search.insert_text_at_caret("sam!")
+				search.text_changed.emit(search.text)
+				await _wait(25)
+				check(search.text == "sam", "symbols can't go in (%s)" % search.text)
+				var warn = search.get_meta("text_guard")
+				check(warn.visible and warn.modulate.a > 0.5, "and a red line says so")
+				check(_find(modal_class.top(), func(n): return n is Label and n.text == "No one called sam yet.") != null, "the search shows the clean name")
+				await _shot("friend_search")
+			_close_modal()
+			await _wait(15)
 		var stats_pane: Control = main._panes[Vector2i(0, 1)]
-		check(stats_pane._periods.is_empty() and _find(stats_pane, func(n): return n is Button and _find(n, func(l): return l is Label and l.text == "This week") != null) == null,
-			"with only this week there are no weeks to pick between")
+		check(stats_pane._earlier.disabled and stats_pane._later.disabled,
+			"with only this week there are no weeks to step between")
 	await _shot("leaderboard_empty")
 
 	# Log out, delete Sam, and log back in as Joe.
@@ -2435,6 +2480,14 @@ func _tap_menu(dropdown: Node, text: String) -> void:
 		return
 	var at := b.get_global_rect().get_center()
 	await _drag(at, at, 1)
+
+
+## Sets the debug clock, then waits while the sky and the orb ease over to
+## it (Motion.catch_up: 0.1s an hour, half a day at most).
+func _set_hour(hour: float) -> void:
+	_app().set_setting("debug_hour", hour)
+	await create_timer(1.3).timeout
+	await process_frame
 
 
 func _wait(frames: int) -> void:

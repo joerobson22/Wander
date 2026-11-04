@@ -32,9 +32,6 @@ const PET_HEIGHT := 200.0
 const PLACE_BUTTON := 42
 const PLACE_GAP := 4
 const PLACE_PAD := 6
-## The bin: how much it grows under the pointer, and how long that takes.
-const BIN_GROW := 1.05
-const BIN_GROW_TIME := 0.2
 
 static func sorts() -> Array:
 	return [
@@ -637,7 +634,10 @@ func _on_left() -> void:
 			if ok:
 				var next := _neighbour_id(p.id)
 				App.rehome_pet(p.id)
-				Toast.show_text(Text.t("choose_focus.rehomed", {"pet": p.name}), "paw")
+				Toast.show_action(Text.t("choose_focus.rehomed", {"pet": p.name}), "paw", Text.t("common.undo"), func():
+					App.unrehome_pet(p.id)
+					if is_inside_tree() and not _adopting:
+						_build_pick(p.id), "danger")
 				_build_pick(next))
 
 
@@ -658,7 +658,7 @@ func _neighbour_id(id: String) -> String:
 ## something to open.
 func _make_project_pill() -> Button:
 	var b := Button.new()
-	UI.style_button(b, UI.SURFACE, UI.INK, 999, true)
+	UI.style_button(b, UI.SURFACE, UI.INK, 999)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		var sb: StyleBoxFlat = b.get_theme_stylebox(state)
 		sb.content_margin_left = 16
@@ -819,6 +819,7 @@ func _new_project(m: Modal) -> void:
 	edit.max_length = 40
 	edit.custom_minimum_size.y = 50
 	m.body.add_child(edit)
+	TextGuard.attach(edit)
 	var create := func():
 		var title := edit.text.strip_edges()
 		if title == "":
@@ -894,6 +895,7 @@ func _build_adopt() -> void:
 
 	_pet_edit = _field(Text.t("choose_focus.name_pet_placeholder"), 24, 18)
 	v.add_child(_pet_edit)
+	TextGuard.attach(_pet_edit)
 	_pet_edit.text_changed.connect(func(_t): _name_is_default = false)
 	_pet_edit.text_submitted.connect(func(_t): _pet_edit.release_focus())
 
@@ -990,7 +992,7 @@ func _refresh_swatches() -> void:
 		var b := _swatches[k]
 		b.visible = k < parts.size()
 		var c := _draft.colours[k] if k < _draft.colours.size() else Color.WHITE
-		UI.style_button(b, c, UI.INK, 999, true)
+		UI.style_button(b, c, UI.INK, 999)
 		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 			var sb: StyleBoxFlat = b.get_theme_stylebox(state)
 			sb.set_border_width_all(3)
@@ -1037,42 +1039,25 @@ func _style_top(on_form: bool) -> void:
 	for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
 		_close.add_theme_color_override(state, ink)
 	if on_form:
-		UI.style_button(_new, UI.SUCCESS, Color.WHITE, 999, true)
+		UI.style_button(_new, UI.SUCCESS, Color.WHITE, 999)
 		_new.icon = Icons.texture("check", 22, Color.WHITE, 3.0)
 	else:
-		UI.style_button(_new, UI.SURFACE, UI.INK, 999, true)
+		UI.style_button(_new, UI.SURFACE, UI.INK, 999)
 		_new.icon = Icons.texture("paw_add", 22, Color.WHITE, 2.4)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		(_new.get_theme_stylebox(state) as StyleBoxFlat).set_content_margin_all(0)
 
 
 ## The bin that rehomes a pet: a round paper button like the others, with a
-## red bin and a red rim to say it's for something you can't undo. It eases a
-## little bigger under the pointer (no shade, so nothing jumps).
+## red bin and a red rim to say it lets a pet go (Undo on the toast brings
+## it back). Like
+## every button it shades under the pointer and sinks when pressed.
 func _bin_button() -> Button:
-	var b := UI.round_button("bin", Text.t("choose_focus.rehome_pet"), _on_left, UI.SURFACE, UI.DANGER, 56, true)
-	var styles := UI.button_styles(UI.SURFACE, 999, true)
-	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
-		# Hovering keeps the resting look; only a press shades it.
-		var sb: StyleBoxFlat = (styles["pressed" if state in ["pressed", "hover_pressed"] else ("disabled" if state == "disabled" else "normal")] as StyleBoxFlat).duplicate()
-		if state == "focus":
-			sb = styles["focus"]
-		else:
-			sb.set_border_width_all(3)
-			sb.border_color = Color(UI.DANGER, sb.bg_color.a / maxf(UI.SURFACE.a, 0.01))
-		sb.set_content_margin_all(0)
-		b.add_theme_stylebox_override(state, sb)
-	b.set_meta("no_grow", true)
-	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
-	var grow := func(to: float):
-		if to > 1.0 and (b.disabled or App.touch_screen()):
-			return
-		b.pivot_offset = b.size * 0.5
-		var t := Motion.tween(b, "bin_grow")
-		t.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		t.tween_property(b, "scale", Vector2.ONE * to, Motion.time(BIN_GROW_TIME))
-	b.mouse_entered.connect(grow.bind(BIN_GROW))
-	b.mouse_exited.connect(grow.bind(1.0))
+	var b := UI.round_button("bin", Text.t("choose_focus.rehome_pet"), _on_left, UI.SURFACE, UI.DANGER, 56)
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var sb: StyleBoxFlat = b.get_theme_stylebox(state)
+		sb.set_border_width_all(3)
+		sb.border_color = Color(UI.DANGER, sb.bg_color.a / maxf(UI.SURFACE.a, 0.01))
 	return b
 
 

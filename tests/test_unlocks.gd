@@ -71,7 +71,7 @@ func test_level_rewards_are_in_order() -> void:
 	sorted.sort()
 	eq(levels, sorted, "level order")
 	var first := rewards.filter(func(r): return r["level"] == 1).map(func(r): return r["id"])
-	eq(first, ["lake", "farm", "dog1", "cat1"], "lakeside, the farm, a dog and a cat to begin with")
+	eq(first, ["lake", "farm", "dog1", "cat", "dog2"], "lakeside, the farm, two dogs and a cat to begin with")
 	var others := Unlocks.other_rewards().map(func(r): return r["id"])
 	check(others.has("moon") and others.has("gorilla") and others.has("lion"), "exploring rewards")
 	eq(rewards.size() + others.size(), Content.animals.size() + Content.biomes.size(), "everything is one or the other")

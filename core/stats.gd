@@ -8,9 +8,6 @@ extends RefCounted
 const SECONDS_PER_DAY := 86400
 ## A day counts towards a streak with at least this much focus.
 const STREAK_MIN_SECONDS := 600
-## This many work days in a row earn one rest day: missing the next day
-## doesn't break the streak.
-const REST_DAY_AFTER := 3
 
 
 static func local_day(unix: int, bias_minutes: int) -> int:
@@ -191,37 +188,31 @@ static func _day_total(days: Dictionary, day: int) -> int:
 	return total
 
 
-## Work days in the streak ending today. A day with nothing yet doesn't break
-## it until it's over, and one missed day is forgiven (a rest day) when the
-## REST_DAY_AFTER days before it were all work days. Rest days don't add to
-## the count.
+## Work days in the streak ending today. A day with nothing yet doesn't
+## break it until it's over; any day missed before that does.
 static func current_streak(days: Dictionary, today: int) -> int:
 	var work := work_days(days)
 	var day := today if work.has(today) else today - 1
 	var streak := 0
-	while true:
-		if work.has(day):
-			streak += 1
-		elif _run_ending(work, day - 1) < REST_DAY_AFTER:
-			break
+	while work.has(day):
+		streak += 1
 		day -= 1
 	return streak
 
 
-## True when a rest day is banked: the run of work days ending today (or
-## yesterday, if today has nothing yet) is long enough to forgive a miss.
-static func rest_day_ready(days: Dictionary, today: int) -> bool:
+## The longest run of work days in a row there's ever been.
+static func best_streak(days: Dictionary) -> int:
 	var work := work_days(days)
-	var day := today if work.has(today) else today - 1
-	return _run_ending(work, day) >= REST_DAY_AFTER
-
-
-## Consecutive work days ending on `day` (counting back), up to REST_DAY_AFTER.
-static func _run_ending(work: Dictionary, day: int) -> int:
-	var run := 0
-	while run < REST_DAY_AFTER and work.has(day - run):
-		run += 1
-	return run
+	var best := 0
+	for day in work:
+		# Count up from the first day of each run only.
+		if work.has(day - 1):
+			continue
+		var run := 0
+		while work.has(day + run):
+			run += 1
+		best = maxi(best, run)
+	return best
 
 
 ## {id: seconds} as [[id, seconds], ...], most first (ties by id, so the
@@ -261,6 +252,20 @@ static func format_duration(seconds: int) -> String:
 	if h > 0:
 		return Text.t("dates.hours_minutes", {"h": h, "m": "%02d" % m})
 	return Text.t("dates.minutes", {"m": m})
+
+
+## Just the biggest unit, for a small space: "1.5h" (one decimal under a
+## hundred hours, dropping ".0"), "45m", "20s".
+static func format_short(seconds: int) -> String:
+	seconds = maxi(0, seconds)
+	if seconds >= 3600:
+		var h := seconds / 3600.0
+		var shown := str(roundi(h)) if h >= 100.0 else String.num(floorf(h * 10.0) / 10.0, 1).trim_suffix(".0")
+		return Text.t("dates.short_hours", {"h": shown})
+	if seconds >= 60:
+		@warning_ignore("integer_division")
+		return Text.t("dates.short_minutes", {"m": seconds / 60})
+	return Text.t("dates.short_seconds", {"s": seconds})
 
 
 ## "3 Jan 2026" for a unix time, in local time.

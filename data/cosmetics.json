@@ -3,54 +3,269 @@
 	"skin_tones": ["#f3d2b3", "#e2b48f", "#c68d63", "#9a6440", "#4a2c1b"],
 	"hair_tones": ["#2b211c", "#5a3b25", "#c99a5b", "#b4533f", "#9c9c9c"],
 	"slots": [
-		{"id": "hat", "name": "Hat"},
-		{"id": "hair", "name": "Hair"},
-		{"id": "face", "name": "Face"},
-		{"id": "facial_hair", "name": "Facial hair"},
-		{"id": "neckwear", "name": "Neckwear"},
-		{"id": "top", "name": "Top"},
-		{"id": "gloves", "name": "Gloves"},
-		{"id": "walking_stick", "name": "Walking stick"},
-		{"id": "trousers", "name": "Trousers"},
-		{"id": "shoes", "name": "Shoes"}
+		{
+			"id": "hat",
+			"name": "Hat"
+		},
+		{
+			"id": "hair",
+			"name": "Hair"
+		},
+		{
+			"id": "face",
+			"name": "Face"
+		},
+		{
+			"id": "facial_hair",
+			"name": "Facial hair"
+		},
+		{
+			"id": "neckwear",
+			"name": "Neckwear"
+		},
+		{
+			"id": "top",
+			"name": "Top"
+		},
+		{
+			"id": "gloves",
+			"name": "Gloves"
+		},
+		{
+			"id": "walking_stick",
+			"name": "Walking stick"
+		},
+		{
+			"id": "trousers",
+			"name": "Trousers"
+		},
+		{
+			"id": "shoes",
+			"name": "Shoes"
+		}
 	],
 	"sections": [
-		{"id": "head", "name": "Head", "rows": ["hat", "hair", "hair_tone", "face", "facial_hair"]},
-		{"id": "body", "name": "Body", "rows": ["skin_tone", "neckwear", "top", "gloves", "walking_stick"]},
-		{"id": "legs", "name": "Legs", "rows": ["trousers", "shoes"]}
+		{
+			"id": "head",
+			"name": "Head",
+			"rows": ["hat", "hair", "hair_tone", "face", "facial_hair"]
+		},
+		{
+			"id": "body",
+			"name": "Body",
+			"rows": ["skin_tone", "neckwear", "top", "gloves", "walking_stick"]
+		},
+		{
+			"id": "legs",
+			"name": "Legs",
+			"rows": ["trousers", "shoes"]
+		}
 	],
 	"items": [
-		{"id": "hat_none",        "slot": "hat",           "name": "No hat",        "style": "none"},
-		{"id": "hat_beanie",      "slot": "hat",           "name": "Beanie",        "style": "beanie",   "colour": "#c2563f"},
-		{"id": "hat_cap",         "slot": "hat",           "name": "Cap",           "style": "cap",      "colour": "#2f4b6e"},
-		{"id": "hair_short",      "slot": "hair",          "name": "Short",         "style": "short"},
-		{"id": "hair_long",       "slot": "hair",          "name": "Long",          "style": "long"},
-		{"id": "hair_bun",        "slot": "hair",          "name": "Bun",           "style": "bun"},
-		{"id": "hair_curly",      "slot": "hair",          "name": "Curly",         "style": "curly"},
-		{"id": "hair_buzz",       "slot": "hair",          "name": "Buzz cut",      "style": "buzz"},
-		{"id": "hair_none",       "slot": "hair",          "name": "Bald",          "style": "none"},
-		{"id": "face_smile",      "slot": "face",          "name": "Smile",         "style": "smile"},
-		{"id": "face_grin",       "slot": "face",          "name": "Grin",          "style": "grin"},
-		{"id": "face_glasses",    "slot": "face",          "name": "Glasses",       "style": "glasses"},
-		{"id": "face_freckles",   "slot": "face",          "name": "Freckles",      "style": "freckles"},
-		{"id": "beard_none",      "slot": "facial_hair",   "name": "Clean shaven",  "style": "none"},
-		{"id": "beard_stubble",   "slot": "facial_hair",   "name": "Stubble",       "style": "stubble"},
-		{"id": "beard_moustache", "slot": "facial_hair",   "name": "Moustache",     "style": "moustache"},
-		{"id": "beard_short",     "slot": "facial_hair",   "name": "Short beard",   "style": "short_beard"},
-		{"id": "beard_full",      "slot": "facial_hair",   "name": "Full beard",    "style": "full_beard"},
-		{"id": "neck_none",       "slot": "neckwear",      "name": "Nothing",       "style": "none"},
-		{"id": "neck_scarf",      "slot": "neckwear",      "name": "Scarf",         "style": "scarf",    "colour": "#d9a441"},
-		{"id": "top_jumper",      "slot": "top",           "name": "Jumper",        "style": "jumper",   "colour": "#b4533f"},
-		{"id": "top_hoodie",      "slot": "top",           "name": "Hoodie",        "style": "hoodie",   "colour": "#3e6e5b"},
-		{"id": "top_tee",         "slot": "top",           "name": "T-shirt",       "style": "tee",      "colour": "#e8e2d4"},
-		{"id": "gloves_none",     "slot": "gloves",        "name": "No gloves",     "style": "none"},
-		{"id": "gloves_mittens",  "slot": "gloves",        "name": "Mittens",       "style": "mittens",  "colour": "#7b5ea7"},
-		{"id": "stick_none",      "slot": "walking_stick", "name": "No stick",      "style": "none"},
-		{"id": "trousers_jeans",  "slot": "trousers",      "name": "Jeans",         "style": "trousers", "colour": "#4b5a6e"},
-		{"id": "trousers_cords",  "slot": "trousers",      "name": "Cords",         "style": "trousers", "colour": "#8a6a45"},
-		{"id": "trousers_shorts", "slot": "trousers",      "name": "Shorts",        "style": "shorts",   "colour": "#b9a27a"},
-		{"id": "shoes_boots",     "slot": "shoes",         "name": "Walking boots", "style": "boots",    "colour": "#5a3b25"},
-		{"id": "shoes_trainers",  "slot": "shoes",         "name": "Trainers",      "style": "trainers", "colour": "#f2f2f2"},
-		{"id": "shoes_wellies",   "slot": "shoes",         "name": "Wellies",       "style": "wellies",  "colour": "#3d6b45"}
+		{
+			"id": "hat_none",
+			"slot": "hat",
+			"name": "No hat",
+			"style": "none"
+		},
+		{
+			"id": "hat_beanie",
+			"slot": "hat",
+			"name": "Beanie",
+			"style": "beanie",
+			"colour": "#c2563f"
+		},
+		{
+			"id": "hat_cap",
+			"slot": "hat",
+			"name": "Cap",
+			"style": "cap",
+			"colour": "#2f4b6e"
+		},
+		{
+			"id": "hair_short",
+			"slot": "hair",
+			"name": "Short",
+			"style": "short"
+		},
+		{
+			"id": "hair_long",
+			"slot": "hair",
+			"name": "Long",
+			"style": "long"
+		},
+		{
+			"id": "hair_bun",
+			"slot": "hair",
+			"name": "Bun",
+			"style": "bun"
+		},
+		{
+			"id": "hair_curly",
+			"slot": "hair",
+			"name": "Curly",
+			"style": "curly"
+		},
+		{
+			"id": "hair_buzz",
+			"slot": "hair",
+			"name": "Buzz cut",
+			"style": "buzz"
+		},
+		{
+			"id": "hair_none",
+			"slot": "hair",
+			"name": "Bald",
+			"style": "none"
+		},
+		{
+			"id": "face_smile",
+			"slot": "face",
+			"name": "Smile",
+			"style": "smile"
+		},
+		{
+			"id": "face_grin",
+			"slot": "face",
+			"name": "Grin",
+			"style": "grin"
+		},
+		{
+			"id": "face_glasses",
+			"slot": "face",
+			"name": "Glasses",
+			"style": "glasses"
+		},
+		{
+			"id": "face_freckles",
+			"slot": "face",
+			"name": "Freckles",
+			"style": "freckles"
+		},
+		{
+			"id": "beard_none",
+			"slot": "facial_hair",
+			"name": "Clean shaven",
+			"style": "none"
+		},
+		{
+			"id": "beard_stubble",
+			"slot": "facial_hair",
+			"name": "Stubble",
+			"style": "stubble"
+		},
+		{
+			"id": "beard_moustache",
+			"slot": "facial_hair",
+			"name": "Moustache",
+			"style": "moustache"
+		},
+		{
+			"id": "beard_short",
+			"slot": "facial_hair",
+			"name": "Short beard",
+			"style": "short_beard"
+		},
+		{
+			"id": "beard_full",
+			"slot": "facial_hair",
+			"name": "Full beard",
+			"style": "full_beard"
+		},
+		{
+			"id": "neck_none",
+			"slot": "neckwear",
+			"name": "Nothing",
+			"style": "none"
+		},
+		{
+			"id": "neck_scarf",
+			"slot": "neckwear",
+			"name": "Scarf",
+			"style": "scarf",
+			"colour": "#d9a441"
+		},
+		{
+			"id": "top_jumper",
+			"slot": "top",
+			"name": "Jumper",
+			"style": "jumper",
+			"colour": "#b4533f"
+		},
+		{
+			"id": "top_hoodie",
+			"slot": "top",
+			"name": "Hoodie",
+			"style": "hoodie",
+			"colour": "#3e6e5b"
+		},
+		{
+			"id": "top_tee",
+			"slot": "top",
+			"name": "T-shirt",
+			"style": "tee",
+			"colour": "#e8e2d4"
+		},
+		{
+			"id": "gloves_none",
+			"slot": "gloves",
+			"name": "No gloves",
+			"style": "none"
+		},
+		{
+			"id": "gloves_mittens",
+			"slot": "gloves",
+			"name": "Mittens",
+			"style": "mittens",
+			"colour": "#7b5ea7"
+		},
+		{
+			"id": "stick_none",
+			"slot": "walking_stick",
+			"name": "No stick",
+			"style": "none"
+		},
+		{
+			"id": "trousers_jeans",
+			"slot": "trousers",
+			"name": "Jeans",
+			"style": "trousers",
+			"colour": "#4b5a6e"
+		},
+		{
+			"id": "trousers_cords",
+			"slot": "trousers",
+			"name": "Cords",
+			"style": "trousers",
+			"colour": "#8a6a45"
+		},
+		{
+			"id": "trousers_shorts",
+			"slot": "trousers",
+			"name": "Shorts",
+			"style": "shorts",
+			"colour": "#b9a27a"
+		},
+		{
+			"id": "shoes_boots",
+			"slot": "shoes",
+			"name": "Walking boots",
+			"style": "boots",
+			"colour": "#5a3b25"
+		},
+		{
+			"id": "shoes_trainers",
+			"slot": "shoes",
+			"name": "Trainers",
+			"style": "trainers",
+			"colour": "#f2f2f2"
+		},
+		{
+			"id": "shoes_wellies",
+			"slot": "shoes",
+			"name": "Wellies",
+			"style": "wellies",
+			"colour": "#3d6b45"
+		}
 	]
 }

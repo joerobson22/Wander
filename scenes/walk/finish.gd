@@ -199,7 +199,19 @@ func _build_words(session: FocusSession, roll: Dictionary) -> void:
 		var g := Content.gift(_gift_id)
 		var finder := Content.pet_called(_pet, true)
 		found.add_child(_word(UI.label(Text.t("finish.found", {"pet": finder, "a_rarity": UI.a(Content.rarity_name(roll["rarity"]).to_lower())}), 16, colour.lightened(0.4), false, 800)))
-		found.add_child(_word(UI.label(g.get("name", "?"), 30, UI.ON_DARK, true, 600)))
+		var name_label := _word(UI.label(g.get("name", "?"), 30, UI.ON_DARK, true, 600))
+		if g.has("slot"):
+			# Something to wear: COSMETIC right after its name, as on its card.
+			var name_row := UI.hbox(10)
+			name_row.alignment = BoxContainer.ALIGNMENT_CENTER
+			name_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			name_row.add_child(name_label)
+			var worn := UI.cosmetic_tag()
+			worn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			name_row.add_child(worn)
+			found.add_child(name_row)
+		else:
+			found.add_child(name_label)
 		var desc := _word(UI.para(g.get("description", ""), 15, UI.ON_DARK_SOFT))
 		desc.custom_minimum_size.x = room
 		desc.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -212,7 +224,7 @@ func _build_words(session: FocusSession, roll: Dictionary) -> void:
 	# The way home: a paper button like the walk's, in the bottom right on
 	# computers and the top right on phones (where the gift's words take the
 	# whole width of the bottom).
-	_home = UI.round_button("home", Text.t("common.home"), go_back, UI.SURFACE, UI.INK, HOME_SIZE, true)
+	_home = UI.round_button("home", Text.t("common.home"), go_back, UI.SURFACE, UI.INK, HOME_SIZE)
 	_home.modulate.a = 0.0
 	_home.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_home)

@@ -2,8 +2,9 @@ class_name FocusOrb
 extends Control
 ## The living centre of the focus screen: soft, see-through circles of
 ## slightly different greens, each drifting round the middle at its own speed
-## and direction, while the whole cluster slowly breathes in and out and its
-## colours drift between greens and blues and back (about a minute round).
+## and direction, while the whole cluster slowly breathes in and out. Its
+## colour follows the time of day: blue at midnight, green at midday, moving
+## a shade every five minutes in between (easing over, see Motion.catch_up).
 ## Under the pointer it eases a little bigger and a shade deeper, and it dips
 ## when pressed. Tapping it is how a focus session starts: it swells to fill
 ## the screen alongside the choose focus screen's opening circle.
@@ -25,8 +26,10 @@ const DEPTH := 1.5
 ## In the light colours: how much more saturated and how much darker.
 const LIGHT_SATURATE := 1.9
 const LIGHT_DEPTH := 0.1
-## Seconds for the colours to go from green to blue and back.
+## Seconds for a holiday's colours to go once round the blobs.
 const TINT_PERIOD := 60.0
+## The colour moves on a step every this many minutes of the day.
+const TINT_STEP_MINUTES := 5.0
 
 ## [colour, opacity, radius, orbit, speed (radians/s), phase]; radius and
 ## orbit are fractions of the orb's radius.
@@ -68,6 +71,10 @@ const PALETTE_SOLID := 1.8
 const PALETTE_EASE := 1.2
 ## False until its first frame.
 var _drawn := false
+## How blue it is now (0 green, 1 blue), and the time of day (in hours, on
+## a five-minute step) it's showing or easing towards.
+var _tint := -1.0
+var _tint_hour := -1.0
 
 
 func _init() -> void:
@@ -87,15 +94,41 @@ func _process(delta: float) -> void:
 		_blend = 0.0 if _drawn and is_visible_in_tree() else 1.0
 	_drawn = true
 	_blend = minf(1.0, _blend + delta / PALETTE_EASE)
+	_follow_time()
 	queue_redraw()
 
 
-## Blob `k`'s colour at `time` from `palette` (empty: the usual drift
-## between greens and blues). Each blob starts further along the palette and
-## they all drift through it, once round every TINT_PERIOD seconds.
-static func blob_colour(k: int, time: float, palette: PackedColorArray) -> Color:
+## Eases the colour over to the time of day's (on a five-minute step), 0.1s
+## for every hour it moves (straight there the first time).
+func _follow_time() -> void:
+	# Held while hidden (under a walk), so coming back shows the catch-up.
+	if _tint >= 0.0 and not is_visible_in_tree():
+		return
+	var step := TINT_STEP_MINUTES / 60.0
+	var hour := floorf(App.day_hour() / step) * step
+	if is_equal_approx(hour, _tint_hour):
+		return
+	var want := tint_for_hour(hour)
+	if _tint < 0.0 or Motion.still:
+		Motion.tween(self, "tint").kill()
+		_tint = want
+	else:
+		var diff := fposmod(hour - _tint_hour + 12.0, 24.0) - 12.0
+		Motion.method(self, "tint", func(v: float): _tint = v, _tint, want, Motion.catch_up(diff))
+	_tint_hour = hour
+
+
+## How blue the orb is at `hour` past midnight: 1 at midnight, 0 at midday.
+static func tint_for_hour(hour: float) -> float:
+	return 0.5 + 0.5 * cos(hour / 24.0 * TAU)
+
+
+## Blob `k`'s colour at `time` from `palette` (empty: between its green and
+## its blue, `tint` of the way to blue). Each blob starts further along a
+## holiday's palette and they all drift through it, once round every
+## TINT_PERIOD seconds.
+static func blob_colour(k: int, time: float, palette: PackedColorArray, tint: float = 0.0) -> Color:
 	if palette.is_empty():
-		var tint := tint_at(time)
 		return Color.from_string(BLOBS[k][0], Color.WHITE).lerp(Color.from_string(BLUES[k], Color.WHITE), tint)
 	var n := palette.size()
 	var at := fposmod(float(k) * n / BLOBS.size() + time / TINT_PERIOD * n, float(n))
@@ -104,9 +137,9 @@ static func blob_colour(k: int, time: float, palette: PackedColorArray) -> Color
 
 
 ## The faint halo's colour.
-static func halo_colour(time: float, palette: PackedColorArray) -> Color:
+static func halo_colour(palette: PackedColorArray, tint: float = 0.0) -> Color:
 	if palette.is_empty():
-		return Color(0.38, 0.65, 0.52).lerp(Color(0.36, 0.55, 0.74), tint_at(time))
+		return Color(0.38, 0.65, 0.52).lerp(Color(0.36, 0.55, 0.74), tint)
 	var sum := Color(0, 0, 0, 0)
 	for c in palette:
 		sum += c
@@ -122,7 +155,7 @@ func _colour(k: int) -> Color:
 
 
 func _shown(k: int, palette: PackedColorArray) -> Color:
-	var c := blob_colour(k, _time, palette)
+	var c := blob_colour(k, _time, palette, maxf(_tint, 0.0))
 	if not UI.dark and palette.is_empty():
 		# Richer by day, so it doesn't wash out against a bright sky (a
 		# holiday's colours are already as rich as they should be).
@@ -142,9 +175,9 @@ func _draw() -> void:
 	# colours (red over green) turn muddy.
 	var solid := lerpf(1.0 if _old_palette.is_empty() else PALETTE_SOLID, 1.0 if _palette.is_empty() else PALETTE_SOLID, smoothstep(0.0, 1.0, _blend))
 	# A faint halo so the orb sits softly on the page.
-	var halo := halo_colour(_time, _palette)
+	var halo := halo_colour(_palette, maxf(_tint, 0.0))
 	if _blend < 1.0:
-		halo = halo_colour(_time, _old_palette).lerp(halo, smoothstep(0.0, 1.0, _blend))
+		halo = halo_colour(_old_palette, maxf(_tint, 0.0)).lerp(halo, smoothstep(0.0, 1.0, _blend))
 	for i in 6:
 		draw_circle(c, base * breathe * (1.02 + i * 0.035), Color(halo, 0.035), true, -1.0, true)
 	for k in BLOBS.size():
@@ -155,12 +188,6 @@ func _draw() -> void:
 		var colour := _colour(k)
 		colour = colour.darkened(HOVER_SHADE * _shade)
 		draw_circle(p, base * b[2] * breathe * wobble, Color(colour, minf(1.0, b[1] * DEPTH * solid)), true, -1.0, true)
-
-
-## How far towards blue the colours are at `time` seconds: 0 green, 1 blue,
-## easing to and fro.
-static func tint_at(time: float) -> float:
-	return 0.5 - 0.5 * cos(time * TAU / TINT_PERIOD)
 
 
 func _has_point(point: Vector2) -> bool:

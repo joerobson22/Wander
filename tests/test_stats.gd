@@ -51,29 +51,19 @@ func test_short_walks_on_one_day_add_up() -> void:
 	eq(Stats.current_streak(d, Stats.local_day(MONDAY, 0)), 1, "two five minute walks make a work day")
 
 
-func test_rest_day_after_three_days() -> void:
-	# Work Mon-Wed, rest Thu, work Fri.
+func test_a_missed_day_breaks_the_streak() -> void:
+	# Work Mon-Wed, miss Thu, work Fri.
 	var d := _days([[0, 900], [1, 900], [2, 900], [4, 900]])
 	var monday := Stats.local_day(MONDAY, 0)
-	eq(Stats.current_streak(d, monday + 4), 4, "rest day forgiven, not counted")
-	eq(Stats.current_streak(d, monday + 3), 3, "the rest day itself is still pending")
-	check(Stats.rest_day_ready(d, monday + 2), "three days banks a rest day")
-	check(not Stats.rest_day_ready(d, monday + 1), "two days doesn't")
-	check(not Stats.rest_day_ready(d, monday + 4), "a rest day was just used")
-	# Two missed days in a row break it.
+	eq(Stats.current_streak(d, monday + 4), 1, "no rest days: Thursday broke it")
+	eq(Stats.current_streak(d, monday + 3), 3, "today not over yet")
 	eq(Stats.current_streak(d, monday + 6), 0)
 
 
-func test_rest_day_needs_three_days_before_it() -> void:
-	# Work Mon, Tue, miss Wed, work Thu.
-	var d := _days([[0, 900], [1, 900], [3, 900]])
-	eq(Stats.current_streak(d, Stats.local_day(MONDAY, 0) + 3), 1)
-
-
-func test_rest_day_yesterday_keeps_streak_alive_today() -> void:
-	var d := _days([[0, 900], [1, 900], [2, 900]])
-	# Thursday missed, Friday not over yet.
-	eq(Stats.current_streak(d, Stats.local_day(MONDAY, 0) + 4), 3)
+func test_best_streak() -> void:
+	var d := _days([[0, 900], [1, 900], [2, 900], [4, 900], [5, 900], [6, 100]])
+	eq(Stats.best_streak(d), 3, "the longest run, short days left out")
+	eq(Stats.best_streak({}), 0)
 
 
 func test_totals_by_project_pet_and_place() -> void:

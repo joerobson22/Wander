@@ -39,9 +39,12 @@ const NARROW_WINDOW := 0.75
 const MAP_INSET := 18.0
 ## A drag becomes a swipe once it moves this far...
 const SWIPE_START := 16.0
-## ...and goes through when let go past this much of the screen, or flicked.
-const SWIPE_COMMIT := 0.22
-const FLICK_SPEED := 1.6  # screens per second
+## ...and goes through when let go past this much of the screen's short
+## side, or flicked. Measured on the short side either way, so swiping along
+## the long side (up and down on a phone, sideways on a computer) takes no
+## more of a swipe than across it.
+const SWIPE_COMMIT := 0.18
+const FLICK_SPEED := 1.4  # short sides per second
 ## The wheel or trackpad moves to the next pane after this much turning in
 ## one go (a wheel notch is 1; a trackpad sends small amounts)...
 const WHEEL_STEP := 1.0
@@ -194,6 +197,8 @@ func _ready() -> void:
 	if not App.ended_walk.is_empty():
 		_open_flow("ended", App.ended_walk, true)
 		App.ended_walk = {}
+	elif not _locked:
+		_start_up()
 	if App.save_reset:
 		App.save_reset = false
 		Toast.show_text.call_deferred(Text.t("save.reset"), "gear")
@@ -475,6 +480,14 @@ func _sync_lock(instant: bool = false) -> void:
 			going.queue_free()
 		else:
 			Motion.fade(going, 0.0, Motion.NORMAL).tween_callback(going.queue_free)
+
+
+## Opening the app plays the same arrival as making an account: the view
+## starts looking down at the hilltop and tilts up to the sky, the orb pops
+## up, the greeting types itself out, then the rest fades in.
+func _start_up() -> void:
+	_show_home(false, true)
+	_show_home(true, false)
 
 
 ## Fades the screens and the minimap in or out, leaving the hilltop view:
@@ -949,7 +962,11 @@ func _update_swipe(pos: Vector2) -> void:
 
 func _end_swipe() -> void:
 	_swiping = false
-	if _progress > SWIPE_COMMIT or _velocity > FLICK_SPEED:
+	# Progress and speed are in lengths of the side being swiped along: in
+	# short sides they're the same however the screen is turned.
+	var along := size.x if _target.x != _at.x else size.y
+	var k := along / maxf(1.0, minf(size.x, size.y))
+	if _progress * k > SWIPE_COMMIT or _velocity * k > FLICK_SPEED:
 		_slide_to(_target, Motion.NORMAL * maxf(0.4, 1.0 - _progress))
 	else:
 		var back := _target

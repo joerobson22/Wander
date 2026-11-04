@@ -62,11 +62,8 @@ func _tile(id: String) -> GiftTile:
 ## Three rings side by side: gifts in green, pets' gift tables in blue and
 ## cosmetics in purple (the common, rare and epic colours).
 func _progress(counts: Dictionary) -> Control:
-	var section := UI.vbox(8)
-	section.add_child(UI.caption(Text.t("gifts.collection_stats")))
 	_stats = StatPanel.new(3)
-	section.add_child(_stats)
-	var diameter := clampf(size.y * 0.12, 64.0, 104.0)
+	var diameter := StatPanel.ring_size(size.y)
 	var stats := [
 		[Text.t("gifts.discovered"), Text.t("gifts.discovered_note", {"have": counts["found"], "total": counts["gifts"]}), counts["found"], counts["gifts"], "common"],
 		[Text.t("gifts.pet_tables"), Text.t("gifts.pet_tables_note", {"have": counts["tables"], "total": counts["total_tables"]}), counts["tables"], counts["total_tables"], "rare"],
@@ -74,4 +71,4 @@ func _progress(counts: Dictionary) -> Control:
 	]
 	for s in stats:
 		_stats.add(ProgressRing.new(Collection.fraction(s[2], s[3]), Content.rarity_colour(s[4]), diameter), s[0], s[1])
-	return section
+	return _stats

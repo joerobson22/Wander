@@ -124,7 +124,8 @@ func _shelf() -> Control:
 
 
 func _edit(key: String, title: String, placeholder: String, max_length: int) -> void:
-	Modal.prompt(title, str(App.state.profile.get(key, "")), placeholder, max_length).closed.connect(func(text):
+	# A username is one word: friends find you by it.
+	Modal.prompt(title, str(App.state.profile.get(key, "")), placeholder, max_length, key != "username").closed.connect(func(text):
 		if text is String:
 			App.set_profile(key, text))
 

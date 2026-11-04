@@ -71,10 +71,6 @@ func _ready() -> void:
 	heartbeat.autostart = true
 	heartbeat.timeout.connect(_on_heartbeat)
 	add_child(heartbeat)
-	# Every button grows a little under the pointer (HoverGrow).
-	get_tree().node_added.connect(func(n: Node):
-		if n is BaseButton:
-			HoverGrow.attach(n))
 
 
 func _notification(what: int) -> void:
@@ -355,8 +351,17 @@ func rehome_pet(id: String) -> void:
 		_changed()
 
 
+## Undo for rehoming: the pet's back with your others.
+func unrehome_pet(id: String) -> void:
+	var p := state.pet(id)
+	if p and p.is_rehomed():
+		p.rehomed_unix = 0
+		_changed()
+
+
 ## A name for a new pet of this animal that no pet of yours has yet:
-## "Dog 1", then "Dog 1 (2)", "Dog 1 (3)"...
+## "Dog 1", then "Dog 1 2", "Dog 1 3"... (names take only letters, numbers
+## and spaces: see TextGuard).
 func free_pet_name(animal_id: String) -> String:
 	var base := str(Content.animal(animal_id).get("name", ""))
 	var taken := {}
@@ -365,7 +370,7 @@ func free_pet_name(animal_id: String) -> String:
 	var pick := base
 	var n := 2
 	while taken.has(pick.to_lower()):
-		pick = "%s (%d)" % [base, n]
+		pick = "%s %d" % [base, n]
 		n += 1
 	return pick
 
@@ -500,15 +505,25 @@ func day_hour() -> float:
 ## How much it's night where you are (0 day, 1 night), easing over the
 ## twilight round sunrise and sunset (Outdoors.sun_hours()).
 func night() -> float:
+	return night_at(day_hour())
+
+
+## How much it's night at `hour` (hours past midnight) today.
+func night_at(hour: float) -> float:
 	var sun := Outdoors.sun_hours()
-	return DayCycle.night_at(day_hour(), sun.x, sun.y)
+	return DayCycle.night_at(fposmod(hour, 24.0), sun.x, sun.y)
 
 
 ## The sky now (DayCycle.at()), with the sun up while it's really up.
 func sky_look() -> Dictionary:
+	return sky_look_at(day_hour())
+
+
+## The sky at `hour` (hours past midnight) today.
+func sky_look_at(hour: float) -> Dictionary:
 	var sun := Outdoors.sun_hours()
 	var cycle := Content.day_cycle
-	return DayCycle.at(DayCycle.solar_hour(day_hour(), sun.x, sun.y, cycle), cycle)
+	return DayCycle.at(DayCycle.solar_hour(fposmod(hour, 24.0), sun.x, sun.y, cycle), cycle)
 
 
 ## Whether the app is in its dark colours: after sunset till sunrise. Tests

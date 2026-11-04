@@ -7,7 +7,8 @@ extends Button
 ## gift is on its way. From then on blue, purple and gold slices show the
 ## chance of a rare, epic or legendary gift, growing as the walk goes on;
 ## once a rarity is certain the ones below it drop out, with another pop.
-## Pressing it ends the walk.
+## Thin lines in the pill's paper colour part the slices, and the pie fills
+## its whole circle (no rim round it). Pressing it ends the walk.
 
 const HEIGHT := 52.0
 ## The pie's size, and how far it sits in from the pill's right end.
@@ -37,7 +38,7 @@ func _init() -> void:
 	custom_minimum_size.y = HEIGHT
 	focus_mode = Control.FOCUS_ALL
 	mouse_default_cursor_shape = Cursor.HOVER
-	UI.style_button(self, UI.SURFACE, UI.INK, 999, true)
+	UI.style_button(self, UI.SURFACE, UI.INK, 999)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
 		var sb := get_theme_stylebox(state)
 		if sb is StyleBoxFlat:
@@ -133,14 +134,15 @@ func _set_blend(v: float) -> void:
 
 func _draw() -> void:
 	var r := PIE * 0.5 * _pie_scale
-	var c := Vector2(size.x - PIE_INSET - PIE * 0.5, size.y * 0.5)
+	# (It sinks with the pill when pressed.)
+	var c := Vector2(size.x - PIE_INSET - PIE * 0.5, size.y * 0.5 + (float(UI.DEPTH) if is_pressed() else 0.0))
 	var green := Content.rarity_colour("common")
-	draw_circle(c, r, UI.NEUTRAL, true, -1.0, true)
+	_slice(c, r, 0.0, TAU, UI.NEUTRAL)
 	if _reveal < 1.0:
 		# The first ten minutes sweeping round, then the green filling in.
 		_slice(c, r, -PI * 0.5, TAU * _progress, green.darkened(0.4))
 		if _reveal > 0.0:
-			draw_circle(c, r * _reveal, green, true, -1.0, true)
+			_slice(c, r * _reveal, 0.0, TAU, green)
 	else:
 		var at := -PI * 0.5
 		var shares := shown()
@@ -149,17 +151,18 @@ func _draw() -> void:
 			if sweep > 0.002:
 				_slice(c, r, at, sweep, Content.rarity_colour(rarity))
 				at += sweep
-		# Thin lines between the slices so neighbours read apart.
+		# Hairlines between the slices in the pill's own paper colour, so
+		# neighbours read apart in light and dark alike.
 		at = -PI * 0.5
 		for rarity in SLICES:
 			var share := float(shares.get(rarity, 0.0))
 			if share > 0.002 and share < 0.998:
-				draw_line(c, c + Vector2(cos(at), sin(at)) * r, Color(UI.SURFACE, 0.6), 1.0, true)
+				draw_line(c, c + Vector2(cos(at), sin(at)) * r, UI.SURFACE, 0.75, true)
 			at += TAU * share
-	draw_arc(c, r - 1.0, 0, TAU, 40, Color(UI.EDGE, 0.8), 2.0, true)
 
 
-## A slice of the pie from `from` (radians, clockwise) round `sweep`.
+## A slice of the pie from `from` (radians, clockwise) round `sweep`,
+## filled right out to its edge, with a smooth rim (no outline round it).
 func _slice(c: Vector2, r: float, from: float, sweep: float, colour: Color) -> void:
 	if sweep >= TAU - 0.001:
 		draw_circle(c, r, colour, true, -1.0, true)
@@ -167,8 +170,10 @@ func _slice(c: Vector2, r: float, from: float, sweep: float, colour: Color) -> v
 	if sweep <= 0.0:
 		return
 	var pts := PackedVector2Array([c])
-	var steps := maxi(2, ceili(sweep / TAU * 64.0))
+	var steps := maxi(2, ceili(sweep / TAU * 96.0))
 	for i in steps + 1:
 		var a := from + sweep * i / steps
 		pts.append(c + Vector2(cos(a), sin(a)) * r)
 	draw_colored_polygon(pts, colour)
+	# The polygon's curved edge isn't smoothed: a thin arc over it is.
+	draw_arc(c, r - 0.5, from, from + sweep, steps + 1, colour, 1.0, true)

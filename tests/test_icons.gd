@@ -19,6 +19,9 @@ func test_named_icons_exist() -> void:
 	var names := {}
 	for b in load_json("res://data/biomes.json")["biomes"]:
 		names[b["icon"]] = true
+	# The walk's weather picker names its icons by kind.
+	for kind in Weather.KINDS:
+		names[WeatherPicker.ICON_NAME % kind] = true
 	var used := RegEx.create_from_string('(?:icon_rect|Icons\\.texture|round_button|ghost_button)\\("([a-z_]+)"')
 	for dir in ["res://ui/", "res://ui/components/", "res://scenes/", "res://scenes/panes/", "res://scenes/walk/",
 			"res://scenes/choose_focus/", "res://scenes/customise/", "res://scenes/account/", "res://core/"]:

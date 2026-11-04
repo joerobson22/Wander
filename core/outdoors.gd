@@ -117,6 +117,11 @@ func weather() -> String:
 		return look.weather
 	if choice() != "":
 		return choice()
+	return real_weather()
+
+
+## The latest real weather where you are, or "sunny" when it isn't known.
+func real_weather() -> String:
 	var w := _cached("weather_cache")
 	if enabled() and w.has("kind") and App.now() - int(w.get("at", 0)) < WEATHER_KEEPS:
 		return str(w["kind"])

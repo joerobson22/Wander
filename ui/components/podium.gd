@@ -20,9 +20,11 @@ func _init(title: String, rows: Array, empty_text: String) -> void:
 	add_theme_constant_override("separation", 6)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var cap := UI.caption(title)
-	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(cap)
+	# (No title when something else says what it is: a menu above it.)
+	if title != "":
+		var cap := UI.caption(title)
+		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		add_child(cap)
 	if rows.is_empty():
 		var empty := UI.label(empty_text, 13, UI.INK_FAINT, false, 700)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

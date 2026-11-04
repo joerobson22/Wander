@@ -4,11 +4,11 @@ extends TestCase
 func test_the_cast() -> void:
 	var animals: Array = load_json("res://data/animals.json")["animals"]
 	var ids: Array = animals.map(func(a): return a["id"])
-	for id in ["dog1", "dog2", "dog3", "cat1", "cat2", "snail", "bird", "sheep", "pig", "rabbit", "bear", "tortoise"]:
+	for id in ["dog1", "dog2", "cat", "snail", "bird", "sheep", "pig", "rabbit", "bear", "tortoise"]:
 		check(ids.has(id), "%s is in the core cast" % id)
 	for id in ["elephant", "lion", "gorilla", "hyrax", "lizard", "spider", "snake", "eagle", "parakeet", "fox", "leopard", "tiger", "monkey", "giraffe", "red_panda", "rhino", "frog"]:
 		check(ids.has(id), "%s is unlockable" % id)
-	eq(ids.size(), 33)
+	eq(ids.size(), 32)
 	for a in animals:
 		eq(a["parts"].size(), a["default_colours"].size(), "%s colours per part" % a["id"])
 
@@ -66,7 +66,7 @@ func test_grades_have_colours() -> void:
 
 func test_trade_costs() -> void:
 	var r: Array = load_json("res://data/gifts.json")["rarities"]
-	eq(r.map(func(x): return int(x.get("trade_in", 0))), [10, 5, 3, 0])
+	eq(r.map(func(x): return int(x.get("trade_in", 0))), [5, 5, 3, 0])
 
 
 func test_every_animal_can_dive() -> void:

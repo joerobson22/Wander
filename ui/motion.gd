@@ -86,6 +86,18 @@ static func enter(control: Control, delay: float = 0.0, offset: float = 16.0, se
 	return t
 
 
+## Things that follow the time of day (the sky, the sun and moon, the focus
+## orb's colour) ease over to a new time rather than jumping: this long per
+## hour of difference.
+const PER_HOUR := 0.1
+
+
+## How long catching up `hours` of the time of day takes (PER_HOUR each).
+static func catch_up(hours: float) -> float:
+	# (Raw seconds: Motion.method and Motion.to scale them for reduced motion.)
+	return absf(hours) * PER_HOUR
+
+
 ## A quick swell and settle, for something that just changed state.
 static func pop(item: CanvasItem, amount: float = 0.18, seconds: float = 0.38) -> Tween:
 	if item is Control:
