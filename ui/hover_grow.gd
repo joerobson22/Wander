@@ -6,9 +6,6 @@ extends RefCounted
 ## stand on a chunky edge, shade under the pointer and sink when pressed
 ## (UI.button_styles).
 ## A control with its own hover animation sets the "no_grow" meta first.
-## Pills with words in (dropdowns, chips, the project pill) never grow: they
-## sit in rows and scroll strips that would cut a grown pill off, so they
-## only shade under the pointer (their hover style).
 
 const GROW := 1.1
 const TIME := 0.1
@@ -31,32 +28,16 @@ static func _wire(target) -> void:
 	if not is_instance_valid(target):
 		return
 	var control := target as Control
-	if control.has_meta("no_grow") or control is BaseButton or is_pill(control):
+	if control.has_meta("no_grow") or control is BaseButton:
 		return
 	control.resized.connect(func(): control.pivot_offset = control.size * 0.5)
 	control.pivot_offset = control.size * 0.5
 	control.mouse_entered.connect(func(): _to(control, GROW))
 	control.mouse_exited.connect(func(): _to(control, 1.0))
-	if control is BaseButton:
-		# A button switched off mid-hover settles back.
-		control.draw.connect(func():
-			if (control as BaseButton).disabled and control.scale != Vector2.ONE:
-				_to(control, 1.0))
-
-
-## A button with words in and fully round ends.
-static func is_pill(control: Control) -> bool:
-	var b := control as Button
-	if b == null or b.text == "":
-		return false
-	var sb := b.get_theme_stylebox("normal") as StyleBoxFlat
-	return sb != null and sb.corner_radius_top_left >= 99 and sb.corner_radius_bottom_right >= 99
 
 
 static func _to(control: Control, s: float) -> void:
 	if not is_instance_valid(control) or not control.is_inside_tree():
-		return
-	if s > 1.0 and control is BaseButton and (control as BaseButton).disabled:
 		return
 	# A finger doesn't hover: nothing grows in the debug phone view.
 	var app := control.get_tree().root.get_node_or_null("App")

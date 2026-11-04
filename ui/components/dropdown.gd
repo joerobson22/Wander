@@ -125,8 +125,6 @@ func _open() -> void:
 	for o in _options:
 		var on: bool = o[0] == current
 		var b := UI.flat_button(UI.button(o[1], Callable(), "quiet" if on else "ghost"))
-		# Menu rows only shade under the pointer; they never grow.
-		b.set_meta("no_grow", true)
 		b.custom_minimum_size = Vector2(150, 40)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.add_theme_font_size_override("font_size", 14)
