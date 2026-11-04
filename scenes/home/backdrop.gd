@@ -39,8 +39,6 @@ var covered := false
 ## tilts the view up to the forest and the sky. Near layers move further than
 ## far ones, and the sky and the sun or moon least of all.
 var look_down := 0.0
-## For tests and the debug bar: 0 day to 1 night. Below 0 works it out.
-var night_override := -1.0
 ## The time of day on show, in hours past midnight (it can run past 24 while
 ## easing over midnight). It eases to a new time rather than jumping
 ## (Motion.catch_up), and stays put while a flow covers the view, so coming
@@ -147,7 +145,7 @@ func _set_hour(v: float) -> void:
 func _apply_hour() -> void:
 	if not is_inside_tree():
 		return
-	var night := night_override if night_override >= 0.0 else App.night_at(shown_hour)
+	var night := App.night_at(shown_hour)
 	$NightSky.modulate.a = night
 	for i in _layers.size():
 		var dim := _layers[i].night_brightness if _layers[i].night_brightness >= 0.0 else night_brightness

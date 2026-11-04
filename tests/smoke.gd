@@ -817,14 +817,13 @@ func _run() -> void:
 		await _shot("stats_strip_dragged")
 		legend_strip.scroll_horizontal = 0
 		await _wait(5)
-	# Pills (the project chips, dropdowns) shade under the pointer rather
-	# than grow, so the strip never cuts them off.
+	# Buttons (the project chips here) shade under the pointer rather than
+	# grow, so the strip never cuts them off.
 	var chip: Button = _find(legend_strip, func(n): return n is Button and n.text != "")
 	if chip:
 		await _point(chip.get_global_rect().get_center())
 		await _wait(20)
 		check(is_equal_approx(chip.scale.x, 1.0), "a chip doesn't grow under the pointer (%.2f)" % chip.scale.x)
-		check(_class("res://ui/hover_grow.gd").is_pill(chip), "it counts as a pill")
 		await _point(Vector2(4, 4))
 		await _wait(5)
 	main._panes[Vector2i(0, 1)]._show_piece(app.state.projects[0].id, 0)

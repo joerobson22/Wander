@@ -604,7 +604,6 @@ static func text_link(text: String, on_press: Callable, size: int = 15) -> Butto
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
 		b.add_theme_color_override(state, ACCENT)
 	b.add_theme_font_size_override("font_size", size)
-	b.set_meta("no_grow", true)
 	return b
 
 
@@ -645,15 +644,21 @@ static func ghost_button(icon: String, tip: String, on_press: Callable, ink: Col
 	b.mouse_default_cursor_shape = Cursor.HOVER
 	for state in ["normal", "disabled"]:
 		b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	for state in ["hover", "pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(state, bar_box(Color(ink, 0.1 if state == "hover" else 0.16), 999))
 	b.add_theme_stylebox_override("focus", focus_ring(999))
-	for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
-		b.add_theme_color_override(state, ink)
-	b.add_theme_color_override("icon_disabled_color", Color(ink, 0.45))
+	ink_ghost(b, ink)
 	if on_press.is_valid():
 		b.pressed.connect(on_press)
 	return b
+
+
+## Recolours a ghost_button: its icon, and the faint circle under the
+## pointer, in `ink` (for one over scenery that turns dark at dusk).
+static func ink_ghost(b: Button, ink: Color) -> void:
+	for state in ["hover", "pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(state, bar_box(Color(ink, 0.1 if state == "hover" else 0.16), 999))
+	for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
+		b.add_theme_color_override(state, ink)
+	b.add_theme_color_override("icon_disabled_color", Color(ink, 0.45))
 
 
 ## Round filter/segment pill: ink when selected, soft grey when not.

@@ -19,7 +19,6 @@ const REVEAL := 0.5
 ## Rarest first, clockwise from the top.
 const SLICES := ["legendary", "epic", "rare", "common"]
 
-var _seconds := 0
 var _level := -2  # -2 = not set yet, -1 = no gift, 0 = common ... 3 = legendary
 ## How far round the first ten minutes are (0..1).
 var _progress := 0.0
@@ -52,7 +51,6 @@ func _init() -> void:
 ## Updates the button for a walk this long, with a fanfare when it earns its
 ## first gift or a rarer one becomes certain.
 func set_seconds(seconds: int) -> void:
-	_seconds = seconds
 	var table := Content.drop_table
 	_progress = clampf(float(seconds) / maxf(1.0, float(table.get("min_seconds", 600))), 0.0, 1.0)
 	var floor_rarity := GiftRoller.min_rarity(seconds, table)

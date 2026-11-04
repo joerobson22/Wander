@@ -14,7 +14,6 @@ extends Control
 ## Gifts per row in the collection.
 const PER_ROW := 5
 
-var modal: Modal
 var _shelf_box: VBoxContainer
 var _grid: GiftGrid
 var _slots: Array[GiftShelf.Slot] = []
@@ -31,7 +30,6 @@ var _pointer := Vector2.ZERO
 static func open() -> Modal:
 	var m := Modal.open(560)
 	var editor := ShelfEditor.new()
-	editor.modal = m
 	m.header.add_child(m.heading_row(Text.t("shelf.title")))
 	editor._shelf_box = UI.vbox(0)
 	m.header.add_child(editor._shelf_box)

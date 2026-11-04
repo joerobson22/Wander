@@ -338,13 +338,8 @@ func _restyle_hud() -> void:
 	_style_quote()
 	var ink := _hud_ink()
 	for b: Button in [_pause, _sound]:
-		if not is_instance_valid(b):
-			continue
-		for state in ["hover", "pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(state, UI.bar_box(Color(ink, 0.1 if state == "hover" else 0.16), 999))
-		for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
-			b.add_theme_color_override(state, ink)
-		b.add_theme_color_override("icon_disabled_color", Color(ink, 0.45))
+		if is_instance_valid(b):
+			UI.ink_ghost(b, ink)
 
 
 ## Centred text with a soft shadow so it reads over any scenery.
