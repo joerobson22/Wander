@@ -15,9 +15,27 @@ func test_no_gift_under_ten_minutes() -> void:
 	check(not GiftRoller.roll(600, "dog", 0, table, gifts, rng).is_empty(), "gift at exactly 10 minutes")
 
 
-func test_legendary_only_from_45_minutes() -> void:
-	eq(GiftRoller.chances(2699, table)["legendary"], 0.0)
-	check(GiftRoller.chances(2700, table)["legendary"] > 0.0)
+## The first tier with any weight for `rarity`.
+func _first_tier_with(rarity: String) -> Dictionary:
+	for tier in table["tiers"]:
+		if float(tier["weights"].get(rarity, 0)) > 0.0:
+			return tier
+	return {}
+
+
+## `rarity`'s share of a tier's weights, among those at least `floor_rarity`.
+func _share(tier: Dictionary, rarity: String, floor_rarity: String = "common") -> float:
+	var from := GiftRoller.RARITIES.find(floor_rarity)
+	var total := 0.0
+	for r in GiftRoller.RARITIES.slice(from):
+		total += float(tier["weights"].get(r, 0))
+	return float(tier["weights"].get(rarity, 0)) / total if GiftRoller.RARITIES.find(rarity) >= from else 0.0
+
+
+func test_no_legendary_before_its_first_tier() -> void:
+	var at := int(_first_tier_with("legendary")["min_seconds"])
+	eq(GiftRoller.chances(at - 1, table)["legendary"], 0.0)
+	check(GiftRoller.chances(at, table)["legendary"] > 0.0)
 
 
 func test_gift_matches_table_and_rarity() -> void:
@@ -36,22 +54,25 @@ func test_distribution_roughly_matches_table() -> void:
 	var counts := {"common": 0, "rare": 0, "epic": 0, "legendary": 0}
 	for i in 20000:
 		counts[GiftRoller.roll(1800, "dog", 0, table, gifts, rng)["rarity"]] += 1
-	# 30 minute tier is 75 / 23 / 2 / 0.
-	check(absf(counts["common"] / 20000.0 - 0.75) < 0.02, "common %s" % counts)
-	check(absf(counts["epic"] / 20000.0 - 0.02) < 0.01, "epic %s" % counts)
-	eq(counts["legendary"], 0)
+	# Exactly on the 30 minute tier: its weights as they are.
+	var tier: Dictionary = table["tiers"].filter(func(t): return int(t["min_seconds"]) == 1800)[0]
+	check(absf(counts["common"] / 20000.0 - _share(tier, "common")) < 0.02, "common %s" % counts)
+	check(absf(counts["epic"] / 20000.0 - _share(tier, "epic")) < 0.01, "epic %s" % counts)
+	eq(counts["legendary"] > 0, _share(tier, "legendary") > 0.0, "legendary %s" % counts)
 
 
 func test_guaranteed_rarity_drops_lower_ones() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 9
 	var counts := {"common": 0, "rare": 0, "epic": 0, "legendary": 0}
+	var at := int(table["guaranteed"]["rare"])
 	for i in 20000:
-		counts[GiftRoller.roll(3600, "dog", 0, table, gifts, rng)["rarity"]] += 1
-	# 1 hour: at least rare, so 32 / 6 / 2 of the tier's weights share it all.
+		counts[GiftRoller.roll(at, "dog", 0, table, gifts, rng)["rarity"]] += 1
+	# At least rare from here, so the tier's other weights share it all.
+	var tier: Dictionary = table["tiers"].filter(func(t): return int(t["min_seconds"]) <= at).back()
 	eq(counts["common"], 0, "no commons once rare is guaranteed")
-	check(absf(counts["rare"] / 20000.0 - 0.80) < 0.02, "rare %s" % counts)
-	check(absf(counts["legendary"] / 20000.0 - 0.05) < 0.01, "legendary %s" % counts)
+	check(absf(counts["rare"] / 20000.0 - _share(tier, "rare", "rare")) < 0.02, "rare %s" % counts)
+	check(absf(counts["legendary"] / 20000.0 - _share(tier, "legendary", "rare")) < 0.01, "legendary %s" % counts)
 
 
 func test_min_rarity_follows_the_gift_button() -> void:
@@ -122,8 +143,8 @@ func test_animals_of_a_kind_share_a_table() -> void:
 	for a in load_json("res://data/animals.json")["animals"]:
 		check(tables.has(a["table"]), "%s's table %s exists" % [a["id"], a["table"]])
 		by_table[a["table"]] = by_table.get(a["table"], []) + [a["id"]]
-	eq(by_table["dog"], ["dog1", "dog2", "dog3"], "every dog brings dog gifts")
-	eq(by_table["cat"], ["cat1", "cat2"], "both cats bring cat gifts")
+	eq(by_table["dog"], ["dog1", "dog2"], "every dog brings dog gifts")
+	eq(by_table["cat"], ["cat"], "the cat brings cat gifts")
 	for t in ["lion", "tiger", "leopard"]:
 		eq(by_table[t], [t], "the %s has its own" % t)
 	for t in load_json("res://data/gifts.json")["tables"]:
@@ -138,10 +159,10 @@ func test_odds_grow_steadily_between_tiers() -> void:
 	var between := GiftRoller.chances(2250, table)
 	var at_45 := GiftRoller.chances(2699, table)
 	check(between["rare"] > at_30["rare"] and at_45["rare"] > between["rare"], "rare grows through the half hour")
-	eq(at_45["legendary"], 0.0, "but no legendary before 45 minutes")
+	eq(at_45["legendary"], 0.0, "but no legendary yet")
 	var total := 0.0
 	for r in GiftRoller.RARITIES:
 		total += float(between[r])
 	check(absf(total - 1.0) < 0.0001, "the chances add up")
 	eq(GiftRoller.chances(599, table), {"common": 0.0, "rare": 0.0, "epic": 0.0, "legendary": 0.0}, "nothing before the first gift")
-	eq(GiftRoller.chances(600, table)["common"], 0.9)
+	eq(GiftRoller.chances(600, table)["common"], _share(table["tiers"][0], "common"))

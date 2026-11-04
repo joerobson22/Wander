@@ -1,10 +1,10 @@
 extends Pane
 ## Projects, to the right of the focus screen. The menu in the top right
 ## shows ongoing projects, completed ones or all of them, and everything
-## follows it: four headline numbers up top (how many there are, or for all
-## of them how many are done; the focus time they took; the biggest by focus
-## time; the longest from start to finish, or to today), then each project
-## in a list of its own that scrolls, in the order picked from "Sort by".
+## follows it: three headline rings up top (how many there are, or for all
+## of them the share done; the focus time they took; the biggest by focus
+## time), then each project in a list of its own that scrolls, in the order
+## picked from "Sort by".
 ## Swipe a project from right to left to complete it (confetti), or a
 ## completed one to put it back to ongoing; from left to right to delete it
 ## (with a few seconds to undo). Tap the circled "?" in a completed
@@ -52,16 +52,43 @@ func build() -> void:
 		empty.add_child(v)
 		col.add_child(empty)
 		return
-	var stats := _stats(listed, col.custom_minimum_size.x)
+	var stats := _stats(listed)
 	col.add_child(stats)
 
+	# "Your projects | Swipe to complete / delete", the how-to smaller.
 	var list_head := UI.hbox(8)
-	var cap := UI.caption(Text.t({"ongoing": "projects.hint_ongoing", "completed": "projects.hint_completed", "all": "projects.hint_all"}[_filter()]))
+	var words := UI.hbox(8)
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.clip_contents = true
+	var cap := UI.label(Text.t("projects.your_projects"), 16, UI.INK, false, 800)
 	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cap.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	cap.clip_text = true
-	list_head.add_child(cap)
+	words.add_child(cap)
+	var bar := UI.label("|", 15, UI.LINE, false, 600)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.add_child(bar)
+	var hint := Text.t({"ongoing": "projects.hint_ongoing", "completed": "projects.hint_completed", "all": "projects.hint_all"}[_filter()])
+	var how := UI.label(hint, 12, UI.INK_FAINT, false, 700)
+	how.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.add_child(how)
+	# Too narrow for the hint after the title (a phone, beside the sort
+	# menu): it takes a line of its own under it rather than being cut off.
+	var lines := UI.vbox(0)
+	lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lines.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lines.add_child(words)
+	var below := UI.label(hint, 12, UI.INK_FAINT, false, 700)
+	below.visible = false
+	lines.add_child(below)
+	words.resized.connect(func():
+		var need := cap.get_combined_minimum_size().x + bar.get_combined_minimum_size().x \
+			+ how.get_minimum_size().x + 16.0
+		var inline := words.size.x >= need
+		if bar.visible != inline:
+			bar.visible = inline
+			how.visible = inline
+			below.visible = not inline, CONNECT_DEFERRED)
+	list_head.add_child(lines)
 	var sort := Dropdown.for_setting(sorts(), SORT_KEY, sorts()[0][0], true)
 	sort.chosen.connect(func(_by, _reversed):
 		_fill_list()
@@ -119,17 +146,18 @@ func _make_room(holder: Control, stats: Control, list_head: Control, inner: VBox
 	inner.move_child(list_head, 1)
 
 
-## The four headline numbers for the projects shown. Side by side on a wide
-## screen, two by two on a phone so the times have room.
-func _stats(listed: Array[ProjectData], width: float) -> Control:
-	var panel := StatPanel.new(4 if width >= 520.0 else 2)
+## The three headline numbers for the projects shown, each in a ring the
+## size of the Gifts screen's, so the two panels match: how many (or for all
+## of them, the share done), their focus time and the biggest. Times show
+## just their biggest unit ("1.5h", Stats.format_short) to fit in a ring.
+func _stats(listed: Array[ProjectData]) -> StatPanel:
+	var panel := StatPanel.new(3)
+	var d := StatPanel.ring_size(size.y)
 	var total := 0
 	var graded := 0
 	var done := 0
 	var biggest: ProjectData = null
 	var biggest_s := -1
-	var longest: ProjectData = null
-	var longest_s := -1
 	for p in listed:
 		var s := App.state.project_seconds(p.id)
 		total += s
@@ -140,41 +168,31 @@ func _stats(listed: Array[ProjectData], width: float) -> Control:
 		if s > biggest_s:
 			biggest = p
 			biggest_s = s
-		if span(p) > longest_s:
-			longest = p
-			longest_s = span(p)
 	match _filter():
 		"all":
-			# A badge and a big number like the other cells, so the names line up.
-			panel.add(StatPanel.badge("check", UI.SUCCESS), Text.t("projects.complete"),
-				Text.t("projects.x_of_y", {"x": done, "y": listed.size()}),
-				"%d%%" % floori(100.0 * done / maxi(listed.size(), 1)))
+			panel.add(ProgressRing.new(float(done) / maxi(listed.size(), 1), UI.SUCCESS, d), Text.t("projects.complete"),
+				Text.t("projects.x_of_y", {"x": done, "y": listed.size()}))
 		"completed":
-			panel.add(StatPanel.badge("check", UI.SUCCESS), Text.t("projects.completed"),
-				Text.t("projects.graded", {"n": graded}), str(listed.size()))
+			panel.add(ProgressRing.holding(str(listed.size()), UI.SUCCESS, d), Text.t("projects.completed"),
+				Text.t("projects.graded", {"n": graded}))
 		_:
-			panel.add(StatPanel.badge("hourglass", UI.SERIES[1]), Text.t("projects.ongoing"),
-				"", str(listed.size()))
-	panel.add(StatPanel.badge("clock", Content.rarity_colour("rare")), Text.t("projects.focus_time"),
-		Text.t("projects.focus_time_note"), Stats.format_duration(total))
-	panel.add(StatPanel.badge("trophy", Content.rarity_colour("epic")), Text.t("projects.biggest"),
-		biggest.name, Stats.format_duration(biggest_s))
-	panel.add(StatPanel.badge("calendar", Content.rarity_colour("legendary")), Text.t("projects.longest"),
-		longest.name, span_text(longest_s))
+			panel.add(ProgressRing.holding(str(listed.size()), UI.SERIES[1], d), Text.t("projects.ongoing"))
+	panel.add(ProgressRing.holding(Stats.format_short(total), Content.rarity_colour("rare"), d), Text.t("projects.focus_time"),
+		Text.t("projects.focus_time_note"))
+	panel.add(ProgressRing.holding(Stats.format_short(biggest_s), Content.rarity_colour("epic"), d), Text.t("projects.biggest"),
+		biggest.name)
 	return panel
+
+
+## The rings fill up each time you come to the screen, as on Gifts.
+func _on_shown() -> void:
+	for c in find_children("*", "StatPanel", true, false):
+		(c as StatPanel).sweep()
 
 
 ## Seconds from a project's start to its finish, or to now while it's going.
 static func span(p: ProjectData) -> int:
 	return maxi(0, (p.completed_unix if p.is_complete() else App.now()) - p.created_unix)
-
-
-## "12 days" from a day on; under that, hours and minutes.
-static func span_text(seconds: int) -> String:
-	if seconds < 86400:
-		return Stats.format_duration(seconds)
-	var days := roundi(seconds / 86400.0)
-	return Text.count("projects.days", days)
 
 
 ## Refills the list in the saved order, without rebuilding the rest.

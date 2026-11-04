@@ -20,7 +20,7 @@ static func field(title: String, value: String, placeholder: bool = false, on_ta
 	text.add_child(UI.trimmed(value, 15, UI.INK_FAINT if placeholder else UI.INK, false, 800))
 	row.add_child(text)
 	if on_tap.is_valid():
-		var b := UI.round_button("edit", Text.t("profile.edit_field", {"field": title.to_lower()}), on_tap, UI.SURFACE_SOFT, UI.INK, 28, false)
+		var b := UI.round_button("edit", Text.t("profile.edit_field", {"field": title.to_lower()}), on_tap, UI.SURFACE_SOFT, UI.INK, 28)
 		row.add_child(b)
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
 		# A whole row of details stays still under the pointer; only its
@@ -51,7 +51,7 @@ static func shelf(gift_shelf: GiftShelf, on_edit: Callable = Callable()) -> Cont
 	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(cap)
 	if on_edit.is_valid():
-		head.add_child(UI.round_button("edit", Text.t("shelf.arrange"), on_edit, UI.SURFACE_SOFT, UI.INK, 28, false))
+		head.add_child(UI.round_button("edit", Text.t("shelf.arrange"), on_edit, UI.SURFACE_SOFT, UI.INK, 28))
 	v.add_child(head)
 	v.add_child(gift_shelf)
 	return v

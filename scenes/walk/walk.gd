@@ -40,6 +40,8 @@ var _title: Label
 var _quote: Label
 ## Which encouragement shows (see _quote_key()).
 var _quote_key := 0
+## Whether the HUD was last styled for the dark (see _restyle_hud()).
+var _hud_dark := false
 ## The buttons, which fade in once you set off.
 var _buttons: Array[Control] = []
 ## True until you've walked in and set off (see _intro()).
@@ -223,7 +225,10 @@ func _build_hud() -> void:
 	_title = _shadowed(UI.label(_project.name, 22, UI.ON_DARK, true, 500))
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_title)
-	_quote = _shadowed(UI.label("", 15, UI.ON_DARK_SOFT, false, 700))
+	_quote = UI.label("", 15, UI.ON_DARK_SOFT, false, 700)
+	_quote.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_quote.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_style_quote()
 	_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_quote.custom_minimum_size.x = minf(440.0, size.x - 60.0)
 	_quote.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -232,7 +237,7 @@ func _build_hud() -> void:
 
 	var bottom := UI.hbox()
 	bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pause = UI.round_button("pause", Text.t("walk.pause"), _toggle_pause, UI.SURFACE, UI.INK, 52, true)
+	_pause = UI.ghost_button("pause", Text.t("walk.pause"), _toggle_pause, _hud_ink(), 52, 26)
 	_pause.size_flags_vertical = Control.SIZE_SHRINK_END
 	bottom.add_child(_pause)
 	bottom.add_child(UI.spacer())
@@ -266,31 +271,17 @@ func _build_hud() -> void:
 	var weather := _weather_picker()
 	row.add_child(weather)
 	row.add_child(UI.spacer())
-	_sound = UI.round_button("sound", Text.t("walk.sound"), _toggle_sound, UI.SURFACE, UI.INK, 40, true)
+	_sound = UI.ghost_button("sound", Text.t("walk.sound"), _toggle_sound, _hud_ink(), 40, 22)
 	row.add_child(_sound)
 	_show_sound()
 	_buttons.append_array([_pause, _gift, weather, _sound])
 
 
-## The weather to walk in: the real weather (when you've let the app look
-## it up) or any kind, remembered for next time. A holiday that pins the
-## weather (snow at Christmas) shows it, and it can't be changed.
-func _weather_picker() -> Dropdown:
-	var look := App.holiday_look()
-	if look and look.weather in Weather.KINDS:
-		var pinned := Dropdown.new([[look.weather, Weather.look(look.weather, Content.weathers)["name"]]], look.weather, false, Text.t("walk.weather"), false).on_scenery()
-		pinned.disabled = true
-		return pinned
-	var options := []
-	if Outdoors.enabled():
-		options.append(["real", Text.t("walk.weather_real")])
-	for kind in Weather.KINDS:
-		options.append([kind, Weather.look(kind, Content.weathers)["name"]])
-	var now := Outdoors.choice()
-	if now == "":
-		now = "real" if Outdoors.enabled() else "sunny"
-	var pick := Dropdown.new(options, now, false, Text.t("walk.weather"), false).on_scenery()
-	pick.chosen.connect(func(option: String, _reversed: bool):
+## The weather to walk in (WeatherPicker): the real weather (when you've
+## let the app look it up) or any kind, remembered for next time.
+func _weather_picker() -> WeatherPicker:
+	var pick := WeatherPicker.new()
+	pick.chosen.connect(func(option: String):
 		Outdoors.set_choice("" if option == "real" else option)
 		_update_ambience())
 	return pick
@@ -313,8 +304,47 @@ func _toggle_sound() -> void:
 
 func _show_sound() -> void:
 	var on := _sound_on()
-	_sound.icon = Icons.texture("sound" if on else "mute", int(40 * 0.42), Color.WHITE, 2.6)
+	_sound.icon = Icons.texture("sound" if on else "mute", 22, Color.WHITE, 2.6)
 	_sound.accessibility_name = Text.t("walk.sound_off" if on else "walk.sound_on")
+
+
+## The walk's icon buttons (pause, sound) are just icons over the scenery:
+## light at night, ink by day, like the quote.
+func _hud_ink() -> Color:
+	return UI.ON_DARK if _dark_out() else UI.INK
+
+
+## Whether the scene behind the HUD is dark (after dusk), whatever the
+## app's own palette.
+func _dark_out() -> bool:
+	return is_instance_valid(_scenery) and _scenery.darkness() >= 0.5
+
+
+## At night the quote is light with a shadow; by day a shadow muddies it,
+## so it's plain muted ink, which reads better on the sky.
+func _style_quote() -> void:
+	_hud_dark = _dark_out()
+	if _hud_dark:
+		_shadowed(_quote)
+		_quote.add_theme_color_override("font_color", UI.ON_DARK_SOFT)
+	else:
+		_quote.remove_theme_color_override("font_shadow_color")
+		_quote.add_theme_color_override("font_color", UI.INK_SOFT)
+
+
+## The sky turned (dusk or dawn) mid-walk: the quote and the icon buttons
+## follow it.
+func _restyle_hud() -> void:
+	_style_quote()
+	var ink := _hud_ink()
+	for b: Button in [_pause, _sound]:
+		if not is_instance_valid(b):
+			continue
+		for state in ["hover", "pressed", "hover_pressed"]:
+			b.add_theme_stylebox_override(state, UI.bar_box(Color(ink, 0.1 if state == "hover" else 0.16), 999))
+		for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
+			b.add_theme_color_override(state, ink)
+		b.add_theme_color_override("icon_disabled_color", Color(ink, 0.45))
 
 
 ## Centred text with a soft shadow so it reads over any scenery.
@@ -367,6 +397,9 @@ func _process(delta: float) -> void:
 			_gift.set_seconds(elapsed)
 			if _quote_key_now() != _quote_key and not _quote.text.is_empty():
 				_show_quote(true)
+
+	if is_instance_valid(_quote) and _dark_out() != _hud_dark:
+		_restyle_hud()
 
 	_ambience_check -= delta
 	if _ambience_check <= 0.0:
@@ -436,7 +469,7 @@ func _toggle_pause() -> void:
 
 
 func _apply_paused(paused: bool) -> void:
-	_pause.icon = Icons.texture("play" if paused else "pause", 22, Color.WHITE)
+	_pause.icon = Icons.texture("play" if paused else "pause", 26, Color.WHITE, 2.6)
 	_pause.accessibility_name = Text.t("walk.carry_on" if paused else "walk.pause")
 	_walker.walking = not paused
 	_animal.walking = not paused
@@ -536,6 +569,8 @@ func _dive(gift_id: String) -> void:
 	t.parallel().tween_method(_hop.bind(inside, out, maxi(hops, 1), height * 0.6, -1.0), 0.0, 1.0, Motion.time(maxf(0.8, seconds * 0.8)))
 	await t.finished
 	_animal.walking = false
+	# Landed: it settles back upright.
+	Motion.to(_animal, "rotation", 0.0, Motion.FAST)
 	# It stays facing you, back the way it came, into the end screen.
 	Motion.pop(_animal, 0.12)
 	Audio.play("gift_found", 1.0, -6.0, "chime")

@@ -24,7 +24,9 @@
 			"where": "in the forest",
 			"name": "Forest",
 			"icon": "place_forest",
-			"unlock": {"level": 3},
+			"unlock": {
+				"level": 3
+			},
 			"ambience": "day",
 			"fx": ["fireflies", "stars"]
 		},
@@ -33,7 +35,9 @@
 			"where": "on the beach",
 			"name": "Beach",
 			"icon": "place_beach",
-			"unlock": {"level": 6},
+			"unlock": {
+				"level": 6
+			},
 			"ambience": "lake",
 			"fx": ["stars"]
 		},
@@ -42,7 +46,9 @@
 			"where": "in the city",
 			"name": "City",
 			"icon": "place_city",
-			"unlock": {"level": 8},
+			"unlock": {
+				"level": 8
+			},
 			"ambience": "day",
 			"fx": ["stars"]
 		},
@@ -51,9 +57,15 @@
 			"where": "in the desert",
 			"name": "Desert",
 			"icon": "place_desert",
-			"unlock": {"level": 10},
+			"unlock": {
+				"level": 10
+			},
 			"ambience": "wind",
-			"weather": {"rainy": "sunny", "stormy": "sunny", "snowy": "sunny"},
+			"weather": {
+				"rainy": "sunny",
+				"stormy": "sunny",
+				"snowy": "sunny"
+			},
 			"fx": ["stars"]
 		},
 		{
@@ -61,9 +73,13 @@
 			"where": "in the jungle",
 			"name": "Jungle",
 			"icon": "place_jungle",
-			"unlock": {"level": 12},
+			"unlock": {
+				"level": 12
+			},
 			"ambience": "day",
-			"weather": {"snowy": "sunny"},
+			"weather": {
+				"snowy": "sunny"
+			},
 			"fx": ["fireflies", "stars"]
 		},
 		{
@@ -71,9 +87,14 @@
 			"where": "on the tundra",
 			"name": "Tundra",
 			"icon": "place_tundra",
-			"unlock": {"level": 14},
+			"unlock": {
+				"level": 14
+			},
 			"ambience": "wind",
-			"weather": {"rainy": "snowy", "stormy": "blizzard"},
+			"weather": {
+				"rainy": "snowy",
+				"stormy": "blizzard"
+			},
 			"fx": ["snow", "wind", "stars"]
 		},
 		{
@@ -81,7 +102,10 @@
 			"where": "in the cherry blossom forest",
 			"name": "Cherry Blossom Forest",
 			"icon": "place_blossom",
-			"unlock": {"hours": 10, "place": "forest"},
+			"unlock": {
+				"hours": 10,
+				"place": "forest"
+			},
 			"ambience": "day",
 			"fx": ["petals", "fireflies", "stars"]
 		},
@@ -90,9 +114,14 @@
 			"where": "on safari",
 			"name": "Safari",
 			"icon": "place_safari",
-			"unlock": {"hours": 10, "place": "desert"},
+			"unlock": {
+				"hours": 10,
+				"place": "desert"
+			},
 			"ambience": "day",
-			"weather": {"snowy": "sunny"},
+			"weather": {
+				"snowy": "sunny"
+			},
 			"fx": ["stars"]
 		},
 		{
@@ -100,23 +129,66 @@
 			"where": "on the Moon",
 			"name": "Moon",
 			"icon": "place_moon",
-			"unlock": {"all_tables": true},
+			"unlock": {
+				"all_tables": true
+			},
 			"ambience": "",
-			"weather": {"*": "sunny"},
+			"weather": {
+				"*": "sunny"
+			},
 			"fx": ["stars"],
-			"sky": {"top": "#04050b", "bottom": "#161a2b"},
+			"sky": {
+				"top": "#04050b",
+				"bottom": "#161a2b"
+			},
 			"fixed_light": true
 		}
 	],
 	"weathers": {
 		"_doc": "How each kind of weather looks (see core/weather.gd). The real weather is one of sunny, partly, cloudy, rainy, stormy or snowy; a place's 'weather' rules can turn a kind into another (the tundra's blizzard) or into 'sunny' for none. clouds: how many cross the sky; overcast: 0..1, greying the sky and dimming the light and the sun; rain and snow: drops and flakes on a 720 x 720 screen; wind: how hard it blows them sideways; lightning: flashes and thunder; haze: a white-out.",
-		"sunny":    {"name": "Sunny"},
-		"partly":   {"name": "Sun and cloud", "clouds": 5, "overcast": 0.1},
-		"cloudy":   {"name": "Cloudy", "clouds": 11, "overcast": 0.55},
-		"rainy":    {"name": "Rain", "clouds": 12, "overcast": 0.65, "rain": 140, "wind": 0.2},
-		"stormy":   {"name": "Storm", "clouds": 14, "overcast": 0.85, "rain": 280, "wind": 1.0, "lightning": true},
-		"snowy":    {"name": "Snow", "clouds": 11, "overcast": 0.55, "snow": 160, "wind": 0.2},
-		"blizzard": {"name": "Blizzard", "clouds": 14, "overcast": 0.75, "snow": 360, "wind": 1.8, "haze": 0.35}
+		"sunny": {
+			"name": "Sunny"
+		},
+		"partly": {
+			"name": "Sun and cloud",
+			"clouds": 5,
+			"overcast": 0.1
+		},
+		"cloudy": {
+			"name": "Cloudy",
+			"clouds": 11,
+			"overcast": 0.55
+		},
+		"rainy": {
+			"name": "Rain",
+			"clouds": 12,
+			"overcast": 0.65,
+			"rain": 140,
+			"wind": 0.2
+		},
+		"stormy": {
+			"name": "Storm",
+			"clouds": 14,
+			"overcast": 0.85,
+			"rain": 280,
+			"wind": 1.0,
+			"lightning": true
+		},
+		"snowy": {
+			"name": "Snow",
+			"clouds": 11,
+			"overcast": 0.55,
+			"snow": 160,
+			"wind": 0.2
+		},
+		"blizzard": {
+			"name": "Blizzard",
+			"clouds": 14,
+			"overcast": 0.75,
+			"snow": 360,
+			"wind": 1.8,
+			"haze": 0.35
+		}
 	},
 	"day_cycle": {
 		"_doc": "Places without fixed_light follow the real clock. Each key is the sky and light at that hour (in order); in between they blend, round the clock. 'dark' (0 day .. 1 night) brings out the stars, fireflies and the night chorus. The sun is up from sunrise to sunset; the moon rises moon_gap hours after sunset and sets moon_gap hours before sunrise.",
@@ -124,19 +196,97 @@
 		"sunset": 18.0,
 		"moon_gap": 0.5,
 		"keys": [
-			{"hour": 0.0,   "sky_top": "#121831", "sky_bottom": "#262c50", "tint": "#666c95", "dark": 1.0},
-			{"hour": 4.0,   "sky_top": "#19203c", "sky_bottom": "#333a5e", "tint": "#737aa2", "dark": 1.0},
-			{"hour": 5.25,  "sky_top": "#39457a", "sky_bottom": "#b88a95", "tint": "#9c9cbb", "dark": 0.65},
-			{"hour": 6.0,   "sky_top": "#7d8ec4", "sky_bottom": "#f3b48a", "tint": "#dcc4bd", "dark": 0.3},
-			{"hour": 7.25,  "sky_top": "#a3c4e6", "sky_bottom": "#f8dcc0", "tint": "#f4e7dc", "dark": 0.05},
-			{"hour": 9.0,   "sky_top": "#86bde6", "sky_bottom": "#dcecf4", "tint": "#fbf8f2", "dark": 0.0},
-			{"hour": 12.0,  "sky_top": "#6eb2e8", "sky_bottom": "#d0ebfa", "tint": "#ffffff", "dark": 0.0},
-			{"hour": 15.0,  "sky_top": "#82bce6", "sky_bottom": "#dceef5", "tint": "#fbf8f1", "dark": 0.0},
-			{"hour": 17.0,  "sky_top": "#a7b7d0", "sky_bottom": "#f2d3b0", "tint": "#f5e2cf", "dark": 0.0},
-			{"hour": 18.0,  "sky_top": "#d98a6c", "sky_bottom": "#f5b98c", "tint": "#e6c3b4", "dark": 0.15},
-			{"hour": 18.75, "sky_top": "#6c5a8c", "sky_bottom": "#e09a83", "tint": "#b5a2b4", "dark": 0.45},
-			{"hour": 19.75, "sky_top": "#2c3260", "sky_bottom": "#5b5580", "tint": "#8a88ae", "dark": 0.85},
-			{"hour": 21.0,  "sky_top": "#1c2340", "sky_bottom": "#3a3f63", "tint": "#7a80a8", "dark": 1.0}
+			{
+				"hour": 0.0,
+				"sky_top": "#121831",
+				"sky_bottom": "#262c50",
+				"tint": "#666c95",
+				"dark": 1.0
+			},
+			{
+				"hour": 4.0,
+				"sky_top": "#19203c",
+				"sky_bottom": "#333a5e",
+				"tint": "#737aa2",
+				"dark": 1.0
+			},
+			{
+				"hour": 5.25,
+				"sky_top": "#39457a",
+				"sky_bottom": "#b88a95",
+				"tint": "#9c9cbb",
+				"dark": 0.65
+			},
+			{
+				"hour": 6.0,
+				"sky_top": "#7d8ec4",
+				"sky_bottom": "#f3b48a",
+				"tint": "#dcc4bd",
+				"dark": 0.3
+			},
+			{
+				"hour": 7.25,
+				"sky_top": "#a3c4e6",
+				"sky_bottom": "#f8dcc0",
+				"tint": "#f4e7dc",
+				"dark": 0.05
+			},
+			{
+				"hour": 9.0,
+				"sky_top": "#86bde6",
+				"sky_bottom": "#dcecf4",
+				"tint": "#fbf8f2",
+				"dark": 0.0
+			},
+			{
+				"hour": 12.0,
+				"sky_top": "#6eb2e8",
+				"sky_bottom": "#d0ebfa",
+				"tint": "#ffffff",
+				"dark": 0.0
+			},
+			{
+				"hour": 15.0,
+				"sky_top": "#82bce6",
+				"sky_bottom": "#dceef5",
+				"tint": "#fbf8f1",
+				"dark": 0.0
+			},
+			{
+				"hour": 17.0,
+				"sky_top": "#a7b7d0",
+				"sky_bottom": "#f2d3b0",
+				"tint": "#f5e2cf",
+				"dark": 0.0
+			},
+			{
+				"hour": 18.0,
+				"sky_top": "#d98a6c",
+				"sky_bottom": "#f5b98c",
+				"tint": "#e6c3b4",
+				"dark": 0.15
+			},
+			{
+				"hour": 18.75,
+				"sky_top": "#6c5a8c",
+				"sky_bottom": "#e09a83",
+				"tint": "#b5a2b4",
+				"dark": 0.45
+			},
+			{
+				"hour": 19.75,
+				"sky_top": "#2c3260",
+				"sky_bottom": "#5b5580",
+				"tint": "#8a88ae",
+				"dark": 0.85
+			},
+			{
+				"hour": 21.0,
+				"sky_top": "#1c2340",
+				"sky_bottom": "#3a3f63",
+				"tint": "#7a80a8",
+				"dark": 1.0
+			}
 		]
 	}
 }

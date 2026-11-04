@@ -2,18 +2,18 @@ extends Pane
 ## Stats, below the focus screen. A chart of your focus for this week, month
 ## or year (the tabs at the top of the chart: a bar per day, or per month
 ## for a year), each bar split by project, pet or place (the menu beside the
-## total); tap a piece, or a name in the sideways strip under the chart, for
-## its details. Your past weeks, months or years sit beside it once there
-## are any (tap one to chart it), your streak in the top right (a shield on
-## the flame when you've earned a day off), and the friends leaderboard
-## underneath. It all fits the screen; only the strips and the leaderboard
-## scroll.
+## tabs); tap a piece, or a name in the sideways strip under the chart, for
+## its details. Arrows either side of the period's name and its total step
+## back to earlier periods and forward again. Your streak is in the top
+## right: tap it for your best ever. The friends leaderboard is underneath,
+## sharing the room evenly with the chart, with a button to add friends. It
+## all fits the screen; only the strip and the leaderboard scroll.
 
 ## Names in the strip under the chart are cut to this many letters.
 const CHIP_LETTERS := 10
-## The least room across for the past periods to sit beside the chart.
-const COLUMNS_FROM := 560.0
 const PERIODS := ["week", "month", "year"]
+## The gold of the streak record's trophy (first place on a podium).
+const RECORD_GOLD := Color("#e2b33c")
 
 
 static func splits() -> Array:
@@ -28,9 +28,10 @@ var _chart_title: Label
 var _chart_total: Label
 var _tabs: Dictionary = {}  # period -> its tab
 var _legend: HBoxContainer
-var _periods: Dictionary = {}  # period start -> history button
-## The past periods go in a column beside the chart (else a strip under it).
-var _columns := false
+var _earlier: Button
+var _later: Button
+## Showing your best streak instead of the one now (tap the streak).
+var _record := false
 
 
 func _period() -> String:
@@ -48,19 +49,16 @@ func build() -> void:
 	var current := Stats.period_start(today, _period())
 	if _start < 0 or _start > current or Stats.period_start(_start, _period()) != _start:
 		_start = current
-	# Computers always have the height for the past periods beside the
-	# chart, even in the smallest window; phones put them in a strip under it.
-	_columns = wide or (not App.phone_layout() and margins(1000)["width"] >= COLUMNS_FROM)
-	var col := frame(1000 if _columns else 680, 14)
+	var col := frame(760, 14)
 
 	var head := title_row(Text.t("stats.title"))
 	head.add_child(_streak())
 	col.add_child(head)
 
-	var chart_card := UI.card(UI.SURFACE, 20)
+	var chart_card := UI.card(UI.SURFACE, 16)
 	chart_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	chart_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var c := UI.vbox(8)
+	var c := UI.vbox(6)
 	chart_card.add_child(c)
 	# Week · Month · Year on the left, how the bars split on the right...
 	var tab_row := UI.hbox(8)
@@ -84,13 +82,17 @@ func build() -> void:
 		_select(_start))
 	tab_row.add_child(split)
 	c.add_child(tab_row)
-	# ...then the period's name and its total.
-	var chart_head := UI.hbox(8)
-	_chart_title = UI.label("", 20, UI.INK, true, 600)
+	# ...then the period's name and its total, between arrows to step back
+	# to earlier periods and on again.
+	var chart_head := UI.hbox(4)
+	_earlier = UI.ghost_button("back", Text.t("stats.earlier"), _step.bind(-1), UI.INK, 32, 18)
+	chart_head.add_child(_earlier)
+	_chart_title = UI.trimmed("", 20, UI.INK, true, 600)
 	chart_head.add_child(_chart_title)
-	chart_head.add_child(UI.spacer())
 	_chart_total = UI.label("", 20, UI.ACCENT, true, 600)
 	chart_head.add_child(_chart_total)
+	_later = UI.ghost_button("forward", Text.t("stats.later"), _step.bind(1), UI.INK, 32, 18)
+	chart_head.add_child(_later)
 	c.add_child(chart_head)
 	_chart = _Chart.new()
 	_chart.custom_minimum_size.y = 100
@@ -103,64 +105,52 @@ func build() -> void:
 	_legend = UI.hbox(8)
 	strip_room.add_child(_legend)
 	strip.add_child(strip_room)
-	UI.clear_of_bar(strip, strip_room, 8)
+	UI.clear_of_bar(strip, strip_room, 4)
 	c.add_child(strip)
 
-	# The chart gets the most room; the leaderboard the rest. With only
-	# this period so far there's nothing to pick between, so the past ones
-	# stay hidden and the chart has the width.
-	var history := _history(today)
-	if _periods.size() < 2:
-		_periods.clear()
-		history.queue_free()
-		chart_card.size_flags_stretch_ratio = 1.5
-		col.add_child(chart_card)
-	elif _columns:
-		var row := UI.hbox(16)
-		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		row.size_flags_stretch_ratio = 1.5
-		# Narrower in a small window, so the chart keeps most of the width.
-		history.custom_minimum_size.x = clampf(col.custom_minimum_size.x * 0.28, 180.0, 230.0)
-		row.add_child(history)
-		row.add_child(chart_card)
-		col.add_child(row)
-	else:
-		chart_card.size_flags_stretch_ratio = 1.5
-		col.add_child(chart_card)
-		col.add_child(history)
-
+	# The chart and the leaderboard share the room evenly.
+	chart_card.size_flags_stretch_ratio = 1.0
+	col.add_child(chart_card)
 	var mine := Stats.week_total(App.state.days, Stats.week_start(today))
-	var board := Leaderboard.new(Friends.ranked(App.friends, mine, App.state.active != null))
+	var board := Leaderboard.new(Friends.ranked(App.friends, mine, App.state.active != null), true)
 	# At least a row and yours: a friend above you, then your pinned row.
-	board.custom_minimum_size.y = 180 if _columns else 128
+	board.custom_minimum_size.y = 128
+	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board.size_flags_stretch_ratio = 1.0
 	col.add_child(board)
 	_select(_start, false)
 
 
-## Your streak: the flame with how many days, and a see-through blue
-## shield over the flame's corner when you've earned a day off.
+## Your streak: the flame with how many days. Tap it and it fades over (a
+## tenth of a second out, a tenth in) to your best ever, by a golden trophy
+## holding a flame; tap again for the streak now.
 func _streak() -> Control:
 	var days := Stats.current_streak(App.state.days, App.today())
-	var rest_ready := Stats.rest_day_ready(App.state.days, App.today())
-	var row := UI.hbox(8)
-	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.accessibility_name = Text.count("stats.streak_rest" if rest_ready else "stats.streak", days)
-	var flame := Control.new()
-	flame.custom_minimum_size = Vector2(34, 34)
-	flame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	flame.add_child(UI.icon_rect("flame", 32, UI.FLAME if days > 0 else UI.INK_FAINT))
-	if rest_ready:
-		# A ring of page colour round the shield keeps it apart from the flame.
-		var cut := UI.icon_rect("shield", 22, UI.BG)
-		cut.position = Vector2(15, 14)
-		flame.add_child(cut)
-		var shield := UI.icon_rect("shield", 18, Color(Content.rarity_colour("rare"), 0.6))
-		shield.position = Vector2(17, 16)
-		flame.add_child(shield)
-	row.add_child(flame)
-	row.add_child(UI.label(Text.count("stats.days", days), 22, UI.INK, true, 600))
-	UI.ignore_mouse(row)
-	return row
+	var best := Stats.best_streak(App.state.days)
+	var holder := UI.hbox(8)
+	holder.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	holder.mouse_filter = Control.MOUSE_FILTER_STOP
+	holder.mouse_default_cursor_shape = Cursor.HOVER
+	holder.set_meta("no_grow", true)
+	var icon := UI.icon_rect("flame", 32, UI.FLAME if days > 0 else UI.INK_FAINT)
+	icon.custom_minimum_size = Vector2(34, 34)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	holder.add_child(icon)
+	var words := UI.label("", 22, UI.INK, true, 600)
+	holder.add_child(words)
+	var face := func(record: bool):
+		icon.texture = Icons.texture("trophy_flame", 32, RECORD_GOLD) if record \
+			else Icons.texture("flame", 32, UI.FLAME if days > 0 else UI.INK_FAINT)
+		words.text = Text.count("stats.best", best) if record else Text.count("stats.days", days)
+		holder.accessibility_name = Text.count("stats.best_streak" if record else "stats.streak", best if record else days)
+	face.call(_record)
+	Press.attach(holder).tapped.connect(func():
+		_record = not _record
+		var t := Motion.tween(holder, "swap")
+		t.tween_property(holder, "modulate:a", 0.0, Motion.time(0.1))
+		t.tween_callback(face.bind(_record))
+		t.tween_property(holder, "modulate:a", 1.0, Motion.time(0.1)))
+	return holder
 
 
 ## A tab for a period: bold in ink while it's the one charted, muted
@@ -188,41 +178,6 @@ func _tab(period: String) -> Button:
 			_start = -1
 			rebuild())
 	return b
-
-
-## Past periods, newest first: a column beside the chart on computers and
-## wide screens, a sideways strip under it on phones. Only shown once
-## there's one before this one.
-func _history(today: int) -> Control:
-	_periods.clear()
-	var period := _period()
-	var totals := Stats.period_sums(App.state.days, period)
-	# Past periods with no focus at all are left out; this one always shows.
-	var current := Stats.period_start(today, period)
-	var starts := Stats.period_history(App.state.days, today, period, Stats.local_day(int(App.state.profile.get("created_unix", 0)), App.tz_bias())) \
-		.filter(func(w): return w == current or int(totals.get(w, 0)) > 0)
-	var best := 1
-	for w in starts:
-		best = maxi(best, int(totals.get(w, 0)))
-	var list: BoxContainer
-	if _columns:
-		list = UI.vbox(8)
-	else:
-		list = UI.hbox(8)
-	for w in starts:
-		var b := _period_button(w, int(totals.get(w, 0)), best)
-		list.add_child(b)
-		_periods[w] = b
-	if _columns:
-		# Scrolls without cutting the cards' shadows off at the sides.
-		var holder := UI.shadow_scroll(list)
-		holder.size_flags_horizontal = Control.SIZE_FILL
-		return holder
-	var sc := ScrollContainer.new()
-	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.custom_minimum_size.y = 84
-	sc.add_child(list)
-	return sc
 
 
 ## "This week", "Last month", "13 Oct – 19 Oct", "September 2026", "2025".
@@ -253,32 +208,27 @@ func _period_name(start: int, short: bool) -> String:
 			return Text.t("stats.week_of", {"day": Stats.format_day(start)})
 
 
-func _period_button(w: int, seconds: int, best: int) -> Button:
-	var b := Button.new()
-	b.custom_minimum_size = Vector2(0 if _columns else 132, 70)
-	# The words clip, not the button, or its shadow would be cut off.
-	var v := UI.vbox(2)
-	v.clip_contents = true
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 14
-	v.offset_right = -14
-	v.offset_top = 10
-	v.offset_bottom = -10
-	v.add_child(UI.trimmed(_period_name(w, true), 13, UI.INK_SOFT, false, 800))
-	v.add_child(UI.label(Stats.format_duration(seconds), 17, UI.INK, true, 600))
-	v.add_child(UI.progress_line(float(seconds) / best))
-	b.add_child(v)
-	UI.ignore_mouse(b)
-	b.pressed.connect(_select.bind(w))
-	return b
+## The first period there's anything to look back on: the earliest with
+## focus, or the one you started in.
+func _first_start() -> int:
+	var history := Stats.period_history(App.state.days, App.today(), _period(), Stats.local_day(int(App.state.profile.get("created_unix", 0)), App.tz_bias()))
+	return history.back() if not history.is_empty() else Stats.period_start(App.today(), _period())
+
+
+## One period back (-1) or on (+1), no further than the first or this one.
+func _step(way: int) -> void:
+	var period := _period()
+	var to := Stats.period_before(_start, period) if way < 0 else Stats.period_next(_start, period)
+	if to < _first_start() or to > Stats.period_start(App.today(), period):
+		return
+	_select(to)
 
 
 func _select(start: int, animate: bool = true) -> void:
 	_start = start
-	for w in _periods:
-		var b: Button = _periods[w]
-		UI.style_button(b, UI.ACCENT_SOFT if w == start else UI.SURFACE, UI.INK, 18, w != start)
 	var period := _period()
+	_earlier.disabled = start <= _first_start()
+	_later.disabled = start >= Stats.period_start(App.today(), period)
 	var split := _split()
 	var today := App.today()
 	_chart_title.text = _period_name(start, false)

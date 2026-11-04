@@ -123,11 +123,14 @@ smaller than 800 × 560 points, so layouts never squash.
   that stay apart) and Reduce motion. The Privacy Policy, Terms of Service
   and open source Licences are linked at the bottom (see
   [legal/README.md](legal/README.md)).
-- **Stats** (down): this week's focus split by project (the projects scroll
-  sideways under the chart), past weeks with any focus in them, your streak
-  as a flame with the days beside it (a blue shield on the flame when you've
-  earned a rest day: one allowed after three days in a row), and the friends
-  leaderboard, which scrolls inside its card. "See full" lists everyone in a
+- **Stats** (down): your focus for a week, month or year, split by
+  project, pet or place, with arrows either side of the period's name to step
+  back and forward through earlier ones. Your streak is a flame with the days
+  beside it (any missed day ends it); tap it for your best streak, under a
+  gold trophy. The friends leaderboard sits under the chart, the two sharing
+  the height; it scrolls inside its card, and the person-plus button in its
+  corner searches for a friend by username (no server yet, so it finds no
+  one). "See full" lists everyone in a
   popup. Tap a friend's face or name for their profile: their character,
   when they joined (never where they study), their week, their gift shelf (tap a
   gift for a look) and their achievements. Tap yours for your profile. The

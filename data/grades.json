@@ -5,39 +5,165 @@
 			"id": "gcse",
 			"name": "GCSE",
 			"grades": [
-				{"id": "9", "label": "9", "name": "Grade 9", "colour": "#e0a100", "ink": "#3a2600"},
-				{"id": "8", "label": "8", "name": "Grade 8", "colour": "#8db63c", "ink": "#ffffff"},
-				{"id": "7", "label": "7", "name": "Grade 7", "colour": "#3e9e5c", "ink": "#ffffff"},
-				{"id": "6", "label": "6", "name": "Grade 6", "colour": "#2a9d8f", "ink": "#ffffff"},
-				{"id": "5", "label": "5", "name": "Grade 5", "colour": "#3a7dc9", "ink": "#ffffff"},
-				{"id": "4", "label": "4", "name": "Grade 4", "colour": "#6a5acd", "ink": "#ffffff"},
-				{"id": "3", "label": "3", "name": "Grade 3", "colour": "#8c8c7e", "ink": "#ffffff"},
-				{"id": "2", "label": "2", "name": "Grade 2", "colour": "#d9822b", "ink": "#ffffff"},
-				{"id": "1", "label": "1", "name": "Grade 1", "colour": "#d64545", "ink": "#ffffff"}
+				{
+					"id": "9",
+					"label": "9",
+					"name": "Grade 9",
+					"colour": "#e0a100",
+					"ink": "#3a2600"
+				},
+				{
+					"id": "8",
+					"label": "8",
+					"name": "Grade 8",
+					"colour": "#8db63c",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "7",
+					"label": "7",
+					"name": "Grade 7",
+					"colour": "#3e9e5c",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "6",
+					"label": "6",
+					"name": "Grade 6",
+					"colour": "#2a9d8f",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "5",
+					"label": "5",
+					"name": "Grade 5",
+					"colour": "#3a7dc9",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "4",
+					"label": "4",
+					"name": "Grade 4",
+					"colour": "#6a5acd",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "3",
+					"label": "3",
+					"name": "Grade 3",
+					"colour": "#8c8c7e",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "2",
+					"label": "2",
+					"name": "Grade 2",
+					"colour": "#d9822b",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "1",
+					"label": "1",
+					"name": "Grade 1",
+					"colour": "#d64545",
+					"ink": "#ffffff"
+				}
 			]
 		},
 		{
 			"id": "alevel",
 			"name": "A-Level",
 			"grades": [
-				{"id": "a_star", "label": "A*", "name": "A*", "colour": "#e0a100", "ink": "#3a2600"},
-				{"id": "a", "label": "A", "name": "A", "colour": "#8db63c", "ink": "#ffffff"},
-				{"id": "b", "label": "B", "name": "B", "colour": "#3e9e5c", "ink": "#ffffff"},
-				{"id": "c", "label": "C", "name": "C", "colour": "#2a9d8f", "ink": "#ffffff"},
-				{"id": "d", "label": "D", "name": "D", "colour": "#3a7dc9", "ink": "#ffffff"},
-				{"id": "e", "label": "E", "name": "E", "colour": "#8c8c7e", "ink": "#ffffff"},
-				{"id": "u", "label": "U", "name": "Ungraded", "colour": "#d64545", "ink": "#ffffff"}
+				{
+					"id": "a_star",
+					"label": "A*",
+					"name": "A*",
+					"colour": "#e0a100",
+					"ink": "#3a2600"
+				},
+				{
+					"id": "a",
+					"label": "A",
+					"name": "A",
+					"colour": "#8db63c",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "b",
+					"label": "B",
+					"name": "B",
+					"colour": "#3e9e5c",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "c",
+					"label": "C",
+					"name": "C",
+					"colour": "#2a9d8f",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "d",
+					"label": "D",
+					"name": "D",
+					"colour": "#3a7dc9",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "e",
+					"label": "E",
+					"name": "E",
+					"colour": "#8c8c7e",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "u",
+					"label": "U",
+					"name": "Ungraded",
+					"colour": "#d64545",
+					"ink": "#ffffff"
+				}
 			]
 		},
 		{
 			"id": "uni",
 			"name": "University",
 			"grades": [
-				{"id": "first", "label": "1st", "name": "First", "colour": "#e0a100", "ink": "#3a2600"},
-				{"id": "upper_second", "label": "2:1", "name": "Upper second", "colour": "#3e9e5c", "ink": "#ffffff"},
-				{"id": "lower_second", "label": "2:2", "name": "Lower second", "colour": "#2a9d8f", "ink": "#ffffff"},
-				{"id": "third", "label": "3rd", "name": "Third", "colour": "#3a7dc9", "ink": "#ffffff"},
-				{"id": "fail", "label": "Fail", "name": "Fail", "colour": "#d64545", "ink": "#ffffff"}
+				{
+					"id": "first",
+					"label": "1st",
+					"name": "First",
+					"colour": "#e0a100",
+					"ink": "#3a2600"
+				},
+				{
+					"id": "upper_second",
+					"label": "2:1",
+					"name": "Upper second",
+					"colour": "#3e9e5c",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "lower_second",
+					"label": "2:2",
+					"name": "Lower second",
+					"colour": "#2a9d8f",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "third",
+					"label": "3rd",
+					"name": "Third",
+					"colour": "#3a7dc9",
+					"ink": "#ffffff"
+				},
+				{
+					"id": "fail",
+					"label": "Fail",
+					"name": "Fail",
+					"colour": "#d64545",
+					"ink": "#ffffff"
+				}
 			]
 		}
 	]

@@ -19,8 +19,8 @@ config/features=PackedStringArray("4.6", "Mobile")
 run/low_processor_mode=true
 boot_splash/bg_color=Color(0.37254903, 0.56078434, 0.3529412, 1)
 boot_splash/stretch_mode=0
-boot_splash/image="uid://cqt5cppn0sn2e"
-config/icon="uid://cqt5cppn0sn2e"
+boot_splash/image="res://assets/brand/splash.png"
+config/icon="res://assets/brand/app_icon.svg"
 
 [autoload]
 

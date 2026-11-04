@@ -216,7 +216,7 @@
 		"rehome_pet": "Rehome pet",
 		"rehome": "Rehome",
 		"rehome_title": "Rehome {pet}?",
-		"rehome_body": "{pet} goes off to a happy new home. Projects it walked for still show it. You can't undo this.",
+		"rehome_body": "{pet} goes off to a happy new home. Projects it walked for still show it.",
 		"rehomed": "{pet} has a new home",
 		"place_locked_name": "{place} · locked · {rule}",
 		"no_pets_title": "No pets yet",
@@ -233,11 +233,7 @@
 		"project_placeholder": "What are you focusing on?",
 		"name_first": "Give it a name first",
 		"name_pet_placeholder": "Name your pet",
-		"colour_roles": [
-			"Primary",
-			"Secondary",
-			"Tertiary"
-		],
+		"colour_roles": ["Primary", "Secondary", "Tertiary"],
 		"colour_name": "{role} colour",
 		"scroll_animals": "Scroll for more animals",
 		"animal_locked": "{rule}"
@@ -285,7 +281,6 @@
 	},
 	"gifts": {
 		"title": "Gifts",
-		"collection_stats": "Collection stats",
 		"your_collection": "Your collection",
 		"discovered": "Discovered",
 		"discovered_note": "{have} of {total} gifts",
@@ -299,14 +294,14 @@
 	"gift": {
 		"from": "from the {table} table",
 		"new": "NEW",
-		"wearable": "Wearable ({slot}). Dress your character on your profile, above the focus screen.",
 		"you_have": "You have {n}",
 		"no_trade": "Legendary gifts can't be traded in.",
 		"count": "×{n}",
 		"tally": "{have}/{need}",
 		"click_to_trade": "Click to trade {cost} in for {a_rarity}!",
 		"tap_to_trade": "Tap again to trade {cost} in for {a_rarity}!",
-		"on_shelf": "{gift} (on your shelf)"
+		"on_shelf": "{gift} (on your shelf)",
+		"cosmetic": "Cosmetic"
 	},
 	"sort": {
 		"rarity": "Rarity",
@@ -335,24 +330,20 @@
 		"empty_body_completed": "When a project's done, swipe it from right to left under Ongoing. It moves here with everything your pets found along the way.",
 		"empty_title_all": "No projects yet",
 		"empty_body_all": "Start a project from the project pill when you choose a focus.",
-		"hint_ongoing": "Swipe left to complete",
-		"hint_completed": "Swipe left to reopen",
-		"hint_all": "Your projects",
+		"hint_ongoing": "Swipe to complete / delete",
+		"hint_completed": "Swipe to reopen / delete",
+		"hint_all": "Swipe to complete / reopen / delete",
 		"graded": "{n} graded",
 		"focus_time": "Focus time",
 		"focus_time_note": "across these",
 		"biggest": "Biggest",
-		"longest": "Longest",
-		"days": {
-			"one": "{n} day",
-			"other": "{n} days"
-		},
 		"deleted": "{project} deleted",
 		"reopened": "{project} is ongoing again",
 		"completed_toast": "{project} completed",
 		"grade_title": "Grade for {project}",
 		"remove_grade": "Remove grade",
-		"graded_toast": "{project}: {grade}"
+		"graded_toast": "{project}: {grade}",
+		"your_projects": "Your projects"
 	},
 	"project": {
 		"no_gifts": "No gifts",
@@ -366,7 +357,8 @@
 		"places": "Places",
 		"no_walks": "No walks yet",
 		"ongoing": "Ongoing",
-		"completed": "Completed"
+		"completed": "Completed",
+		"show": "Show"
 	},
 	"profile": {
 		"title": "Profile",
@@ -489,7 +481,6 @@
 			"other": "{n} days"
 		},
 		"streak": "{n} day streak",
-		"streak_rest": "{n} day streak, day off earned",
 		"this_week": "This week",
 		"last_week": "Last week",
 		"week_span": "{from} – {to}",
@@ -515,7 +506,17 @@
 		"split_by": "Split the bars by",
 		"by_projects": "Projects",
 		"by_pets": "Pets",
-		"by_places": "Places"
+		"by_places": "Places",
+		"earlier": "Earlier",
+		"later": "Later",
+		"best": {
+			"one": "Best {n} day",
+			"other": "Best {n} days"
+		},
+		"best_streak": {
+			"one": "Best streak: {n} day",
+			"other": "Best streak: {n} days"
+		}
 	},
 	"leaderboard": {
 		"title": "Friends leaderboard",
@@ -526,7 +527,11 @@
 		"empty": "No friends yet!"
 	},
 	"friends": {
-		"you": "You"
+		"you": "You",
+		"add": "Add a friend",
+		"search_placeholder": "Their username",
+		"search_note": "Search for a friend by their username. Finding friends arrives with online accounts, coming soon.",
+		"no_results": "No one called {name} yet."
 	},
 	"dates": {
 		"hours_minutes": "{h}h {m}m",
@@ -555,15 +560,7 @@
 			"Nov",
 			"Dec"
 		],
-		"days_short": [
-			"Mon",
-			"Tue",
-			"Wed",
-			"Thu",
-			"Fri",
-			"Sat",
-			"Sun"
-		],
+		"days_short": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 		"days_long": [
 			"Monday",
 			"Tuesday",
@@ -586,7 +583,10 @@
 			"October",
 			"November",
 			"December"
-		]
+		],
+		"short_hours": "{h}h",
+		"short_minutes": "{m}m",
+		"short_seconds": "{s}s"
 	},
 	"debug": {
 		"title": "DEBUG",
@@ -707,5 +707,10 @@
 		"character": "Character, head to toe",
 		"face": "Character's face",
 		"chart": "Focus time, {period}: {time}"
+	},
+	"input": {
+		"symbols": "Only letters and numbers, please.",
+		"symbols_spaces": "Only letters, numbers and spaces, please.",
+		"digits": "Only numbers, please."
 	}
 }

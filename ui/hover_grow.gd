@@ -1,9 +1,10 @@
 class_name HoverGrow
 extends RefCounted
-## Every button (and everything else you can tap) grows by a tenth from its
-## centre while the pointer is over it (wide ones by at most MOST a side),
-## and settles back as it leaves, both in a tenth of a second. Buttons get it without each screen wiring it up
-## (App watches for them); Press.attach() gives it to tappable cards too.
+## Tappable cards (Press.attach()) grow by a tenth from their centre while
+## the pointer is over them (wide ones by at most MOST a side), and settle
+## back as it leaves, both in a tenth of a second. Buttons never grow: they
+## stand on a chunky edge, shade under the pointer and sink when pressed
+## (UI.button_styles).
 ## A control with its own hover animation sets the "no_grow" meta first.
 ## Pills with words in (dropdowns, chips, the project pill) never grow: they
 ## sit in rows and scroll strips that would cut a grown pill off, so they
@@ -30,7 +31,7 @@ static func _wire(target) -> void:
 	if not is_instance_valid(target):
 		return
 	var control := target as Control
-	if control.has_meta("no_grow") or is_pill(control):
+	if control.has_meta("no_grow") or control is BaseButton or is_pill(control):
 		return
 	control.resized.connect(func(): control.pivot_offset = control.size * 0.5)
 	control.pivot_offset = control.size * 0.5

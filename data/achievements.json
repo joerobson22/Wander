@@ -1,13 +1,42 @@
 {
 	"_doc": "Achievements on the profile. 'focus' rewards total hours focused. 'all_gifts' is for finding every gift. 'table_gifts' makes one achievement per gift table (gifts.json) for finding all of its gifts; {table} becomes the table's name. Whether you have each is worked out from your focus time and the gifts you've found (core/achievements.gd), never stored.",
 	"focus": [
-		{"id": "focus_10",    "hours": 10,    "name": "Getting going"},
-		{"id": "focus_50",    "hours": 50,    "name": "In the habit"},
-		{"id": "focus_100",   "hours": 100,   "name": "Hundred hours"},
-		{"id": "focus_500",   "hours": 500,   "name": "Deep focus"},
-		{"id": "focus_1000",  "hours": 1000,  "name": "Thousand hours"},
-		{"id": "focus_10000", "hours": 10000, "name": "Mastery"}
+		{
+			"id": "focus_10",
+			"hours": 10,
+			"name": "Getting going"
+		},
+		{
+			"id": "focus_50",
+			"hours": 50,
+			"name": "In the habit"
+		},
+		{
+			"id": "focus_100",
+			"hours": 100,
+			"name": "Hundred hours"
+		},
+		{
+			"id": "focus_500",
+			"hours": 500,
+			"name": "Deep focus"
+		},
+		{
+			"id": "focus_1000",
+			"hours": 1000,
+			"name": "Thousand hours"
+		},
+		{
+			"id": "focus_10000",
+			"hours": 10000,
+			"name": "Mastery"
+		}
 	],
-	"all_gifts": {"id": "all_gifts", "name": "Full collection"},
-	"table_gifts": {"name": "{table} set"}
+	"all_gifts": {
+		"id": "all_gifts",
+		"name": "Full collection"
+	},
+	"table_gifts": {
+		"name": "{table} set"
+	}
 }

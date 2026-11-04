@@ -32,7 +32,7 @@ static func act(direction: int, swipe: SwipeRow, id: String, keep_ongoing: bool,
 		await swipe.vanish()
 		App.delete_project(id)
 		Toast.show_action(Text.t("projects.deleted", {"project": p.name}), "bin", Text.t("common.undo"), func():
-			App.restore_project(p, at))
+			App.restore_project(p, at), "danger")
 	elif p.is_complete():
 		swipe.spring_back()
 		if not keep_ongoing:
@@ -45,4 +45,5 @@ static func act(direction: int, swipe: SwipeRow, id: String, keep_ongoing: bool,
 		if not keep_completed:
 			await swipe.collapse()
 		App.complete_project(id)
-		Toast.show_text(Text.t("projects.completed_toast", {"project": p.name}), "check")
+		Toast.show_action(Text.t("projects.completed_toast", {"project": p.name}), "check", Text.t("common.undo"), func():
+			App.reopen_project(id), "success")

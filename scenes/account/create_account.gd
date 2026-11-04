@@ -20,6 +20,8 @@ var _school: LineEdit
 ## Day, month and year of birth.
 var _dob: Array[LineEdit] = []
 var _dob_wrong: Label
+## "Only numbers" under the birthday, when something else was typed.
+var _dob_digits: Label
 var _agree: Button
 var _create: Button
 var _have: Button
@@ -62,8 +64,10 @@ func _init(kept: Dictionary = {}, own_backdrop: bool = true) -> void:
 	var form := UI.vbox(6)
 	card.add_child(form)
 	_name = _field(form, Text.t("create.name"), Text.t("profile.username_placeholder"), 24, kept.get("name", ""))
+	TextGuard.attach(_name, false)
 	form.add_child(_gap(2))
 	_school = _field(form, Text.t("create.school"), Text.t("profile.school_placeholder"), 60, kept.get("school", ""))
+	TextGuard.attach(_school)
 	form.add_child(_gap(2))
 	form.add_child(_birth_row(kept.get("dob", ["", "", ""])))
 	form.add_child(_gap(2))
@@ -151,6 +155,10 @@ func _birth_row(start: Array) -> Control:
 		_dob.append(edit)
 		row.add_child(edit)
 	box.add_child(row)
+	_dob_digits = UI.label(Text.t("input.digits"), 13, UI.DANGER, false, 800)
+	_dob_digits.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_dob_digits.visible = false
+	box.add_child(_dob_digits)
 	_dob_wrong = UI.para(Text.t("create.dob_invalid"), 13, UI.DANGER, 700)
 	_dob_wrong.visible = false
 	box.add_child(_dob_wrong)
@@ -166,6 +174,9 @@ func _on_dob_typed(text: String, i: int) -> void:
 	if digits != text:
 		edit.text = digits
 		edit.caret_column = digits.length()
+		TextGuard.flag(_dob_digits)
+	else:
+		TextGuard.unflag(_dob_digits)
 	if digits.length() == edit.max_length and edit.has_focus():
 		_next_after(i)
 	_refresh()

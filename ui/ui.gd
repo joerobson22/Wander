@@ -251,9 +251,19 @@ static func with_shadow(b: StyleBoxFlat, strength: float = 1.0) -> StyleBoxFlat:
 	return b
 
 
-## Styleboxes for every button state from one fill colour.
-static func button_styles(fill: Color, radius: int, shadow: bool = false) -> Dictionary:
+## How far a button stands up off the page: its chunky edge underneath,
+## in a deeper shade of its fill. Pressing it pushes it down onto the page.
+const DEPTH := 4
+
+
+## Styleboxes for every button state from one fill colour. A filled button
+## stands on a chunky edge (DEPTH) in a deeper shade of itself; under the
+## pointer it shades a little, and pressed it sinks down onto that edge (the
+## edge disappears). The edge is what stands it off the page or the
+## scenery.
+static func button_styles(fill: Color, radius: int) -> Dictionary:
 	var out := {}
+	var raised := fill.a > 0.0
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		var shade := fill
 		match state:
@@ -262,15 +272,48 @@ static func button_styles(fill: Color, radius: int, shadow: bool = false) -> Dic
 			"pressed", "hover_pressed":
 				shade = _shift(fill, 0.12)
 			"disabled":
-				shade = Color(fill, fill.a * 0.45)
+				# Solid, so the edge under it doesn't show through as a slab.
+				shade = fill.lerp(Color(BG, fill.a), 0.55) if fill.a >= 1.0 else Color(fill, fill.a * 0.45)
 		var sb := box(shade, Color.TRANSPARENT, radius)
 		if state == "focus":
 			sb = focus_ring(radius)
-		else:
-			if shadow and state != "disabled":
-				with_shadow(sb, 0.8)
+		elif raised and state in ["pressed", "hover_pressed"]:
+			press_down(sb)
+		elif raised:
+			lift(sb, fill, state == "disabled")
 		out[state] = sb
 	return out
+
+
+## The deeper shade of `fill` a raised button's edge is drawn in.
+static func depth_colour(fill: Color) -> Color:
+	if is_surface(fill):
+		return Color(EDGE.darkened(0.12), 1.0)
+	return Color(fill.darkened(0.28 if fill.get_luminance() > 0.25 else 0.4), 1.0)
+
+
+## Gives `sb` its chunky edge underneath, in a deeper shade of `fill`.
+static func lift(sb: StyleBoxFlat, fill: Color, faded: bool = false) -> StyleBoxFlat:
+	var c := depth_colour(fill)
+	# A stacked hard shadow: the button's own shape, DEPTH lower.
+	if faded:
+		c = c.lerp(BG, 0.55)
+	sb.shadow_color = Color(c, c.a * fill.a)
+	sb.shadow_size = 1
+	sb.shadow_offset = Vector2(0, DEPTH)
+	return sb
+
+
+## `sb` pushed down onto its edge: no edge, and the box and its words
+## DEPTH lower.
+static func press_down(sb: StyleBoxFlat) -> StyleBoxFlat:
+	sb.shadow_size = 0
+	sb.shadow_color = Color.TRANSPARENT
+	sb.expand_margin_top = -DEPTH
+	sb.expand_margin_bottom = DEPTH
+	sb.content_margin_top += DEPTH
+	sb.content_margin_bottom -= DEPTH
+	return sb
 
 
 ## The green ring round whatever the keyboard is on (Tab moves it). It
@@ -293,8 +336,8 @@ static func _shift(c: Color, amount: float) -> Color:
 
 
 ## Applies one fill and text colour to every state of a button.
-static func style_button(b: Button, fill: Color, ink: Color, radius: int = 16, shadow: bool = false) -> Button:
-	var styles := button_styles(fill, radius, shadow)
+static func style_button(b: Button, fill: Color, ink: Color, radius: int = 16) -> Button:
+	var styles := button_styles(fill, radius)
 	for state in styles:
 		b.add_theme_stylebox_override(state, styles[state])
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
@@ -306,7 +349,44 @@ static func style_button(b: Button, fill: Color, ink: Color, radius: int = 16, s
 	b.add_theme_color_override("icon_hover_pressed_color", ink)
 	b.add_theme_color_override("icon_focus_color", ink)
 	b.add_theme_color_override("icon_disabled_color", Color(ink, 0.45))
+	# Callers often set their own padding after this; once they're done,
+	# the pressed states get theirs again, DEPTH lower, so the words and
+	# icon sink with the box.
+	_settle_press.call_deferred(b)
 	return b
+
+
+## Takes the chunky edge off `b` (and its press-down): for a row inside a
+## menu, where a raised edge would sit on the next row.
+static func flat_button(b: Button) -> Button:
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var sb := b.get_theme_stylebox(state) as StyleBoxFlat
+		if sb == null:
+			continue
+		sb.shadow_size = 0
+		sb.shadow_color = Color.TRANSPARENT
+		if sb.expand_margin_bottom == DEPTH:
+			sb.expand_margin_top = 0
+			sb.expand_margin_bottom = 0
+			sb.content_margin_top -= DEPTH
+			sb.content_margin_bottom += DEPTH
+	return b
+
+
+static func _settle_press(target: Variant) -> void:
+	# (Untyped: it may have been freed by the time this runs.)
+	if not is_instance_valid(target):
+		return
+	var b := target as Button
+	var normal := b.get_theme_stylebox("normal") as StyleBoxFlat
+	if normal == null:
+		return
+	for state in ["pressed", "hover_pressed"]:
+		var sb := b.get_theme_stylebox(state) as StyleBoxFlat
+		if sb == null or sb == normal or sb.expand_margin_bottom != DEPTH:
+			continue
+		sb.content_margin_top = maxf(normal.content_margin_top, 0.0) + DEPTH
+		sb.content_margin_bottom = maxf(normal.content_margin_bottom, 0.0) - DEPTH
 
 
 static func is_wide(c: Control) -> bool:
@@ -499,7 +579,7 @@ static func button(text: String, on_press: Callable, kind: String = "primary") -
 		"success":
 			style_button(b, SUCCESS, ON_COLOUR)
 		"white":
-			style_button(b, SURFACE, INK, 16, true)
+			style_button(b, SURFACE, INK, 16)
 		"ghost":
 			style_button(b, Color.TRANSPARENT, INK)
 		_:
@@ -530,7 +610,7 @@ static func text_link(text: String, on_press: Callable, size: int = 15) -> Butto
 
 ## A round button holding one icon, like the delete and complete buttons.
 static func round_button(icon: String, tip: String, on_press: Callable, fill: Color = SURFACE,
-		ink: Color = INK, diameter: int = 52, shadow: bool = true) -> Button:
+		ink: Color = INK, diameter: int = 52) -> Button:
 	var b := Button.new()
 	b.accessibility_name = tip
 	b.custom_minimum_size = Vector2(diameter, diameter)
@@ -539,7 +619,7 @@ static func round_button(icon: String, tip: String, on_press: Callable, fill: Co
 	b.icon = Icons.texture(icon, int(diameter * 0.42), Color.WHITE, 2.6)
 	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.expand_icon = false
-	style_button(b, fill, ink, 999, shadow)
+	style_button(b, fill, ink, 999)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
 		var sb: StyleBoxFlat = b.get_theme_stylebox(state)
 		sb.set_content_margin_all(0)
@@ -549,8 +629,8 @@ static func round_button(icon: String, tip: String, on_press: Callable, fill: Co
 
 
 ## An icon with no button round it (the "x" that closes things): just the
-## icon in `ink`, a `diameter` square to hit. It grows on hover like every
-## button, but never shows a fill.
+## icon in `ink`, a `diameter` square to hit. Under the pointer a faint
+## circle of its ink shades in behind it, a little deeper when pressed.
 static func ghost_button(icon: String, tip: String, on_press: Callable, ink: Color = INK,
 		diameter: int = 36, icon_px: int = 22) -> Button:
 	var b := Button.new()
@@ -563,8 +643,10 @@ static func ghost_button(icon: String, tip: String, on_press: Callable, ink: Col
 	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	b.expand_icon = false
 	b.mouse_default_cursor_shape = Cursor.HOVER
-	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+	for state in ["normal", "disabled"]:
 		b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	for state in ["hover", "pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(state, bar_box(Color(ink, 0.1 if state == "hover" else 0.16), 999))
 	b.add_theme_stylebox_override("focus", focus_ring(999))
 	for state in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
 		b.add_theme_color_override(state, ink)
@@ -686,6 +768,50 @@ static func tag(text: String, fill: Color, colour: Color, size: int = 12) -> Pan
 	p.add_child(label(text, size, colour, false, 800))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return p
+
+
+## Makes `l` (in `row`) take the width its words need, up to whatever the
+## rest of the row leaves, then trim with "...": for a name with tags right
+## after it that mustn't push them off the end. The row needs an expanding
+## spacer after the tags (UI.spacer()): the name and the spacer share the
+## spare room by stretch ratio, the name's being what it needs. Ratios never
+## change the row's minimum width, so a long name can't push the row (and a
+## close button at its end) off the edge of a popup.
+static func fit_name(l: Label, row: HBoxContainer) -> void:
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.clip_text = true
+	l.custom_minimum_size.x = 0
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var fit := func():
+		if not is_instance_valid(l):
+			return
+		var room := row.size.x
+		var gap: Control = null
+		var shown := 0
+		for c in row.get_children():
+			if not (c is Control and (c as Control).visible):
+				continue
+			shown += 1
+			if c == l:
+				continue
+			if gap == null and c.get_index() > l.get_index() and (c as Control).size_flags_horizontal & Control.SIZE_EXPAND:
+				gap = c
+			else:
+				room -= (c as Control).get_combined_minimum_size().x
+		room -= row.get_theme_constant("separation") * maxi(shown - 1, 0)
+		var want := l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x + 2.0
+		var name_part := clampf(want, 1.0, maxf(room, 1.0))
+		l.size_flags_stretch_ratio = name_part
+		if gap:
+			gap.size_flags_stretch_ratio = maxf(room - name_part, 0.0001)
+	row.resized.connect(fit)
+	fit.call_deferred()
+
+
+## The "COSMETIC" tag beside a gift's name when it can be worn.
+static func cosmetic_tag(size: int = 12) -> PanelContainer:
+	return tag(Text.t("gift.cosmetic").to_upper(), ACCENT, ON_ACCENT, size)
 
 
 ## A thin rounded bar filled to `fraction`, e.g. a week against your best.

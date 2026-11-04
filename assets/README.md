@@ -416,11 +416,12 @@ In `assets/brand/`:
 
 | File | What it is |
 | --- | --- |
-| `app_icon.svg` | The app's icon (1024 × 1024). |
+| `app_icon.svg` | The app's icon (1024 × 1024), and its window icon on computers. |
 | `app_icon_dark.svg` | The icon in the phone's dark mode. |
-| `splash.png` | The picture while the app opens. Its background colour is in Project > Project Settings > Application > Boot Splash. |
+| `splash.png` | The picture while the app opens (Godot only takes a PNG here): `app_icon.svg` drawn at 500 × 500. Its background colour is in Project > Project Settings > Application > Boot Splash. |
 
-Replace a file with your own of the same name and size.
+They're SVGs so they stay sharp at every size a phone asks for. Replace a
+file with your own of the same name (keep the 1024 × 1024 canvas).
 
 ---
 

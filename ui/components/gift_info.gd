@@ -90,6 +90,13 @@ func _init(id: String) -> void:
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
+	if g.has("slot"):
+		# Right after the name; the name gives way if it's long.
+		var worn := UI.cosmetic_tag(11)
+		worn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(worn)
+		head.add_child(UI.spacer())
+		UI.fit_name(title, head)
 	var tag := UI.tag(Content.rarity_name(rarity).to_upper(), Content.rarity_text_colour(rarity), UI.ON_COLOUR, 11)
 	tag.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	head.add_child(tag)

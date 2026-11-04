@@ -31,7 +31,6 @@ These are optional. Without them the app uses the one-colour icon.
 | --- | --- |
 | `back` | Back buttons in flows (finishing a walk). |
 | `bin` | Delete: projects, accounts, swipe-left on a project. |
-| `calendar` | The date on the Projects screen. |
 | `check` | Ticks: done buttons, complete swipe, chosen swatches, the current pet. |
 | `clipboard` | The Projects tile on the map. |
 | `clock` | Time focused: walks, projects, accounts, hours achievements. |
@@ -52,7 +51,6 @@ These are optional. Without them the app uses the one-colour icon.
 | `play` | Carry on a paused walk. |
 | `plus` | Add: new project, custom colour, empty shelf spots. |
 | `shelf` | The gift shelf. |
-| `shield` | Your best week on the Stats screen. |
 | `sort_down` | Dropdown arrows, and sorting from high to low. |
 | `sort_up` | Sorting from low to high. |
 | `sound` | Sound on during a walk. |
@@ -60,6 +58,14 @@ These are optional. Without them the app uses the one-colour icon.
 | `stats` | The Stats tile on the map. |
 | `sun` | The sun in the walk's sky. |
 | `trophy` | Achievements and the leaderboard. |
+| `trophy_flame` | Your best streak on the Stats screen (a cup holding a flame). |
+| `undo` | Undo on a toast, after the word. |
+| `forward` | The arrow to the next period on the Stats chart. |
+| `user_add` | Add a friend, on the leaderboard. |
+| `search` | The friend search box. |
+| `pin` | The map pin over the real weather, in the walk's weather menu. |
+| `weather_sunny` | Weather choices on a walk: sunny, partly cloudy, cloudy, |
+| `weather_partly`, `weather_cloudy`, `weather_rainy`, `weather_stormy`, `weather_snowy` | rainy, stormy and snowy. |
 | `user` | The Profile tile on the map. |
 | `walk` | Start a walk. |
 | `place_beach` | The Beach button, until there's `art/places/beach.png`. |

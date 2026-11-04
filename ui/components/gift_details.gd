@@ -20,17 +20,21 @@ static func open(id: String, fresh: bool = false, yours: bool = true, first: boo
 	if message != "":
 		m.body.add_child(UI.label(message, 15, UI.ACCENT, false, 800))
 	var head := m.heading_row(g["name"])
+	# NEW (one you'd never had) and COSMETIC (one you can wear) sit right
+	# after the name, which keeps only the room it needs.
+	var badges: Array[Control] = []
 	if first:
-		# The name keeps only the room it needs, so NEW sits right after it.
-		var name_label := head.get_child(0) as Label
-		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-		var badge := UI.tag(Text.t("gift.new"), UI.INK, UI.BG)
-		head.add_child(badge)
-		head.move_child(badge, 1)
+		badges.append(UI.tag(Text.t("gift.new"), UI.INK, UI.BG))
+	if g.has("slot"):
+		badges.append(UI.cosmetic_tag())
+	if not badges.is_empty():
+		for i in badges.size():
+			head.add_child(badges[i])
+			head.move_child(badges[i], 1 + i)
 		var gap := UI.spacer()
 		head.add_child(gap)
-		head.move_child(gap, 2)
+		head.move_child(gap, 1 + badges.size())
+		UI.fit_name(head.get_child(0) as Label, head)
 	m.body.add_child(head)
 	var art := GiftArt.new(id, 1.0)
 	art.custom_minimum_size = Vector2(0, 170)
@@ -49,6 +53,4 @@ static func open(id: String, fresh: bool = false, yours: bool = true, first: boo
 	m.body.add_child(UI.para(g.get("description", ""), 16, UI.INK))
 	if not yours:
 		return
-	if g.has("slot"):
-		m.body.add_child(UI.para(Text.t("gift.wearable", {"slot": Content.slot_name(g["slot"]).to_lower()}), 14))
 	m.body.add_child(UI.label(Text.t("gift.you_have", {"n": count}), 15, UI.INK_SOFT, false, 800))
