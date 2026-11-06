@@ -114,8 +114,7 @@ static func pet_rows(totals: Dictionary) -> Array:
 		out.append({
 			"picture": func(side: float) -> Control: return UI.animal_portrait(pet.animal_id, pet.colours, Vector2(side * 1.15, side)),
 			"name": pet.name,
-			"time": Text.t("podium.rehomed", {"time": Stats.format_duration(row[1])}) if pet.is_rehomed() else Stats.format_duration(row[1]),
-			"faded": pet.is_rehomed(),
+			"time": Stats.format_duration(row[1]),
 		})
 	return out
 

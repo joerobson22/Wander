@@ -114,7 +114,7 @@ func test_holiday_data_is_real() -> void:
 		var rule: Dictionary = a.get("unlock", {})
 		if rule.has("holiday"):
 			check(_list.any(func(h): return h["id"] == rule["holiday"]), "%s's holiday" % a["id"])
-			eq(load_json("res://data/gifts.json")["gifts"].filter(func(g): return g["table"] == a["table"]).size(), 4, "%s has 4 gifts" % a["id"])
+			eq(load_json("res://data/gifts.json")["gifts"].filter(func(g): return g["table"] == a["table"]).size(), 5, "%s has 5 gifts" % a["id"])
 
 
 ## Holiday gifts come once a year, so the Moon doesn't wait on them.

@@ -14,6 +14,8 @@ var _bar: Control
 var _caption: Label
 var _xp := 0.0
 var _on_dark := false
+## The bar stands upright and fills from the bottom (see strip()).
+var _upright := false
 
 
 ## `on_dark` styles it for scenery (light text, see-through track).
@@ -62,10 +64,28 @@ func _set_xp(v: float) -> void:
 	shown_changed.emit(int(v))
 
 
+## Takes the bar out from beside the badge and stands it upright, filling
+## from the bottom up, for the caller to place (the profile runs it up the
+## left edge of the character's frame, which rounds its ends). It keeps
+## its width: the bar's height lying down.
+func strip() -> Control:
+	_upright = true
+	_bar.get_parent().remove_child(_bar)
+	_bar.custom_minimum_size = Vector2(_bar.custom_minimum_size.y, 0)
+	_bar.queue_redraw()
+	return _bar
+
+
 func _draw_bar() -> void:
 	var p := Levels.progress(int(_xp), Content.levels)
 	var part := float(p["into"]) / maxf(1.0, float(p["needed"]))
 	var r := Rect2(Vector2.ZERO, _bar.size)
+	if _upright:
+		_bar.draw_rect(r, UI.LINE)
+		var h := r.size.y * clampf(part, 0.0, 1.0)
+		if h > 0.5:
+			_bar.draw_rect(Rect2(0, r.size.y - h, r.size.x, h), UI.ACCENT)
+		return
 	_bar.draw_style_box(UI.box(Color(1, 1, 1, 0.22) if _on_dark else UI.LINE, Color.TRANSPARENT, 99), r)
 	var w := r.size.x * clampf(part, 0.0, 1.0)
 	if w > 0.5:

@@ -441,8 +441,42 @@ func _run() -> void:
 	var filter: Node = _find(projects_pane, func(n): return _is(n, "dropdown.gd") and not n.sortable)
 	check(filter != null and filter.get_parent().get_global_rect().end.x - filter.get_global_rect().end.x < 4.0 and filter.get_global_rect().position.y < 90.0, "the filter is in the top right")
 	var ongoing_panels: Array = _all(projects_pane, func(n): return _is(n, "project_panel.gd"))
+	var podiums: Array = []
 	check(ongoing_panels.size() == app.state.active_projects().size(), "one panel per ongoing project (%d)" % ongoing_panels.size())
-	var podiums: Array = _all(ongoing_panels[0], func(n): return _is(n, "podium.gd"))
+	# Each starts folded to its header; a tap opens it out downwards, and a
+	# tap on its header folds it again.
+	var first_fold: Control = ongoing_panels[0]._fold
+	check(first_fold.open == 0.0 and ongoing_panels[0].size.y < 90.0, "projects start folded to their header (%.0f tall)" % ongoing_panels[0].size.y)
+	var head_at: Vector2 = ongoing_panels[0].get_global_rect().position + Vector2(70, 26)
+	await _drag(head_at, head_at, 1)
+	await _wait(5)
+	check(first_fold.open > 0.0 and first_fold.open < 1.0, "it opens out smoothly (%.2f)" % first_fold.open)
+	await _wait(30)
+	check(first_fold.open == 1.0 and ongoing_panels[0].size.y > 200.0, "a tap opens it out (%.0f tall)" % ongoing_panels[0].size.y)
+	var inside_at: Vector2 = ongoing_panels[0].get_global_rect().position + Vector2(ongoing_panels[0].size.x * 0.5, ongoing_panels[0].size.y - 30.0)
+	await _drag(inside_at, inside_at, 1)
+	await _wait(30)
+	check(first_fold.open == 1.0, "a tap lower down leaves it open")
+	await _drag(head_at, head_at, 1)
+	await _wait(30)
+	check(first_fold.open == 0.0, "a tap on its header folds it again")
+	await _shot("projects_folded")
+	# Open them all to look inside; they stay open as the screen rebuilds.
+	for p in projects_pane.shown_projects():
+		projects_pane._open[p.id] = true
+	projects_pane.rebuild()
+	await _wait(20)
+	ongoing_panels = _all(projects_pane, func(n): return _is(n, "project_panel.gd"))
+	filter = _find(projects_pane, func(n): return _is(n, "dropdown.gd") and not n.sortable)
+	check(ongoing_panels.all(func(pp): return pp.is_open()), "opened projects stay open")
+	# Gifts as a count per rarity, all four spread across the panel.
+	var chips: Array = _all(ongoing_panels[0], func(n): return n is Control and n.accessibility_name.ends_with(" gifts"))
+	check(chips.size() == 4, "a gift count for each rarity (%d)" % chips.size())
+	if chips.size() == 4:
+		var body_rect: Rect2 = chips[0].get_parent().get_global_rect()
+		check(absf(chips[0].get_global_rect().position.x - body_rect.position.x) < 2.0 and absf(chips[3].get_global_rect().end.x - body_rect.end.x) < 2.0,
+			"from edge to edge (%s %s %s)" % [chips[0].get_global_rect(), chips[3].get_global_rect(), body_rect])
+	podiums = _all(ongoing_panels[0], func(n): return _is(n, "podium.gd"))
 	check(podiums.size() == (1 if app.phone_layout() else 2), "a podium for pets and one for places (one at a time on phones)")
 	var top_pets: Array = _class("res://core/stats.gd").ranked(app.state.project(ongoing_panels[0].project_id).pets)
 	var first_name: Label = _find(podiums[0], func(n): return n is Label and n.text == app.state.pet(top_pets[0][0]).name)
@@ -458,10 +492,10 @@ func _run() -> void:
 		check(spots[0].get_global_rect().position.x < spots[1].get_global_rect().position.x and spots[1].get_global_rect().position.x < spots[2].get_global_rect().position.x
 			and _find(spots[1], func(n): return n is Label and n.text == app.state.pet(top_pets[0][0]).name) != null, "second, first, third on one line")
 		check(absf(spots[0].get_global_rect().end.y - spots[1].get_global_rect().end.y) < 1.0 and absf(spots[2].get_global_rect().end.y - spots[1].get_global_rect().end.y) < 1.0, "bottoms level")
-	# When it ran sits in the top right, level with the name.
-	var dates: Label = _find(ongoing_panels[0], func(n): return n is Label and n.text.ends_with("now"))
-	check(dates != null and dates.get_global_rect().position.y < podiums[0].get_global_rect().position.y
-		and ongoing_panels[0].get_global_rect().end.x - dates.get_global_rect().end.x < 24.0, "the dates are in the top right")
+	# When it started sits in the bottom right.
+	var dates: Label = _find(ongoing_panels[0], func(n): return n is Label and n.text.begins_with("Started "))
+	check(dates != null and dates.get_global_rect().position.y > podiums[0].get_global_rect().end.y - 1.0
+		and ongoing_panels[0].get_global_rect().end.x - dates.get_global_rect().end.x < 24.0, "\"Started ...\" is in the bottom right")
 	if main.size.x >= 1200 and main.size.y >= 780:
 		var list_box: Control = projects_pane.scroll
 		check(ongoing_panels[0].get_global_rect().end.y <= list_box.get_global_rect().end.y + 1.0, "on a computer the first project fits without scrolling (%.0f > %.0f)" % [ongoing_panels[0].get_global_rect().end.y, list_box.get_global_rect().end.y])
@@ -501,8 +535,10 @@ func _run() -> void:
 		# On its name, top left (the middle can be under the minimap).
 		var on_panel: Vector2 = ungraded_panel.get_global_rect().position + Vector2(70, 26)
 		await _drag(on_panel, on_panel, 1)
-		await _wait(15)
-		check(not _class("res://ui/modal.gd").is_open(), "the rest of the panel doesn't open anything")
+		await _wait(30)
+		check(not _class("res://ui/modal.gd").is_open() and ungraded_panel.is_open(), "the rest of the header just opens it")
+		var ended: Label = _find(ungraded_panel, func(n): return n is Label and n.text.contains(" – "))
+		check(ended != null, "a completed project says when it started and finished")
 		await _shot("completed_ungraded")
 		var at_ask: Vector2 = ask.get_global_rect().get_center()
 		await _drag(at_ask, at_ask, 1)
@@ -571,6 +607,28 @@ func _run() -> void:
 		undo.pressed.emit()
 		await _wait(30)
 	check(app.state.project(row_id) != null, "Undo brings it back")
+	# Showing them all, a project completed holds its green flash under the
+	# confetti, fades, the list closes up, then it rises back in where it
+	# now belongs.
+	app.set_setting("projects_filter", "all")
+	await _wait(30)
+	var all_row: Control = _find(projects_pane, func(n): return _is(n, "swipe_row.gd") and not app.state.project(n.content.project_id).is_complete())
+	check(all_row != null, "an ongoing project in the full list")
+	if all_row:
+		var all_id: String = all_row.content.project_id
+		projects_pane._on_swiped(-1, all_row, all_id)
+		await _wait(18)
+		check(all_row.content.modulate.a > 0.9 and all_row._flash.strength > 0.4, "it holds its green flash while the confetti flies")
+		await _shot("projects_all_confetti")
+		await _wait(52)
+		var back_row: Control = _find(projects_pane, func(n): return _is(n, "swipe_row.gd") and n.content.project_id == all_id)
+		check(back_row != null and back_row != all_row and app.state.project(all_id).is_complete(), "it comes back into the list, completed")
+		await _wait(45)
+		check(back_row != null and back_row.content.modulate.a > 0.99 and back_row._rise == 0.0, "rising and fading into place")
+		app.reopen_project(all_id)
+		await _wait(20)
+	app.set_setting("projects_filter", "ongoing")
+	await _wait(20)
 	# Put the completed one back, so the rest of the run sees the sample.
 	app.reopen_project(app.state.completed_projects().filter(func(p): return p.grade == "")[0].id)
 	await _wait(20)
@@ -850,6 +908,8 @@ func _run() -> void:
 	var project_panel: Control = _find(project_popup.body, func(n): return _is(n, "project_panel.gd"))
 	check(project_popup.body.get_child_count() == 1 and project_panel != null, "the project popup is just its panel")
 	check(_find(project_popup, func(n): return n is Label and n.text.begins_with("Still in progress")) == null, "with no note under it")
+	check(_find(project_popup, func(n): return n is Label and (n.text.contains("this week") or n.text.contains(" on "))) == null, "and no time-this-week line")
+	check(_find(project_popup, func(n): return n is Label and (n.text.begins_with("Started ") or n.text.contains(" – "))) != null, "just when it ran, bottom right")
 	var project_close: Button = _find(project_panel, func(n): return n is Button and n.accessibility_name == "Close") if project_panel else null
 	check(project_close != null and project_close.mouse_filter == Control.MOUSE_FILTER_STOP, "a close button in its corner")
 	if project_close:
@@ -960,9 +1020,42 @@ func _run() -> void:
 		"going straight back fades the lake away from where it had got to, over the beach")
 	await _wait(50)
 	check(chooser._marker.is_equal_approx(chooser._places["beach"].get_rect()) and not chooser._marker_moving, "and the highlight slides back")
+	# A fish only swims in the ocean: swiping to it takes you there, the
+	# other places fade and won't take it, and swiping on comes back.
+	app.state.settings["debug_unlock_all"] = true
+	var fish := PetData.new()
+	fish.name = "Nemo"
+	fish.animal_id = "fish"
+	fish.colours = _content().animal_default_colours("fish")
+	app.add_pet(fish)
+	chooser._build_pick(fish.id)
+	await _wait(50)
+	check(chooser._place_id() == "ocean" and chooser._scenery.biome["id"] == "ocean", "a fish is in the ocean")
+	chooser._pick_place("lake")
+	await _wait(10)
+	check(chooser._place_id() == "ocean" and absf(chooser._places["lake"].rotation) > 0.01, "the lake wiggles and it stays in the ocean")
+	var fish_view: Node = chooser._pets.items[chooser._pets.index].get_meta("view")
+	check(fish_view.helmet == "", "a fish needs no diving helmet")
+	await _wait(40)
+	await _shot("choose_ocean_fish")
+	var by_fish: int = chooser._pets.index
+	chooser._pets.go_to((by_fish + 1) % chooser._pet_list.size())
+	await _wait(50)
+	check(chooser._scenery.biome["id"] == "beach", "the next pet goes back to the beach")
+	chooser._pick_place("ocean")
+	await _wait(50)
+	var diver: Node = chooser._pets.items[chooser._pets.index].get_meta("view")
+	check(diver.helmet == "diver", "a land pet wears a diving helmet in the ocean")
+	await _shot("choose_ocean_diver")
+	chooser._pick_place("moon")
+	await _wait(50)
+	check(diver.helmet == "astronaut", "and a space helmet on the Moon")
+	chooser._pick_place("beach")
+	app.delete_pet(fish.id)
+	chooser._build_pick(chooser._current_pet_id())
+	await _wait(50)
 	# In the jungle the growth stands in front of the pets, under the words,
 	# and the scene holds still while you choose.
-	app.state.settings["debug_unlock_all"] = true
 	chooser._pick_place("jungle")
 	await _wait(50)
 	var growth: Control = chooser._scenery.front
@@ -1034,7 +1127,7 @@ func _run() -> void:
 	await _wait(25)
 	chooser._on_left()
 	await _wait(25)
-	await _shot("rehome_confirm")
+	await _shot("delete_pet_confirm")
 	_close_modal(false)
 	await _wait(10)
 	# The paw starts adopting: the bottom buttons go, the paw becomes a tick
@@ -1063,8 +1156,11 @@ func _run() -> void:
 	check(not chooser._animal_hint.text.ends_with("to unlock"), "without \"to unlock\" on the end (%s)" % chooser._animal_hint.text)
 	await _shot("new_pet_locked")
 	chooser._animals.activated.emit(locked)
-	await _wait(2)
-	check(not modal_class.is_open() and absf(chooser._animals.items[locked].rotation) > 0.01, "tapping a locked animal wiggles it, no popup")
+	var wiggled := false
+	for i in 12:
+		await process_frame
+		wiggled = wiggled or absf(chooser._animals.items[locked].rotation) > 0.01
+	check(not modal_class.is_open() and wiggled, "tapping a locked animal wiggles it, no popup")
 	await _wait(20)
 	var table_at := -1
 	for i in _content().animals.size():
@@ -1113,13 +1209,24 @@ func _run() -> void:
 	var new_home := str(_content().animal(app.state.pets.back().animal_id).get("home", ""))
 	check(not app.can_walk_in(new_home) or chooser._place_id() == new_home, "and the place switches to its home (%s)" % new_home)
 	await _wait(150 if _shots_dir != "" else 10)
-	# Rehoming takes the pet out of the list but keeps it on its projects.
+	# Deleting a pet takes it out of everything; Undo brings it back.
 	var leaving: PetData = chooser._current_pet()
 	chooser._on_left()
 	await _wait(20)
 	_close_modal(true)
 	await _wait(20)
-	check(leaving.is_rehomed() and not chooser._pet_list.has(leaving) and app.state.pet(leaving.id) != null, "rehoming hides the pet but keeps its record")
+	check(not chooser._pet_list.has(leaving) and app.state.pet(leaving.id) == null
+		and app.state.projects.all(func(pr): return not pr.pets.has(leaving.id)), "deleting a pet takes it out of everything")
+	var undo_pet: Button = _find(_class("res://ui/modal.gd").layer, func(n): return n is Button and n.text == "Undo")
+	check(undo_pet != null, "with an Undo button")
+	if undo_pet:
+		undo_pet.pressed.emit()
+		await _wait(20)
+	check(app.state.pet(leaving.id) != null, "Undo brings the pet back")
+	chooser._on_left()
+	await _wait(20)
+	_close_modal(true)
+	await _wait(20)
 
 	# Tapping a pet sets off: everything but the pet fades and it walks to
 	# the path; the walk opens in the same place, you walk in to join it,
@@ -1151,11 +1258,15 @@ func _run() -> void:
 	await _wait(12)
 	check(arriving._lead_alpha > 0.5 and arriving._title.modulate.a > 0.3 and app.state.active == null and arriving._timer.modulate.a < 0.05, "the lead and the project's name, but no time yet")
 	await _shot("set_off_lead")
-	await _wait(80)
+	# The words type out quickly, so watch for them part typed.
+	var typing := false
+	var started := Time.get_ticks_msec()
+	while not typing and Time.get_ticks_msec() - started < 6000:
+		await process_frame
+		typing = typing or (arriving._quote.visible_characters > 0 and arriving._quote.visible_characters < arriving._quote.get_total_character_count())
 	check(app.state.active != null and app.state.active.pet_id == setting_off.id, "then you set off and the clock starts")
-	await _wait(40)
 	await _shot("set_off_typing")
-	check(arriving._quote.visible_characters >= 0, "the encouragement types itself out")
+	check(typing, "the encouragement types itself out")
 	await _wait(330)
 	check(arriving._quote.visible_characters == -1 and arriving._quote.text != "", "all of it")
 	check(arriving._pause.modulate.a > 0.95 and arriving._sound.modulate.a > 0.95, "and the buttons are in")
@@ -1375,8 +1486,11 @@ func _run() -> void:
 		var near_spot: Vector2 = backdrop._layers[4].position
 		var far_spot: Vector2 = backdrop._layers[0].position
 		app.go("gifts")
-		await _wait(8)
-		check(backdrop._layers[4].position.x - near_spot.x > backdrop._layers[0].position.x - far_spot.x + 4.0, "sliding away, near layers move further than far ones")
+		var further := false
+		for i in 30:
+			await process_frame
+			further = further or backdrop._layers[4].position.x - near_spot.x > backdrop._layers[0].position.x - far_spot.x + 4.0
+		check(further, "sliding away, near layers move further than far ones")
 		await _wait(50)
 		check(backdrop.visible and backdrop.modulate.a > 0.99 and main._backdrop == backdrop, "and it stays, the same one, on the other screens")
 		var hilltop: Control = backdrop._layers[4]
@@ -1663,7 +1777,7 @@ func _scenery_gallery(main: Node) -> void:
 				scenery.scroll = scroll
 				await process_frame
 		scenery.weather = "rainy"
-		var dry: bool = b["id"] in ["desert", "moon"]
+		var dry: bool = b["id"] in ["desert", "ocean", "moon"]
 		check((scenery.weather_kind() == "sunny") == dry, "%s: rain shows as %s" % [b["id"], scenery.weather_kind()])
 		if b["id"] == "tundra":
 			check(scenery.weather_kind() == "snowy", "rain falls as snow in the tundra")
@@ -1995,15 +2109,14 @@ func _accounts(main: Node) -> void:
 	await _wait(40)
 	check(main._backdrop == null or main._backdrop.look_down > 0.99, "the view looks down at the ground behind it")
 	await _shot("create_account")
-	# Keyboard only: Tab goes down the form, round and round.
+	# Keyboard: Tab goes down the boxes, round and round (buttons never
+	# take focus, so a tap leaves no ring behind).
 	(boxes[0] as LineEdit).grab_focus()
 	await _key(KEY_TAB)
 	check(main.get_viewport().gui_get_focus_owner() == boxes[1], "Tab goes from the name to where you study")
-	for i in 4:
+	for i in 6:
 		await _key(KEY_TAB)
-	check(main.get_viewport().gui_get_focus_owner() == agree, "then the date of birth and the box (%s)" % main.get_viewport().gui_get_focus_owner())
-	await _key(KEY_TAB)
-	check(main.get_viewport().gui_get_focus_owner() == links[0], "then the Privacy Policy")
+		check(main.get_viewport().gui_get_focus_owner() is LineEdit, "Tab keeps to the boxes: buttons never take focus (%s)" % main.get_viewport().gui_get_focus_owner())
 	main.get_viewport().gui_release_focus()
 	await _key(KEY_DOWN)
 	await _wait(40)
@@ -2079,7 +2192,7 @@ func _accounts(main: Node) -> void:
 			break
 		await _wait(3)
 	check(home_pane._orb.scale.x > 0.99 and main._minimap.modulate.a < 0.05, "the orb grows in once the view's up")
-	for i in 120:
+	for i in 300:
 		if home_pane._greeting.modulate.a > 0.3:
 			break
 		await process_frame
@@ -2229,7 +2342,11 @@ func _vision_and_data(main: Node) -> void:
 	await settings.scroll_to(data)
 	await _wait(20)
 	await _tap_control(data, main)
-	await _wait(25)
+	for i in 12:
+		await _wait(5)
+		if modal_class.top() != settings:
+			break
+	await _wait(10)
 	var popup: Node = modal_class.top()
 	check(popup != settings and _find(popup.header, func(n): return n is Label and n.text == "Your data") != null, "Data opens what's kept about you")
 	if popup != settings:

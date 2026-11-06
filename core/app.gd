@@ -342,21 +342,22 @@ func add_pet(p: PetData) -> void:
 	_changed()
 
 
-## The pet leaves your pets for good, but still shows on the projects it
-## walked for.
-func rehome_pet(id: String) -> void:
-	var p := state.pet(id)
-	if p and not p.is_rehomed():
-		p.rehomed_unix = now()
+## Deletes the pet everywhere (GameState.remove_pet): it's gone from your
+## pets, your projects' podiums and the stats. Returns what restore_pet()
+## needs to undo it.
+func delete_pet(id: String) -> Dictionary:
+	var taken := state.remove_pet(id)
+	if not taken.is_empty():
 		_changed()
+	return taken
 
 
-## Undo for rehoming: the pet's back with your others.
-func unrehome_pet(id: String) -> void:
-	var p := state.pet(id)
-	if p and p.is_rehomed():
-		p.rehomed_unix = 0
-		_changed()
+## Undo for deleting a pet: it's back everywhere it was.
+func restore_pet(taken: Dictionary) -> void:
+	if taken.is_empty():
+		return
+	state.restore_pet(taken)
+	_changed()
 
 
 ## A name for a new pet of this animal that no pet of yours has yet:

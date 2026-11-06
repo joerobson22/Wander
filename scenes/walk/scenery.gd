@@ -27,7 +27,7 @@ const CHUNK := SceneryPainter.CHUNK
 ## The screen height (in pixels) that layer art scenes are drawn for.
 const ART_HEIGHT := 720.0
 ## Layers that move with the time and so redraw every frame.
-const ANIMATED := ["water", "reeds", "fronds", "undergrowth", "vines", "stalks"]
+const ANIMATED := ["water", "reeds", "fronds", "undergrowth", "vines", "stalks", "seaweed"]
 ## How often the light catches up with the clock, in seconds.
 const LIGHT_EVERY := 5.0
 ## Every scenery's front growth is in this group, wherever it's been moved.
@@ -598,7 +598,8 @@ class _Clouds extends Node2D:
 
 
 ## Weather on top of the scenery: stars coming out as it gets dark (unless
-## it's cloudy), fireflies at dusk and overnight, the tundra's snow and
+## it's cloudy), fireflies at dusk and overnight, the ocean's light shafts
+## and bubbles, the tundra's snow and
 ## wind, and the real weather's rain, lightning, snow and white-outs. A few
 ## hundred dots and lines a frame at most.
 class _Fx extends Node2D:
@@ -639,6 +640,25 @@ class _Fx extends Node2D:
 				draw_set_transform(Vector2(x, fall), spin, Vector2(1.0, 0.55 + 0.45 * absf(sin(spin))))
 				draw_circle(Vector2.ZERO, 3.2, petal, true, -1.0, true)
 			draw_set_transform(Vector2.ZERO)
+		# Under the sea: shafts of light swaying down from the surface, and
+		# bubbles wobbling up.
+		if fx.has("rays"):
+			for i in 6:
+				var x := size.x * (0.08 + 0.17 * i + 0.05 * Scenery._hash(i, 51.0)) + sin(t * 0.25 + i * 1.7) * size.x * 0.03
+				var wide := size.x * (0.025 + 0.03 * Scenery._hash(i, 52.0))
+				var lean := size.x * 0.12
+				var a := 0.07 + 0.05 * sin(t * 0.4 + i * 2.3)
+				draw_polygon(PackedVector2Array([Vector2(x - wide, 0), Vector2(x + wide, 0), Vector2(x + wide * 2.2 + lean, size.y * 0.85), Vector2(x - wide * 2.2 + lean, size.y * 0.85)]),
+					PackedColorArray([Color(1, 1, 1, a), Color(1, 1, 1, a), Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.0)]))
+		if fx.has("bubbles"):
+			var unit_b := minf(size.x, size.y) / 720.0
+			for i in 34:
+				var speed := (28.0 + 46.0 * Scenery._hash(i, 53.0)) * unit_b
+				var rise := size.y + 20.0 - fposmod(Scenery._hash(i, 54.0) * size.y + t * speed, size.y + 40.0)
+				var x := fposmod(Scenery._hash(i, 55.0) * size.x - scenery.scroll * 0.3, size.x) + sin(t * 2.0 + i) * 5.0 * unit_b
+				var r := (2.0 + 4.5 * Scenery._hash(i, 56.0)) * unit_b
+				draw_arc(Vector2(x, rise), r, 0, TAU, 14, Color(1, 1, 1, 0.55), 1.4, true)
+				draw_circle(Vector2(x - r * 0.35, rise - r * 0.35), r * 0.25, Color(1, 1, 1, 0.7))
 		var gust := 0.6 + 0.4 * sin(t * 0.45)
 		var area := clampf(size.x * size.y / (720.0 * 720.0), 0.5, 3.0)
 		var unit := minf(size.x, size.y) / 720.0

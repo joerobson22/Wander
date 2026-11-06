@@ -5,8 +5,9 @@ extends Pane
 ## tabs); tap a piece, or a name in the sideways strip under the chart, for
 ## its details. Arrows either side of the period's name and its total step
 ## back to earlier periods and forward again. Your streak is in the top
-## right: tap it for your best ever. The friends leaderboard is underneath,
-## sharing the room evenly with the chart, with a button to add friends. It
+## right: tap it for your best ever. The friends leaderboard, with a button
+## to add friends, is beside the chart on a computer (60% chart, 40%
+## leaderboard) and underneath it on a phone, sharing the room evenly. It
 ## all fits the screen; only the strip and the leaderboard scroll.
 
 ## Names in the strip under the chart are cut to this many letters.
@@ -49,7 +50,8 @@ func build() -> void:
 	var current := Stats.period_start(today, _period())
 	if _start < 0 or _start > current or Stats.period_start(_start, _period()) != _start:
 		_start = current
-	var col := frame(760, 14)
+	var side_by_side := not App.phone_layout()
+	var col := frame(1040 if side_by_side else 760, 14)
 
 	var head := title_row(Text.t("stats.title"))
 	head.add_child(_streak())
@@ -109,16 +111,26 @@ func build() -> void:
 	UI.clear_of_bar(strip, strip_room, 4, UI.DEPTH)
 	c.add_child(strip)
 
-	# The chart and the leaderboard share the room evenly.
-	chart_card.size_flags_stretch_ratio = 1.0
-	col.add_child(chart_card)
 	var mine := Stats.week_total(App.state.days, Stats.week_start(today))
 	var board := Leaderboard.new(Friends.ranked(App.friends, mine, App.state.active != null), true)
 	# At least a row and yours: a friend above you, then your pinned row.
 	board.custom_minimum_size.y = 128
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	board.size_flags_stretch_ratio = 1.0
-	col.add_child(board)
+	if side_by_side:
+		# Computers: the chart on the left (60%), the leaderboard on the
+		# right (40%), both the full height.
+		var pair := UI.hbox(16)
+		pair.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		chart_card.size_flags_stretch_ratio = 3.0
+		board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		board.size_flags_stretch_ratio = 2.0
+		pair.add_child(chart_card)
+		pair.add_child(board)
+		col.add_child(pair)
+	else:
+		# Phones: the chart over the leaderboard, sharing the room evenly.
+		col.add_child(chart_card)
+		col.add_child(board)
 	_select(_start, false)
 
 
@@ -344,7 +356,7 @@ func _show_piece(id: String, bar: int) -> void:
 				return
 			# The popup is the project's panel itself, with a close button in its corner.
 			var m := Modal.open(560, true, 0)
-			var panel := ProjectPanel.new(p, _extra(id, bar), false, true, m.close.bind(null))
+			var panel := ProjectPanel.new(p, false, true, m.close.bind(null))
 			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			m.body.add_child(panel)
 

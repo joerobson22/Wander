@@ -30,11 +30,13 @@ func _ready() -> void:
 	add_child(_scenery)
 	_walker = CharacterView.new()
 	_walker.walking = speed > 0.0
+	_walker.helmet = AnimalView.helmet_in(place, "")
 	_scenery.add_child(_walker)
 	_animal = AnimalView.new()
 	_animal.animal_id = animal
 	_animal.colours = Content.animal_default_colours(animal)
 	_animal.walking = speed > 0.0
+	_animal.helmet = AnimalView.helmet_in(place, animal)
 	_scenery.add_child(_animal)
 	resized.connect(_layout)
 	_layout.call_deferred()

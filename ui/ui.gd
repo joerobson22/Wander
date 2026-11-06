@@ -276,7 +276,7 @@ static func button_styles(fill: Color, radius: int) -> Dictionary:
 				shade = fill.lerp(Color(BG, fill.a), 0.55) if fill.a >= 1.0 else Color(fill, fill.a * 0.45)
 		var sb := box(shade, Color.TRANSPARENT, radius)
 		if state == "focus":
-			sb = focus_ring(radius)
+			sb = no_focus()
 		elif raised and state in ["pressed", "hover_pressed"]:
 			press_down(sb)
 		elif raised:
@@ -316,15 +316,12 @@ static func press_down(sb: StyleBoxFlat) -> StyleBoxFlat:
 	return sb
 
 
-## The green ring round whatever the keyboard is on (Tab moves it). It
-## only shows when you got there with keys, not with a tap or a click.
-static func focus_ring(radius: int) -> StyleBoxFlat:
-	var sb := box(Color.TRANSPARENT, ACCENT, radius)
+## A button's focus look: nothing at all. Buttons never show a ring or a
+## shade for having been tapped (and Cursor stops them taking focus).
+## Still a StyleBoxFlat, so code restyling every state can treat it alike.
+static func no_focus() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
 	sb.draw_center = false
-	sb.expand_margin_left = 3
-	sb.expand_margin_right = 3
-	sb.expand_margin_top = 3
-	sb.expand_margin_bottom = 3
 	return sb
 
 
@@ -646,7 +643,7 @@ static func ghost_button(icon: String, tip: String, on_press: Callable, ink: Col
 	b.mouse_default_cursor_shape = Cursor.HOVER
 	for state in ["normal", "disabled"]:
 		b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	b.add_theme_stylebox_override("focus", focus_ring(999))
+	b.add_theme_stylebox_override("focus", no_focus())
 	ink_ghost(b, ink)
 	if on_press.is_valid():
 		b.pressed.connect(on_press)

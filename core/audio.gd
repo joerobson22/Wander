@@ -13,6 +13,7 @@ const AMBIENCE := {
 	"night": "night_ambience",
 	"wind": "wind_ambience",
 	"rain": "rain_ambience",
+	"ocean": "ocean_ambience",
 }
 ## How loud the ambience plays, under the sound effects.
 const AMBIENCE_DB := -10.0

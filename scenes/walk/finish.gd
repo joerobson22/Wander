@@ -90,6 +90,7 @@ func _ready() -> void:
 	_walker = CharacterView.new()
 	_walker.scale = Vector2(_unit, _unit)
 	_walker.position = scene.get("walker", Vector2(size.x * 0.38, feet))
+	_walker.helmet = AnimalView.helmet_in(str(_scenery.biome.get("id", "")), "")
 	_scenery.stand(_walker, _walker.position.y)
 	_glow = _Glow.new()
 	_glow.colour = Content.rarity_colour(roll.get("rarity", "common")) if not roll.is_empty() else UI.ACCENT
@@ -102,6 +103,7 @@ func _ready() -> void:
 		_animal.animal_id = _pet.animal_id
 		_animal.colours = _pet.colours
 		_animal.held_gift = _gift_id
+		_animal.helmet = AnimalView.helmet_in(str(_scenery.biome.get("id", "")), _pet.animal_id)
 		_animal.water_colour = _scenery.water_colour()
 		_rest = scene.get("animal", Vector2(size.x * 0.38 + 170.0 * _unit, feet + 4.0 * _unit))
 		_rest_scale = _unit

@@ -16,8 +16,6 @@ static func open(pet: PetData, extra: String = "") -> Modal:
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var kind := str(Content.animal(pet.animal_id).get("name", ""))
-	if pet.is_rehomed():
-		kind = Text.t("pet_card.kind_rehomed", {"kind": kind})
 	words.add_child(UI.label(kind, 14, UI.INK_SOFT, false, 800))
 	words.add_child(UI.label(Stats.format_duration(App.state.pet_seconds(pet.id)), 24, UI.ACCENT, true, 600))
 	words.add_child(UI.label(Text.t("pet_card.adopted", {"date": Stats.format_date(pet.adopted_unix, App.tz_bias())}), 13, UI.INK_FAINT, false, 700))

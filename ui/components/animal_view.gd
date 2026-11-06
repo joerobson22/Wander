@@ -22,6 +22,7 @@ const MOUTHS := {
 	"snake": Vector2(62, -18), "lizard": Vector2(56, -12), "spider": Vector2(34, -14),
 	"rhino": Vector2(80, -40), "skeleton": Vector2(70, -54), "reindeer": Vector2(70, -56),
 	"egg": Vector2(34, -30), "cake": Vector2(36, -30),
+	"fish": Vector2(40, -50), "crab": Vector2(30, -26), "whale": Vector2(70, -42),
 }
 ## Where each shape's lead clips on, before any bounce in its step.
 const NECKS := {
@@ -31,7 +32,11 @@ const NECKS := {
 	"elephant": Vector2(40, -78), "giraffe": Vector2(32, -96), "snake": Vector2(40, -14),
 	"lizard": Vector2(30, -12), "spider": Vector2(14, -18), "rhino": Vector2(40, -62),
 	"egg": Vector2(16, -40), "cake": Vector2(18, -44), "reindeer": Vector2(34, -58),
+	"fish": Vector2(14, -60), "crab": Vector2(0, -30), "whale": Vector2(20, -74),
 }
+## Where a helmet goes round the head, and how big it is, for shapes whose
+## head isn't between the neck and the mouth (a crab is all body).
+const HELMETS := {"crab": [Vector2(4, -26), 34.0], "snail": [Vector2(40, -22), 18.0], "spider": [Vector2(22, -18), 18.0]}
 
 @export var animal_id: String = "dog1":
 	set(v):
@@ -64,6 +69,14 @@ var submerged := 0.0:
 		if _overlay:
 			_overlay.queue_redraw()
 var water_colour := Color("#7fb2c9")
+## A helmet round its head: "diver" (brass, for the ocean), "astronaut"
+## (white, for the Moon) or "" for none. See helmet_in().
+var helmet := "":
+	set(v):
+		helmet = v
+		queue_redraw()
+		if _overlay:
+			_overlay.queue_redraw()
 ## A gift id to carry in its mouth, or "".
 var held_gift := "":
 	set(v):
@@ -80,6 +93,8 @@ var sad := 0.0:
 
 var _phase: float = 0.0
 var _sigh: float = 0.0
+## Time spent afloat: swimmers bob gently even standing still.
+var _swim := 0.0
 ## The art scene's root and its animations, if this animal has art.
 var _rig: Node2D
 var _player: AnimationPlayer
@@ -93,6 +108,20 @@ static func rig_path(id: String) -> String:
 	var dir := str(Content.animal(id).get("sprite_dir", ""))
 	var path := dir.path_join("animal.tscn")
 	return path if dir != "" and ResourceLoader.exists(path) else ""
+
+
+## The helmet an animal wears in a place (the place's "helmet" in
+## biomes.json): none for one that lives underwater in the ocean.
+static func helmet_in(place_id: String, id: String) -> String:
+	var kind := str(Content.biome(place_id).get("helmet", ""))
+	if kind == "diver" and bool(Content.animal(id).get("aquatic", false)):
+		return ""
+	return kind
+
+
+## Whether it swims rather than walks (it lives only in the ocean).
+func swims() -> bool:
+	return str(Content.animal(animal_id).get("only_in", "")) == "ocean"
 
 
 func has_art() -> bool:
@@ -185,6 +214,9 @@ func _process(delta: float) -> void:
 	if _rig:
 		_animate_rig(delta)
 		return
+	if swims():
+		_swim += delta
+		queue_redraw()
 	if walking:
 		var walk_speed := float(Content.animal(animal_id).get("walk_speed", 1.0))
 		_phase += delta * TAU * (0.6 + walk_speed) * speed * (2.4 if running else 1.0)
@@ -282,6 +314,12 @@ func _draw() -> void:
 			_draw_egg()
 		"cake":
 			_draw_cake()
+		"fish":
+			_draw_fish()
+		"crab":
+			_draw_crab()
+		"whale":
+			_draw_whale()
 		_:
 			_draw_dog()
 	_draw_over(self, str(data.get("shape", "dog")))
@@ -295,6 +333,26 @@ func _draw_over(canvas: CanvasItem, shape: String) -> void:
 		canvas.draw_line(Vector2(-60, -submerged), Vector2(80, -submerged), Color(1, 1, 1, 0.55), 2.0, true)
 	if held_gift != "":
 		_draw_held_gift(canvas, shape)
+	if helmet != "":
+		_draw_helmet(canvas, shape)
+
+
+## A round glass helmet over the head with a collar where it meets the
+## neck: brass for diving, white for space.
+func _draw_helmet(canvas: CanvasItem, shape: String) -> void:
+	var s := float(Content.animal(animal_id).get("size", 1.0))
+	var at: Vector2
+	var r: float
+	if HELMETS.has(shape):
+		at = HELMETS[shape][0] + Vector2(0, -_float())
+		r = HELMETS[shape][1]
+	else:
+		var n := neck() / s
+		var m := (MOUTHS.get(shape, Vector2(60, -50)) as Vector2) - Vector2(0, _float())
+		at = n.lerp(m, 0.62) + Vector2(0, -3)
+		r = clampf(n.distance_to(m) * 0.62 + 6.0, 16.0, 30.0)
+	at += _droop() * 0.6
+	CharacterView.draw_helmet(canvas, at, r, helmet)
 
 
 ## Where a lead clips on, in this node's own space: the neck, just behind
@@ -318,7 +376,7 @@ func neck() -> Vector2:
 				lift = absf(sin(_phase * 0.7)) * 8.0 * _stride()
 			_:
 				lift = absf(sin(_phase)) * 2.0 * _stride()
-	return (at - Vector2(0, lift)) * float(data.get("size", 1.0))
+	return (at - Vector2(0, lift + _float())) * float(data.get("size", 1.0))
 
 
 ## The gift's position in this node's own space (for glows behind it).
@@ -326,13 +384,13 @@ func mouth() -> Vector2:
 	if _rig:
 		return _marker("Mouth", MOUTHS.get(str(Content.animal(animal_id).get("shape", "dog")), Vector2(60, -50)))
 	var s := float(Content.animal(animal_id).get("size", 1.0))
-	return MOUTHS.get(str(Content.animal(animal_id).get("shape", "dog")), Vector2(60, -50)) * s
+	return (MOUTHS.get(str(Content.animal(animal_id).get("shape", "dog")), Vector2(60, -50)) - Vector2(0, _float())) * s
 
 
 func _draw_held_gift(canvas: CanvasItem, shape: String) -> void:
 	var g := Content.gift(held_gift)
 	var colour := Content.rarity_colour(g.get("rarity", "common"))
-	var at: Vector2 = _marker("Mouth", MOUTHS.get(shape, Vector2(60, -50))) / float(Content.animal(animal_id).get("size", 1.0)) if _rig else MOUTHS.get(shape, Vector2(60, -50))
+	var at: Vector2 = _marker("Mouth", MOUTHS.get(shape, Vector2(60, -50))) / float(Content.animal(animal_id).get("size", 1.0)) if _rig else MOUTHS.get(shape, Vector2(60, -50)) - Vector2(0, _float())
 	canvas.draw_circle(at, 15, Color(colour, 0.22), true, -1.0, true)
 	canvas.draw_circle(at, 11, UI.SURFACE, true, -1.0, true)
 	var art := GiftArt.texture_for(held_gift)
@@ -820,3 +878,93 @@ func _draw_cake() -> void:
 		_ellipse(Vector2(0, -69 - bob + sin(_phase * 3.0)), Vector2(3, 5), Color("#ffb347"))
 	_eye(Vector2(10, -24 - bob) + d, 2.5, sponge)
 	draw_arc(Vector2(13, -18 - bob) + d, 4, 0.3 + 0.6 * sad, PI - 0.3 - 0.6 * sad, 8, UI.INK, 1.5, true)
+
+
+## How high a swimmer floats over the ground, bobbing as it goes.
+func _float() -> float:
+	return 6.0 * sin(_swim * 1.6) if swims() else 0.0
+
+
+## A fish swimming along: a round body with stripes, a tail flicking
+## behind and fins top and bottom.
+func _draw_fish() -> void:
+	var fins := _part("Fins", Color("#e8702a"))
+	var body := _part("Body", Color("#ff9a3c"))
+	var stripes := _part("Stripes", Color.WHITE)
+	var y := -50.0 - _float()
+	var flick := sin(_swim * (9.0 if walking else 4.0)) * 0.35
+	var tail := Vector2(-32, y)
+	var a := tail + Vector2(-24, -18).rotated(flick)
+	var b := tail + Vector2(-24, 18).rotated(flick)
+	draw_colored_polygon(PackedVector2Array([tail, a, tail + Vector2(-16, 0).rotated(flick), b]), fins)
+	draw_colored_polygon(PackedVector2Array([Vector2(-8, y - 20), Vector2(6, y - 34), Vector2(16, y - 18)]), fins)
+	draw_colored_polygon(PackedVector2Array([Vector2(-6, y + 18), Vector2(2, y + 30), Vector2(12, y + 18)]), fins.darkened(0.1))
+	_ellipse(Vector2(0, y), Vector2(38, 22), body)
+	for x in [-16.0, 10.0]:
+		_ellipse(Vector2(x, y), Vector2(5, 19 - absf(x) * 0.3), stripes)
+	_ellipse(Vector2(-4, y + 8), Vector2(10, 4), fins, 0.4 + sin(_swim * 5.0) * 0.2)
+	var d := _droop() * 0.3
+	draw_circle(Vector2(24, y - 6) + d, 5.0, UI.SURFACE, true, -1.0, true)
+	_eye(Vector2(25, y - 6) + d, 2.6, body)
+	draw_arc(Vector2(34, y + 5) + d, 4, 0.3 + 0.6 * sad, PI - 0.3 - 0.6 * sad, 8, UI.INK, 1.5, true)
+
+
+## A crab scuttling: a wide shell on six little legs, two claws held up and
+## eyes on stalks.
+func _draw_crab() -> void:
+	var legs := _part("Legs", Color("#b8402c"))
+	var shell := _part("Shell", Color("#d9573a"))
+	var claws := _part("Claws", Color("#ee8a5e"))
+	var bob := _bob(1.5)
+	for i in 3:
+		for side in [-1.0, 1.0]:
+			var step := sin(_phase * 1.4 + i * 2.1 + (PI if side > 0 else 0.0)) * 4.0 if walking else 0.0
+			var hip := Vector2(side * (10 + i * 7), -16 - bob)
+			var knee := hip + Vector2(side * 12, -6 + step * 0.4)
+			var foot := Vector2(side * (24 + i * 8) + step, 0)
+			draw_polyline(PackedVector2Array([hip, knee, foot]), legs, 3.0, true)
+	for side in [-1.0, 1.0]:
+		var wave := sin(_phase * 0.8 + side) * 3.0 if walking else 0.0
+		var arm := Vector2(side * 22, -24 - bob)
+		var claw := Vector2(side * 34, -44 - bob + wave) + _droop() * Vector2(0.2, 0.8)
+		draw_line(arm, claw, claws, 4.0, true)
+		_ellipse(claw, Vector2(9, 7), claws, side * 0.3)
+		draw_colored_polygon(PackedVector2Array([claw + Vector2(side * 2, -3), claw + Vector2(side * 10, -10), claw + Vector2(side * 9, -1)]), claws.darkened(0.15))
+	_ellipse(Vector2(0, -22 - bob), Vector2(28, 15), shell)
+	_ellipse(Vector2(0, -26 - bob), Vector2(18, 7), shell.lightened(0.15))
+	var d := _droop() * 0.4
+	for x in [-6.0, 8.0]:
+		draw_line(Vector2(x, -34 - bob), Vector2(x + 2, -44 - bob) + d, legs, 2.0, true)
+		draw_circle(Vector2(x + 2, -45 - bob) + d, 4.0, UI.SURFACE, true, -1.0, true)
+		_eye(Vector2(x + 3, -45 - bob) + d, 2.0, shell)
+	draw_arc(Vector2(2, -18 - bob) + d, 5, 0.3 + 0.6 * sad, PI - 0.3 - 0.6 * sad, 8, UI.INK, 1.5, true)
+
+
+## A whale gliding along: a long body with a pale belly, a flipper, and
+## its tail flukes beating slowly up and down.
+func _draw_whale() -> void:
+	var fins := _part("Fins", Color("#34557d"))
+	var body := _part("Body", Color("#4a76a8"))
+	var belly := _part("Belly", Color("#d6e3ec"))
+	var y := -46.0 - _float()
+	var beat := sin(_swim * (2.6 if walking else 1.4)) * 10.0
+	var root := Vector2(-58, y - 2)
+	var tip := Vector2(-84, y - 8 + beat)
+	draw_line(Vector2(-40, y), root, body, 18, true)
+	draw_colored_polygon(PackedVector2Array([root, tip + Vector2(-10, -14), tip + Vector2(2, 0), tip + Vector2(-10, 14)]), fins)
+	var shape := PackedVector2Array()
+	for k in 33:
+		var t := TAU * k / 32.0
+		# A blunt head on the right, tapering to the tail on the left.
+		var rx := 64.0 if cos(t) > 0 else 54.0
+		var ry := 28.0 * (1.0 if cos(t) > 0 else 0.85)
+		shape.append(Vector2(6 + cos(t) * rx, y + sin(t) * ry))
+	draw_colored_polygon(shape, body)
+	_ellipse(Vector2(14, y + 14), Vector2(48, 11), belly)
+	for k in 4:
+		draw_line(Vector2(-6 + k * 12, y + 10), Vector2(-4 + k * 12, y + 22), belly.darkened(0.15), 1.6, true)
+	_ellipse(Vector2(4, y + 16), Vector2(18, 7), fins, 0.5 + sin(_swim * 1.4) * 0.15)
+	var d := _droop() * 0.3
+	_eye(Vector2(44, y - 2) + d, 3.0, body)
+	draw_arc(Vector2(60, y + 6) + d, 9, 0.2 + 0.5 * sad, PI * 0.5, 10, UI.INK, 1.8, true)
+	draw_circle(Vector2(20, y - 26), 2.5, fins.darkened(0.2), true, -1.0, true)

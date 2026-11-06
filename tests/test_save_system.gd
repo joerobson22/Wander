@@ -25,7 +25,6 @@ func _sample() -> GameState:
 	pet.animal_id = "dog1"
 	pet.colours = [Color("#112233"), Color("#445566"), Color("#778899")]
 	pet.adopted_unix = 400
-	pet.rehomed_unix = 900
 	pet.places = {"jungle": 1234, "lake": 66}
 	s.pets.append(pet)
 	s.log_focus(20380, "p1", "pet1", "jungle", 1234)
@@ -49,7 +48,6 @@ func test_round_trip() -> void:
 	eq(back.pets[0].colours[1].to_html(false), "445566")
 	eq(back.pets[0].adopted_unix, 400)
 	eq(back.pets[0].places, {"jungle": 1234, "lake": 66})
-	check(back.pets[0].is_rehomed(), "a rehomed pet stays rehomed")
 	eq(back.pet_seconds("pet1"), 1300)
 	eq(back.project_gifts("p1"), {"dog_common": 2})
 	eq(back.days[20380]["places"], {"jungle": 1234}, "days come back keyed by number")
@@ -59,6 +57,32 @@ func test_round_trip() -> void:
 	eq(back.active.start_unix, 500)
 	eq(back.active.pet_id, "pet1")
 	_cleanup()
+
+
+## Deleting a pet takes it out of everything: your pets, the projects it
+## walked for and the days it walked on. Undo puts it all back.
+func test_deleting_a_pet_takes_it_everywhere() -> void:
+	var s := _sample()
+	var taken := s.remove_pet("pet1")
+	check(s.pet("pet1") == null and s.pets.is_empty(), "it's gone from your pets")
+	eq(s.projects[0].pets, {}, "and from the project's podium")
+	eq(s.pet_seconds("pet1"), 0, "and from the days")
+	eq(s.project_seconds("p1"), 1300, "the project keeps its focus time")
+	s.restore_pet(taken)
+	eq(s.pets.size(), 1, "undo brings it back")
+	eq(s.projects[0].pets, {"pet1": 1300})
+	eq(s.pet_seconds("pet1"), 1300)
+	eq(s.remove_pet("nope"), {}, "no such pet, nothing taken")
+
+
+## A pet "rehomed" under the old rules is deleted when the save loads.
+func test_old_rehomed_pets_are_deleted() -> void:
+	var d := SaveSystem.to_dict(_sample())
+	d["pets"][0]["rehomed_unix"] = 900
+	var back := SaveSystem.from_dict(d)
+	check(back.pet("pet1") == null, "the rehomed pet is gone")
+	eq(back.projects[0].pets, {}, "from its projects too")
+	eq(back.pet_seconds("pet1"), 0, "and the days")
 
 
 ## The save keeps only what can't be worked out: a year of daily walks

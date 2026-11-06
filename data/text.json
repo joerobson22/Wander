@@ -213,11 +213,12 @@
 	"choose_focus": {
 		"new_pet": "New pet",
 		"adopt": "Adopt",
-		"rehome_pet": "Rehome pet",
-		"rehome": "Rehome",
-		"rehome_title": "Rehome {pet}?",
-		"rehome_body": "{pet} goes off to a happy new home. Projects it walked for still show it.",
-		"rehomed": "{pet} has a new home",
+		"delete_pet": "Delete pet",
+		"delete": "Delete",
+		"delete_title": "Delete {pet}?",
+		"delete_body": "{pet} goes from your pets, your projects and your stats.",
+		"deleted": "{pet} deleted",
+		"only_in": "{pet} can only swim {where}",
 		"place_locked_name": "{place} · locked · {rule}",
 		"no_pets_title": "No pets yet",
 		"no_pets_body": "Tap the paw at the top right to adopt one.",
@@ -346,10 +347,9 @@
 		"your_projects": "Your projects"
 	},
 	"project": {
-		"no_gifts": "No gifts",
 		"dates": "{from} – {to}",
-		"now": "now",
-		"extra_and_dates": "{extra}  ·  {dates}",
+		"started": "Started {date}",
+		"rarity_count": "{n} {rarity} gifts",
 		"add_grade": "Give it a grade",
 		"change_grade": "{grade} · change the grade",
 		"grade_name": "{scale} {grade}",
@@ -520,6 +520,7 @@
 	},
 	"leaderboard": {
 		"title": "Friends leaderboard",
+		"title_short": "Friends",
 		"see_full": "See full",
 		"full_title": "Friend leaderboard",
 		"your_profile": "Your profile",
@@ -653,12 +654,8 @@
 		"delete_title": "Delete {who}?",
 		"delete_body": "Its projects, walks, gifts and stats go for good. This can't be undone."
 	},
-	"podium": {
-		"rehomed": "{time} · rehomed"
-	},
 	"pet_card": {
 		"adopted": "Adopted {date}",
-		"kind_rehomed": "{kind} · rehomed",
 		"top_projects": "Top projects",
 		"top_pets": "Top pets"
 	},

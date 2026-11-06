@@ -35,8 +35,8 @@ extends Resource
 @export_range(0.0, 60.0, 1.0, "suffix:px") var drop := 14.0
 ## Typing out the encouragement: each letter, and the extra pause at each
 ## space between words.
-@export_range(0.0, 0.5, 0.005, "suffix:s") var type_letter := 0.045
-@export_range(0.0, 1.0, 0.01, "suffix:s") var type_space := 0.16
+@export_range(0.0, 0.5, 0.005, "suffix:s") var type_letter := 0.028
+@export_range(0.0, 1.0, 0.01, "suffix:s") var type_space := 0.06
 ## How often the encouragement changes, in minutes of focus.
 @export_range(1, 120, 1, "suffix:min") var quote_every := 10
 

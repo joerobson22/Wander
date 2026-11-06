@@ -130,7 +130,12 @@ static func trade(inventory: Dictionary, gift_id: String, gifts: Array, cost: in
 	var next: Array = gifts.filter(func(x): return x["table"] == g["table"] and x["rarity"] == RARITIES[i + 1])
 	if next.is_empty():
 		return ""
+	# A rarity with more than one gift (two legendaries per table) gives the
+	# one you have fewest of, so trading helps finish the set.
 	var new_id: String = next[0]["id"]
+	for x in next:
+		if int(inventory.get(x["id"], 0)) < int(inventory.get(new_id, 0)):
+			new_id = x["id"]
 	inventory[gift_id] = int(inventory[gift_id]) - cost
 	inventory[new_id] = int(inventory.get(new_id, 0)) + 1
 	return new_id

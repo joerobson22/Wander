@@ -8,8 +8,10 @@ extends Container
 ## the panel springs back. A swipe that starts on the panel is the panel's,
 ## never the app's swipe between screens (Gestures.sideways); up and down
 ## still scroll the list. After acting, the screen plays celebrate() (a
-## green flash and confetti) or vanish() (it shrinks away with a red flash),
-## and collapse() closes the gap it leaves.
+## flash of colour that holds while confetti flies, then the panel fades
+## away) or vanish() (it shrinks away with a red flash), and collapse()
+## closes the gap it leaves. arrive() is a row joining a list: it opens a
+## gap and the panel fades in, rising into it.
 
 ## +1 for a swipe to the right (delete), -1 to the left (complete).
 signal swiped(direction: int)
@@ -31,6 +33,8 @@ var radius := RADIUS:
 var content: Control
 
 var _offset := 0.0
+## How far below its place the panel sits, while it rises in (arrive()).
+var _rise := 0.0
 var _height := 1.0
 var _tracking := false
 var _dragging := false
@@ -60,8 +64,8 @@ func _get_minimum_size() -> Vector2:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_SORT_CHILDREN:
 		var full := content.get_combined_minimum_size().y
-		fit_child_in_rect(content, Rect2(Vector2(_offset, 0), Vector2(size.x, maxf(full, size.y))))
-		fit_child_in_rect(_flash, Rect2(Vector2(_offset, 0), Vector2(size.x, maxf(full, size.y))))
+		fit_child_in_rect(content, Rect2(Vector2(_offset, _rise), Vector2(size.x, maxf(full, size.y))))
+		fit_child_in_rect(_flash, Rect2(Vector2(_offset, _rise), Vector2(size.x, maxf(full, size.y))))
 		content.pivot_offset = content.size * 0.5
 		_flash.pivot_offset = content.pivot_offset
 		_flash.scale = content.scale
@@ -147,21 +151,45 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 
 
-## Springs home, flashes `colour` over the panel and throws confetti.
-func celebrate() -> void:
+## Springs home and washes over with `colour` (green for completing),
+## holding it while confetti flies (with `confetti`), then fades the panel
+## away where it is. collapse() closes the gap after.
+func celebrate(colour: Color = UI.SUCCESS, confetti: bool = true) -> void:
 	spring_back()
-	_flash.colour = UI.SUCCESS
+	_flash.colour = colour
 	var t := Motion.tween(_flash, "flash")
 	t.tween_property(_flash, "strength", 0.55, Motion.time(0.12))
-	t.tween_property(_flash, "strength", 0.0, Motion.time(0.5))
-	if not Motion.reduced():
+	if confetti and not Motion.reduced():
 		var burst := _Confetti.new()
 		burst.top_level = true
 		add_child(burst)
 		# From the middle of the panel, where it's springing back to.
 		burst.global_position = global_position + Vector2(size.x * 0.5, minf(size.y * 0.35, 120.0))
 		burst.start(size.x)
-	await get_tree().create_timer(maxf(Motion.time(0.65), 0.05)).timeout
+	await get_tree().create_timer(maxf(Motion.time(0.55 if confetti else 0.25), 0.05)).timeout
+	var fade := Motion.tween(content, "fade")
+	fade.set_parallel(true)
+	fade.tween_property(content, "modulate:a", 0.0, Motion.time(0.3))
+	fade.tween_property(_flash, "modulate:a", 0.0, Motion.time(0.3))
+	await get_tree().create_timer(maxf(Motion.time(0.3), 0.05)).timeout
+
+
+## Joins the list: the gap opens and the panel fades in, rising into it.
+func arrive() -> void:
+	_set_height(0.0)
+	_set_rise(18.0)
+	content.modulate.a = 0.0
+	var open := Motion.method(self, "height", _set_height, 0.0, 1.0, Motion.FAST)
+	await open.finished
+	var t := Motion.tween(self, "arrive")
+	t.set_parallel(true)
+	t.tween_method(_set_rise, 18.0, 0.0, Motion.time(0.32))
+	t.tween_property(content, "modulate:a", 1.0, Motion.time(0.32))
+
+
+func _set_rise(v: float) -> void:
+	_rise = v
+	queue_sort()
 
 
 ## Flashes red and shrinks away to nothing where it is.
@@ -204,7 +232,9 @@ class _Flash extends Control:
 
 ## A burst of paper bits that fly up and flutter down.
 class _Confetti extends Control:
-	const LIFE := 1.2
+	## Over before the row's gap has closed, so a list rebuilt then cuts
+	## none of it short.
+	const LIFE := 1.0
 	var _bits: Array = []
 	var _age := 0.0
 
