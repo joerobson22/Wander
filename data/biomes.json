@@ -1,5 +1,5 @@
 {
-	"_doc": "Places, in the order the place picker shows them. 'unlock' is what it takes to walk there, written as in animals.json ({} or none = from the start; {\"level\": 3}; {\"hours\": 20}; {\"hours\": 10, \"place\": \"forest\"}; {\"table\": \"cat\"}; {\"all_tables\": true}). 'where' finishes \"Focus for 10 hours ...\" in unlock hints. 'icon' is the drawn icon on its button; a white-on-transparent art/places/<id>.png replaces it. Each place's scenery (its parallax layers: hills, trees, water, the ground and path...) is a scene you open and change in the Godot editor: art/scenery/<id>/place.tscn (see assets/README.md). Per place here: 'icon' for its button, 'ambience' (a sound name), 'fx' (snow, wind, fireflies, stars), 'weather' (how the real weather shows there, see weathers below), 'sky' to fix the sky instead of following the clock (see day_cycle below), and 'fixed_light' to ignore the light's tint. Which level unlocks each place is in levels.json.",
+	"_doc": "Places, in the order the place picker shows them. 'unlock' is what it takes to walk there, written as in animals.json ({} or none = from the start; {\"level\": 3}; {\"hours\": 20}; {\"hours\": 10, \"place\": \"forest\"}; {\"table\": \"cat\"}; {\"all_tables\": true}). 'where' finishes \"Focus for 10 hours ...\" in unlock hints. 'icon' is the drawn icon on its button; a white-on-transparent art/places/<id>.png replaces it. Each place's scenery (its parallax layers: hills, trees, water, the ground and path...) is a scene you open and change in the Godot editor: art/scenery/<id>/place.tscn (see assets/README.md). Per place here: 'icon' for its button, 'ambience' (a sound name), 'fx' (snow, wind, fireflies, stars, petals, bubbles, rays), 'weather' (how the real weather shows there, see weathers below), 'sky' to fix the sky instead of following the clock (see day_cycle below), 'fixed_light' to ignore the light's tint, and 'helmet' (diver or astronaut) for what you and your pet wear there (animals marked 'aquatic' skip the diving helmet). Which level unlocks each place is in levels.json.",
 	"biomes": [
 		{
 			"id": "lake",
@@ -125,6 +125,26 @@
 			"fx": ["stars"]
 		},
 		{
+			"id": "ocean",
+			"where": "in the ocean",
+			"name": "Ocean",
+			"icon": "place_ocean",
+			"unlock": {
+				"level": 20
+			},
+			"ambience": "ocean",
+			"weather": {
+				"*": "sunny"
+			},
+			"fx": ["bubbles", "rays"],
+			"sky": {
+				"top": "#0b4f86",
+				"bottom": "#3fa7c9"
+			},
+			"fixed_light": true,
+			"helmet": "diver"
+		},
+		{
 			"id": "moon",
 			"where": "on the Moon",
 			"name": "Moon",
@@ -141,7 +161,8 @@
 				"top": "#04050b",
 				"bottom": "#161a2b"
 			},
-			"fixed_light": true
+			"fixed_light": true,
+			"helmet": "astronaut"
 		}
 	],
 	"weathers": {

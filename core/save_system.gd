@@ -68,8 +68,12 @@ static func from_dict(d: Dictionary) -> GameState:
 	state.xp = int(d.get("xp", 0))
 	for p in d.get("projects", []):
 		state.projects.append(ProjectData.from_dict(p))
+	var gone: Array[String] = []
 	for p in d.get("pets", []):
 		state.pets.append(PetData.from_dict(p))
+		# Pets used to be "rehomed" (hidden but kept): they're deleted now.
+		if int(p.get("rehomed_unix", 0)) > 0:
+			gone.append(state.pets[-1].id)
 	var days = d.get("days", {})
 	if days is Dictionary:
 		for key in days:
@@ -83,6 +87,8 @@ static func from_dict(d: Dictionary) -> GameState:
 					for id in totals:
 						tidy[part][str(id)] = int(totals[id])
 			state.days[int(key)] = tidy
+	for id in gone:
+		state.remove_pet(id)
 	for gift_id in d.get("inventory", {}):
 		state.inventory[gift_id] = int(d["inventory"][gift_id])
 	var active = d.get("active")

@@ -60,6 +60,15 @@ func _init(list: Array, can_add: bool = false) -> void:
 		var add := UI.ghost_button("user_add", Text.t("friends.add"), open_add, UI.INK_SOFT, 34, 22)
 		head.add_child(add)
 	column.add_child(head)
+	# Too narrow for the whole title (beside the chart on a computer): it
+	# says just "Friends" rather than be cut short.
+	var whole := Text.t("leaderboard.title")
+	title.resized.connect(func():
+		var need := title.get_theme_font("font").get_string_size(whole, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x
+		var short := Text.t("leaderboard.title_short")
+		var want := whole if title.size.x >= need - 0.5 else short
+		if title.text != want:
+			title.text = want, CONNECT_DEFERRED)
 
 	# The list and your pinned row are placed by hand in here (see _fit), so
 	# their heights never push the card taller.

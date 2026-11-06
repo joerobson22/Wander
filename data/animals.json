@@ -1,5 +1,5 @@
 {
-	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists; 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in).",
+	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists; 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in). 'aquatic': true lives underwater, so it wears no diving helmet in the ocean (only an astronaut's on the Moon); 'only_in': a place id it can only walk in (fish and whales stay in the ocean): the place picker keeps to it and it swims rather than walks.",
 	"animals": [
 		{
 			"id": "dog1",
@@ -597,6 +597,76 @@
 				"seconds": 0.9
 			},
 			"sprite_dir": "res://art/animals/red_panda/"
+		},
+		{
+			"id": "fish",
+			"name": "Fish",
+			"table": "fish",
+			"home": "ocean",
+			"unlock": {
+				"level": 21
+			},
+			"shape": "fish",
+			"parts": ["Fins", "Body", "Stripes"],
+			"default_colours": ["#e8702a", "#ff9a3c", "#fbf6ee"],
+			"walk_speed": 0.9,
+			"size": 0.6,
+			"sound": "fish_blub",
+			"dive": {
+				"hops": 0,
+				"height": 0,
+				"seconds": 1.0
+			},
+			"aquatic": true,
+			"only_in": "ocean",
+			"sprite_dir": "res://art/animals/fish/"
+		},
+		{
+			"id": "crab",
+			"name": "Crab",
+			"table": "crab",
+			"home": "ocean",
+			"unlock": {
+				"hours": 5,
+				"place": "ocean"
+			},
+			"shape": "crab",
+			"parts": ["Legs", "Shell", "Claws"],
+			"default_colours": ["#b8402c", "#d9573a", "#ee8a5e"],
+			"walk_speed": 0.8,
+			"size": 0.7,
+			"sound": "crab_click",
+			"dive": {
+				"hops": 0,
+				"height": 0,
+				"seconds": 1.4
+			},
+			"aquatic": true,
+			"sprite_dir": "res://art/animals/crab/"
+		},
+		{
+			"id": "whale",
+			"name": "Whale",
+			"table": "whale",
+			"home": "ocean",
+			"unlock": {
+				"hours": 25,
+				"place": "ocean"
+			},
+			"shape": "whale",
+			"parts": ["Fins", "Body", "Belly"],
+			"default_colours": ["#34557d", "#4a76a8", "#d6e3ec"],
+			"walk_speed": 0.45,
+			"size": 1.0,
+			"sound": "whale_song",
+			"dive": {
+				"hops": 0,
+				"height": 0,
+				"seconds": 1.8
+			},
+			"aquatic": true,
+			"only_in": "ocean",
+			"sprite_dir": "res://art/animals/whale/"
 		},
 		{
 			"id": "skeleton_dog",

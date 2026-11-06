@@ -9,7 +9,7 @@ extends Control
 ## new one. Then the pet's name; swipe left and right through your pets,
 ## which stand on the path with their kind, time walked and adoption date
 ## underneath (the one in the middle walks on the spot), and tap one to head
-## out. At the bottom, the red bin rehomes that pet after a check, and the
+## out. At the bottom, the red bin deletes that pet after a check, and the
 ## sort menu on the right orders the pets. The × at the top left goes back
 ## home, and the paw at the top right switches to adopting a new pet: give
 ## it a name (filled in with its kind), scroll up and down through the
@@ -172,10 +172,20 @@ func _on_new() -> void:
 ## The place picked: it opens on where you last focused (App.focus_place),
 ## and only changes when you pick one, or adopt a pet (to its home).
 ## Swiping between pets leaves it where it is.
+## A pet that can only walk in one place (a fish, a whale: the ocean)
+## walks there whatever was picked; the pick comes back for the next pet.
 func _place_id() -> String:
 	if _place == "":
 		_place = App.focus_place()
+	var only := _only_in(_current_pet())
+	if only != "" and App.can_walk_in(only):
+		return only
 	return _place if App.can_walk_in(_place) else "lake"
+
+
+## The one place pet `p` can walk in, or "" if it can walk anywhere.
+static func _only_in(p: PetData) -> String:
+	return str(Content.animal(p.animal_id).get("only_in", "")) if p else ""
 
 
 ## A place's name.
@@ -218,6 +228,7 @@ func _show_place(id: String) -> void:
 		_attach_front()
 		Audio.ambience(_scenery.ambience())
 		_layout()
+		_dress_pets()
 		return
 	_scenery = Scenery.new()
 	_scenery.biome = Content.biome(id)
@@ -238,6 +249,17 @@ func _show_place(id: String) -> void:
 				Motion.to(under, "front_tint:a", 0.0, Motion.style.place_fade)
 		Audio.ambience(_scenery.ambience())
 	_layout()
+	_dress_pets()
+
+
+## The pets wear the place's helmet (a diving one in the ocean, a space one
+## on the Moon), as they will on the walk.
+func _dress_pets() -> void:
+	if not is_instance_valid(_pets) or not is_instance_valid(_scenery):
+		return
+	var where := str(_scenery.biome.get("id", ""))
+	for j in mini(_pets.items.size(), _pet_list.size()):
+		(_pets.items[j].get_meta("view") as AnimalView).helmet = AnimalView.helmet_in(where, _pet_list[j].animal_id)
 
 
 ## Once `top` has fully faded in, the places under it go.
@@ -266,6 +288,14 @@ func _pick_place(id: String) -> void:
 		# Locked: it just wiggles. What unlocks it is on the level rewards.
 		Motion.wiggle(_places[id])
 		Audio.play("locked", 0.8, -8.0, "pop")
+		return
+	var pet := _current_pet()
+	var only := _only_in(pet)
+	if only != "" and id != only:
+		# A fish out of water: it wiggles, and says where this pet can go.
+		Motion.wiggle(_places[id])
+		Audio.play("locked", 0.8, -8.0, "pop")
+		Toast.show_text(Text.t("choose_focus.only_in", {"pet": pet.name, "where": Content.biome(only).get("where", "")}), "paw")
 		return
 	if id == _place_id():
 		return
@@ -330,11 +360,14 @@ func _fit_place_grid() -> void:
 ## under it (with `slide`; else it's simply there).
 func _refresh_places(slide: bool = false) -> void:
 	var current := _place_id()
+	var only := _only_in(_current_pet())
 	for id in _places:
 		var button: Button = _places[id]
 		var unlocked := App.is_unlocked("place", id)
 		var on: bool = id == current
-		var ink := UI.ACCENT if on else Color(UI.INK_SOFT, 1.0 if unlocked else 0.45)
+		# Faded: locked (under a padlock), or not a place this pet can go.
+		var open: bool = unlocked and (only == "" or id == only)
+		var ink := UI.ACCENT if on else Color(UI.INK_SOFT, 1.0 if open else 0.45)
 		button.get_node("Lock").visible = not unlocked
 		button.accessibility_name = _place_title(id) if unlocked else Text.t("choose_focus.place_locked_name", {"place": _place_title(id), "rule": Unlocks.describe(Content.unlock_rule("place", id))})
 		UI.style_button(button, Color.TRANSPARENT, ink, 14)
@@ -459,7 +492,7 @@ func _build_pick(select_id: String = "") -> void:
 	_left.disabled = _pet_list.is_empty()
 	# Nothing to sort with fewer than two pets.
 	_sort.visible = _pet_list.size() > 1
-	_set_icon(_left, "bin", Text.t("choose_focus.rehome_pet"))
+	_set_icon(_left, "bin", Text.t("choose_focus.delete_pet"))
 	if _pet_list.is_empty():
 		_words.add_child(_shadowed(UI.label(Text.t("choose_focus.no_pets_title"), 30, UI.ON_DARK, true, 600)))
 		var p := _shadowed(UI.label(Text.t("choose_focus.no_pets_body"), 15, UI.ON_DARK_SOFT, false, 700))
@@ -543,6 +576,13 @@ func _on_pet_changed(i: int) -> void:
 		"date": Stats.format_date(p.adopted_unix, App.tz_bias()),
 	})
 	Motion.pop(_pet_line, 0.04, 0.25)
+	# Swiping to a fish takes you to the ocean, and back again after.
+	if is_instance_valid(_scenery) and str(_scenery.biome.get("id", "")) != _place_id():
+		_show_place(_place_id())
+		_refresh_places(true)
+	elif is_instance_valid(_places.get(_place_id())):
+		_refresh_places()
+	_dress_pets()
 	_layout()
 
 
@@ -628,14 +668,14 @@ static func walk_spots(view: Vector2, feet: float) -> Dictionary:
 
 func _on_left() -> void:
 	var p := _pet_list[_pets.index]
-	Modal.confirm(Text.t("choose_focus.rehome_title", {"pet": p.name}),
-		Text.t("choose_focus.rehome_body", {"pet": p.name}),
-		Text.t("choose_focus.rehome"), "danger").closed.connect(func(ok):
+	Modal.confirm(Text.t("choose_focus.delete_title", {"pet": p.name}),
+		Text.t("choose_focus.delete_body", {"pet": p.name}),
+		Text.t("choose_focus.delete"), "danger").closed.connect(func(ok):
 			if ok:
 				var next := _neighbour_id(p.id)
-				App.rehome_pet(p.id)
-				Toast.show_action(Text.t("choose_focus.rehomed", {"pet": p.name}), "paw", Text.t("common.undo"), func():
-					App.unrehome_pet(p.id)
+				var taken := App.delete_pet(p.id)
+				Toast.show_action(Text.t("choose_focus.deleted", {"pet": p.name}), "bin", Text.t("common.undo"), func():
+					App.restore_pet(taken)
 					if is_inside_tree() and not _adopting:
 						_build_pick(p.id), "danger")
 				_build_pick(next))
@@ -799,7 +839,7 @@ func _project_row(p: ProjectData, on: bool, m: Modal, busy: Array) -> SwipeRow:
 			row.spring_back()
 			return
 		busy[0] = true
-		await ProjectSwipes.act(direction, row, p.id, true, false)
+		await ProjectSwipes.act(direction, row, p.id)
 		busy[0] = false
 		if is_instance_valid(row) and row.is_inside_tree():
 			App.state_changed.emit())
@@ -1048,12 +1088,12 @@ func _style_top(on_form: bool) -> void:
 		(_new.get_theme_stylebox(state) as StyleBoxFlat).set_content_margin_all(0)
 
 
-## The bin that rehomes a pet: a round paper button like the others, with a
+## The bin that deletes a pet: a round paper button like the others, with a
 ## red bin and a red rim to say it lets a pet go (Undo on the toast brings
 ## it back). Like
 ## every button it shades under the pointer and sinks when pressed.
 func _bin_button() -> Button:
-	var b := UI.round_button("bin", Text.t("choose_focus.rehome_pet"), _on_left, UI.SURFACE, UI.DANGER, 56)
+	var b := UI.round_button("bin", Text.t("choose_focus.delete_pet"), _on_left, UI.SURFACE, UI.DANGER, 56)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		var sb: StyleBoxFlat = b.get_theme_stylebox(state)
 		sb.set_border_width_all(3)

@@ -103,8 +103,9 @@ func test_trade_in() -> void:
 	eq(GiftRoller.trade(inv, "dog_common", gifts, 10), "dog_rare")
 	eq(inv, {"dog_common": 2, "dog_rare": 1})
 	eq(GiftRoller.trade(inv, "dog_common", gifts, 10), "", "not enough left")
-	inv["bear_epic"] = 3
+	inv["bear_epic"] = 6
 	eq(GiftRoller.trade(inv, "bear_epic", gifts, 3), "bear_legendary")
+	eq(GiftRoller.trade(inv, "bear_epic", gifts, 3), "bear_legendary2", "then the legendary you don't have yet")
 	eq(inv["bear_epic"], 0, "stays listed at zero")
 	inv["bear_legendary"] = 9
 	eq(GiftRoller.trade(inv, "bear_legendary", gifts, 3), "", "legendaries can't be traded")
@@ -132,9 +133,20 @@ func test_every_table_has_a_gift_per_rarity() -> void:
 			continue
 		for rarity in GiftRoller.RARITIES:
 			var n := gifts.filter(func(g): return g["table"] == t["id"] and g["rarity"] == rarity).size()
-			eq(n, 1, "%s %s" % [t["id"], rarity])
-		var wearable := gifts.filter(func(g): return g["table"] == t["id"] and g.has("slot")).size()
-		eq(wearable, 2, "%s wearables" % t["id"])
+			eq(n, 2 if rarity == "legendary" else 1, "%s %s" % [t["id"], rarity])
+		var wearable := gifts.filter(func(g): return g["table"] == t["id"] and g.has("slot") and g["rarity"] == "legendary").size()
+		eq(wearable, 2, "%s wearables are its legendaries" % t["id"])
+
+
+## Only legendaries can be worn, and every slot gifts go in has as many.
+func test_cosmetics_are_legendary_and_even() -> void:
+	var per_slot := {}
+	for g in gifts:
+		if g.has("slot"):
+			eq(g["rarity"], "legendary", "%s is wearable, so legendary" % g["id"])
+			per_slot[g["slot"]] = int(per_slot.get(g["slot"], 0)) + 1
+	var counts := per_slot.values()
+	check(counts.min() == counts.max(), "every slot has as many cosmetics (%s)" % per_slot)
 
 
 func test_animals_of_a_kind_share_a_table() -> void:

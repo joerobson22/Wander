@@ -5,9 +5,13 @@ extends Pane
 ## of them the share done; the focus time they took; the biggest by focus
 ## time), then each project in a list of its own that scrolls, in the order
 ## picked from "Sort by".
-## Swipe a project from right to left to complete it (confetti), or a
-## completed one to put it back to ongoing; from left to right to delete it
-## (with a few seconds to undo). Tap the circled "?" in a completed
+## Each project shows just its header (status, name, focus time) until
+## tapped, when it opens out downwards; tap its header to fold it again.
+## Swipe a project from right to left to complete it (it flashes green
+## under confetti, then fades), or a completed one to put it back to
+## ongoing; from left to right to delete it (with a few seconds to undo).
+## Once it has faded the list closes up; showing them all, it comes back
+## where it now belongs, fading in as it rises into place. Tap the circled "?" in a completed
 ## project's top right to give it a grade (GCSE, A-Level or university); its
 ## badge then shows there instead, and tapping that changes it.
 
@@ -32,9 +36,12 @@ var _scale := ""
 var _list: VBoxContainer
 ## A project mid-swipe-action: the screen waits for it before rebuilding.
 var _busy := false
+## The projects opened out, by id; kept while the app runs.
+var _open := {}
 
 
 func build() -> void:
+	_list = null
 	var col := frame(720)
 	var head := title_row(Text.t("projects.title"))
 	var filter := Dropdown.new(filters(), _filter(), false, "", false)
@@ -207,9 +214,15 @@ func _fill_list() -> void:
 	var by := str(App.state.settings.get(SORT_KEY, sorts()[0][0]))
 	var reversed := bool(App.state.settings.get(SORT_KEY + "_reversed", false))
 	for p in sort_projects(shown_projects(), by, reversed):
-		var panel := ProjectPanel.new(p, "", true)
+		var panel := ProjectPanel.new(p, true, false, Callable(), true, _open.has(p.id))
 		panel.grade_pressed.connect(_pick_grade)
+		panel.toggled.connect(func(open: bool):
+			if open:
+				_open[p.id] = true
+			else:
+				_open.erase(p.id))
 		var row := ProjectSwipes.row(panel, p)
+		row.set_meta("project_id", p.id)
 		row.swiped.connect(_on_swiped.bind(row, p.id))
 		_list.add_child(row)
 
@@ -220,10 +233,14 @@ func _on_swiped(direction: int, row: SwipeRow, id: String) -> void:
 		row.spring_back()
 		return
 	_busy = true
-	await ProjectSwipes.act(direction, row, id, _filter() != "completed", _filter() != "ongoing")
+	await ProjectSwipes.act(direction, row, id)
 	_busy = false
 	if shown:
 		rebuild()
+		# Still listed (showing them all): it rejoins where it now belongs.
+		for r in _list.get_children() if _list else []:
+			if r.get_meta("project_id", "") == id:
+				r.arrive()
 
 
 ## Most gifts, biggest (focus time) and longest (start to finish) put the

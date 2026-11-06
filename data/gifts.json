@@ -1,5 +1,5 @@
 {
-	"_doc": "One gift per rarity per gift table. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Epic and legendary gifts are wearable: 'slot' says where and 'style' how the placeholder drawing shows it. 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Legendary gifts are placeholders for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the one-per-rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
+	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
 	"rarities": [
 		{
 			"id": "common",
@@ -166,6 +166,21 @@
 			"animal": "mammoth"
 		},
 		{
+			"id": "fish",
+			"name": "Fish",
+			"animal": "fish"
+		},
+		{
+			"id": "crab",
+			"name": "Crab",
+			"animal": "crab"
+		},
+		{
+			"id": "whale",
+			"name": "Whale",
+			"animal": "whale"
+		},
+		{
 			"id": "skeleton_dog",
 			"name": "Skeleton Dog",
 			"animal": "skeleton_dog",
@@ -216,10 +231,8 @@
 			"id": "dog_epic",
 			"table": "dog",
 			"rarity": "epic",
-			"name": "Seasonal Jumper",
-			"description": "Makes you feel very autumnal.",
-			"slot": "top",
-			"style": "jumper"
+			"name": "Squeaky Bone",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "dog_legendary",
@@ -229,6 +242,15 @@
 			"description": "Shiny, golden and very stylish.",
 			"slot": "neckwear",
 			"style": "collar"
+		},
+		{
+			"id": "dog_legendary2",
+			"table": "dog",
+			"rarity": "legendary",
+			"name": "Seasonal Jumper",
+			"description": "Makes you feel very autumnal.",
+			"slot": "top",
+			"style": "jumper"
 		},
 		{
 			"id": "cat_common",
@@ -248,10 +270,8 @@
 			"id": "cat_epic",
 			"table": "cat",
 			"rarity": "epic",
-			"name": "Jade Ring",
-			"description": "Makes you feel royal.",
-			"slot": "gloves",
-			"style": "ring"
+			"name": "Ball of Yarn",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "cat_legendary",
@@ -261,6 +281,15 @@
 			"description": "Meow.",
 			"slot": "hat",
 			"style": "ears"
+		},
+		{
+			"id": "cat_legendary2",
+			"table": "cat",
+			"rarity": "legendary",
+			"name": "Jade Ring",
+			"description": "Makes you feel royal.",
+			"slot": "gloves",
+			"style": "ring"
 		},
 		{
 			"id": "rabbit_common",
@@ -280,10 +309,8 @@
 			"id": "rabbit_epic",
 			"table": "rabbit",
 			"rarity": "epic",
-			"name": "Ruby Ring",
-			"description": "Looks very shiny.",
-			"slot": "gloves",
-			"style": "ring"
+			"name": "Golden Carrot",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "rabbit_legendary",
@@ -293,6 +320,15 @@
 			"description": "I'm pretty sure there's a rabbit underneath.",
 			"slot": "hat",
 			"style": "top_hat"
+		},
+		{
+			"id": "rabbit_legendary2",
+			"table": "rabbit",
+			"rarity": "legendary",
+			"name": "Ruby Ring",
+			"description": "Looks very shiny.",
+			"slot": "gloves",
+			"style": "ring"
 		},
 		{
 			"id": "sheep_common",
@@ -312,10 +348,8 @@
 			"id": "sheep_epic",
 			"table": "sheep",
 			"rarity": "epic",
-			"name": "Wool Mittens",
-			"description": "Knitted from the finest fleece.",
-			"slot": "gloves",
-			"style": "mittens"
+			"name": "Shearing Comb",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "sheep_legendary",
@@ -325,6 +359,15 @@
 			"description": "Shoo! Shoo!",
 			"slot": "walking_stick",
 			"style": "stick"
+		},
+		{
+			"id": "sheep_legendary2",
+			"table": "sheep",
+			"rarity": "legendary",
+			"name": "Wool Mittens",
+			"description": "Knitted from the finest fleece.",
+			"slot": "gloves",
+			"style": "mittens"
 		},
 		{
 			"id": "bird_common",
@@ -344,10 +387,8 @@
 			"id": "bird_epic",
 			"table": "bird",
 			"rarity": "epic",
-			"name": "Nest Hat",
-			"description": "'Hand' made just for you!",
-			"slot": "hat",
-			"style": "nest"
+			"name": "Shiny Feather",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "bird_legendary",
@@ -357,6 +398,15 @@
 			"description": "You can almost fly away wearing this.",
 			"slot": "top",
 			"style": "cape"
+		},
+		{
+			"id": "bird_legendary2",
+			"table": "bird",
+			"rarity": "legendary",
+			"name": "Nest Hat",
+			"description": "'Hand' made just for you!",
+			"slot": "hat",
+			"style": "nest"
 		},
 		{
 			"id": "pig_common",
@@ -376,19 +426,27 @@
 			"id": "pig_epic",
 			"table": "pig",
 			"rarity": "epic",
-			"name": "Tweed Scarf",
-			"description": "Pink and purple and exciting to wear.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Truffle",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "pig_legendary",
 			"table": "pig",
 			"rarity": "legendary",
-			"name": "Straw Hat",
-			"description": "Keeps the sun off while you walk.",
-			"slot": "hat",
-			"style": "cap"
+			"name": "Muddy Wellies",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "wellies",
+			"colour": "#8a5a3a"
+		},
+		{
+			"id": "pig_legendary2",
+			"table": "pig",
+			"rarity": "legendary",
+			"name": "Tweed Scarf",
+			"description": "Pink and purple and exciting to wear.",
+			"slot": "neckwear",
+			"style": "scarf"
 		},
 		{
 			"id": "snail_common",
@@ -408,10 +466,8 @@
 			"id": "snail_epic",
 			"table": "snail",
 			"rarity": "epic",
-			"name": "Bow Tie",
-			"description": "Makes you look fancy.",
-			"slot": "neckwear",
-			"style": "bowtie"
+			"name": "Spiral Shell",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "snail_legendary",
@@ -421,6 +477,15 @@
 			"description": "Comfy + stylish. Dream combo.",
 			"slot": "shoes",
 			"style": "slippers"
+		},
+		{
+			"id": "snail_legendary2",
+			"table": "snail",
+			"rarity": "legendary",
+			"name": "Bow Tie",
+			"description": "Makes you look fancy.",
+			"slot": "neckwear",
+			"style": "bowtie"
 		},
 		{
 			"id": "tortoise_common",
@@ -440,19 +505,26 @@
 			"id": "tortoise_epic",
 			"table": "tortoise",
 			"rarity": "epic",
-			"name": "Shell Necklace",
-			"description": "Tiny shells on a string.",
-			"slot": "neckwear",
-			"style": "necklace"
+			"name": "Old Map",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "tortoise_legendary",
 			"table": "tortoise",
 			"rarity": "legendary",
-			"name": "Ancient Crown",
-			"description": "Worn by the elder tortoise. Your hard work has been honoured.",
-			"slot": "hat",
-			"style": "crown"
+			"name": "Ancient Staff",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "staff"
+		},
+		{
+			"id": "tortoise_legendary2",
+			"table": "tortoise",
+			"rarity": "legendary",
+			"name": "Shell Necklace",
+			"description": "Tiny shells on a string.",
+			"slot": "neckwear",
+			"style": "necklace"
 		},
 		{
 			"id": "bear_common",
@@ -472,10 +544,8 @@
 			"id": "bear_epic",
 			"table": "bear",
 			"rarity": "epic",
-			"name": "Bear Walking Stick",
-			"description": "Can be equipped to walk with. Looks super cool.",
-			"slot": "walking_stick",
-			"style": "stick"
+			"name": "Honey Pot",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "bear_legendary",
@@ -485,6 +555,15 @@
 			"description": "Smelly fishy. An abnormally large salmon.",
 			"slot": "hat",
 			"style": "salmon_hat"
+		},
+		{
+			"id": "bear_legendary2",
+			"table": "bear",
+			"rarity": "legendary",
+			"name": "Bear Walking Stick",
+			"description": "Can be equipped to walk with. Looks super cool.",
+			"slot": "walking_stick",
+			"style": "stick"
 		},
 		{
 			"id": "frog_common",
@@ -504,10 +583,8 @@
 			"id": "frog_epic",
 			"table": "frog",
 			"rarity": "epic",
-			"name": "Pond Hoodie",
-			"description": "Green, damp and cosy.",
-			"slot": "top",
-			"style": "hoodie"
+			"name": "Lily Pad",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "frog_legendary",
@@ -517,6 +594,15 @@
 			"description": "Cute. Wear it!",
 			"slot": "hat",
 			"style": "bucket_hat"
+		},
+		{
+			"id": "frog_legendary2",
+			"table": "frog",
+			"rarity": "legendary",
+			"name": "Pond Hoodie",
+			"description": "Green, damp and cosy.",
+			"slot": "top",
+			"style": "hoodie"
 		},
 		{
 			"id": "fox_common",
@@ -536,19 +622,27 @@
 			"id": "fox_epic",
 			"table": "fox",
 			"rarity": "epic",
-			"name": "Fox Scarf",
-			"description": "Bushy and orange.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Hen's Egg",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "fox_legendary",
 			"table": "fox",
 			"rarity": "legendary",
-			"name": "Night Cap",
-			"description": "All ready for bed.",
-			"slot": "hat",
-			"style": "beanie"
+			"name": "Fox Slippers",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "slippers",
+			"colour": "#e07b39"
+		},
+		{
+			"id": "fox_legendary2",
+			"table": "fox",
+			"rarity": "legendary",
+			"name": "Fox Scarf",
+			"description": "Bushy and orange.",
+			"slot": "neckwear",
+			"style": "scarf"
 		},
 		{
 			"id": "parakeet_common",
@@ -568,10 +662,8 @@
 			"id": "parakeet_epic",
 			"table": "parakeet",
 			"rarity": "epic",
-			"name": "Bright Bandana",
-			"description": "Very loud colours.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Little Mirror",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "parakeet_legendary",
@@ -581,6 +673,16 @@
 			"description": "",
 			"slot": "top",
 			"style": "cape"
+		},
+		{
+			"id": "parakeet_legendary2",
+			"table": "parakeet",
+			"rarity": "legendary",
+			"name": "Feather Mittens",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "mittens",
+			"colour": "#3cb371"
 		},
 		{
 			"id": "spider_common",
@@ -600,19 +702,28 @@
 			"id": "spider_epic",
 			"table": "spider",
 			"rarity": "epic",
-			"name": "Silk Scarf",
-			"description": "Spun by hand. All eight of them.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Dewdrop Web",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "spider_legendary",
 			"table": "spider",
 			"rarity": "legendary",
-			"name": "Spooky Hat",
-			"description": "Eek! The eyes seem to follow you...",
-			"slot": "hat",
-			"style": "witch"
+			"name": "Spooky Wand",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "wand",
+			"colour": "#3b2f4a"
+		},
+		{
+			"id": "spider_legendary2",
+			"table": "spider",
+			"rarity": "legendary",
+			"name": "Silk Gloves",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "mittens",
+			"colour": "#ecebe6"
 		},
 		{
 			"id": "hyrax_common",
@@ -632,19 +743,27 @@
 			"id": "hyrax_epic",
 			"table": "hyrax",
 			"rarity": "epic",
-			"name": "Desert Tee",
-			"description": "Sandy coloured and breezy.",
-			"slot": "top",
-			"style": "tee"
+			"name": "Warm Stone",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "hyrax_legendary",
 			"table": "hyrax",
 			"rarity": "legendary",
-			"name": "Sun Hat",
-			"description": "Protects your neck and face from the warm warm sun.",
-			"slot": "hat",
-			"style": "cap"
+			"name": "Desert Sandals",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "sandals",
+			"colour": "#d8b07a"
+		},
+		{
+			"id": "hyrax_legendary2",
+			"table": "hyrax",
+			"rarity": "legendary",
+			"name": "Desert Tee",
+			"description": "Sandy coloured and breezy.",
+			"slot": "top",
+			"style": "tee"
 		},
 		{
 			"id": "lizard_common",
@@ -664,10 +783,8 @@
 			"id": "lizard_epic",
 			"table": "lizard",
 			"rarity": "epic",
-			"name": "Scale Ring",
-			"description": "Shimmers in the sun.",
-			"slot": "gloves",
-			"style": "ring"
+			"name": "Shed Skin",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "lizard_legendary",
@@ -677,6 +794,15 @@
 			"description": "Like a mane for a lizard. Look at it!",
 			"slot": "neckwear",
 			"style": "collar"
+		},
+		{
+			"id": "lizard_legendary2",
+			"table": "lizard",
+			"rarity": "legendary",
+			"name": "Scale Ring",
+			"description": "Shimmers in the sun.",
+			"slot": "gloves",
+			"style": "ring"
 		},
 		{
 			"id": "snake_common",
@@ -696,19 +822,27 @@
 			"id": "snake_epic",
 			"table": "snake",
 			"rarity": "epic",
-			"name": "Snake Scarf",
-			"description": "Looks like a friendly snake is giving your neck a hug.",
-			"slot": "neckwear",
-			"style": "necklace"
+			"name": "Desert Rose",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "snake_legendary",
 			"table": "snake",
 			"rarity": "legendary",
-			"name": "Charmer's Hat",
-			"description": "All you need is a flute and a charming song.",
-			"slot": "hat",
-			"style": "alpine"
+			"name": "Charmer's Wand",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "wand",
+			"colour": "#d9a441"
+		},
+		{
+			"id": "snake_legendary2",
+			"table": "snake",
+			"rarity": "legendary",
+			"name": "Snake Scarf",
+			"description": "Looks like a friendly snake is giving your neck a hug.",
+			"slot": "neckwear",
+			"style": "necklace"
 		},
 		{
 			"id": "monkey_common",
@@ -728,19 +862,28 @@
 			"id": "monkey_epic",
 			"table": "monkey",
 			"rarity": "epic",
-			"name": "Vine Necklace",
-			"description": "Green and leafy.",
-			"slot": "neckwear",
-			"style": "necklace"
+			"name": "Banana Bunch",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "monkey_legendary",
 			"table": "monkey",
 			"rarity": "legendary",
-			"name": "Jungle Crown",
-			"description": "Stolen from the monkey king. He might want it back...",
-			"slot": "hat",
-			"style": "crown"
+			"name": "Grip Gloves",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "mittens",
+			"colour": "#6b4c38"
+		},
+		{
+			"id": "monkey_legendary2",
+			"table": "monkey",
+			"rarity": "legendary",
+			"name": "Vine Sandals",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "sandals",
+			"colour": "#5a8f3a"
 		},
 		{
 			"id": "gorilla_common",
@@ -760,19 +903,27 @@
 			"id": "gorilla_epic",
 			"table": "gorilla",
 			"rarity": "epic",
-			"name": "Jungle Jumper",
-			"description": "Big, warm and green.",
-			"slot": "top",
-			"style": "jumper"
+			"name": "Bamboo Shoot",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "gorilla_legendary",
 			"table": "gorilla",
 			"rarity": "legendary",
-			"name": "Silverback Cap",
-			"description": "You look like the alpha when you wear this.",
-			"slot": "hat",
-			"style": "cap"
+			"name": "Jungle Staff",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "staff",
+			"colour": "#5a8f3a"
+		},
+		{
+			"id": "gorilla_legendary2",
+			"table": "gorilla",
+			"rarity": "legendary",
+			"name": "Jungle Jumper",
+			"description": "Big, warm and green.",
+			"slot": "top",
+			"style": "jumper"
 		},
 		{
 			"id": "tiger_common",
@@ -792,10 +943,8 @@
 			"id": "tiger_epic",
 			"table": "tiger",
 			"rarity": "epic",
-			"name": "Stripy Scarf",
-			"description": "Orange and black. Wear it to tea.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Striped Pebble",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "tiger_legendary",
@@ -805,6 +954,15 @@
 			"description": "Big big paws. Fuzzy and warm.",
 			"slot": "gloves",
 			"style": "paws"
+		},
+		{
+			"id": "tiger_legendary2",
+			"table": "tiger",
+			"rarity": "legendary",
+			"name": "Stripy Scarf",
+			"description": "Orange and black. Wear it to tea.",
+			"slot": "neckwear",
+			"style": "scarf"
 		},
 		{
 			"id": "giraffe_common",
@@ -824,19 +982,26 @@
 			"id": "giraffe_epic",
 			"table": "giraffe",
 			"rarity": "epic",
-			"name": "Spotty Tee",
-			"description": "Patches all over, helps you blend in.",
-			"slot": "top",
-			"style": "tee"
+			"name": "Acacia Sprig",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "giraffe_legendary",
 			"table": "giraffe",
 			"rarity": "legendary",
-			"name": "Tall Hat",
-			"description": "Gives you a couple extra inches.",
-			"slot": "hat",
-			"style": "top_hat"
+			"name": "Tall Cane",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "cane"
+		},
+		{
+			"id": "giraffe_legendary2",
+			"table": "giraffe",
+			"rarity": "legendary",
+			"name": "Spotty Tee",
+			"description": "Patches all over, helps you blend in.",
+			"slot": "top",
+			"style": "tee"
 		},
 		{
 			"id": "elephant_common",
@@ -856,19 +1021,27 @@
 			"id": "elephant_epic",
 			"table": "elephant",
 			"rarity": "epic",
-			"name": "Elephant Jumper",
-			"description": "Roomy and cosy.",
-			"slot": "top",
-			"style": "hoodie"
+			"name": "Peanut Sack",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "elephant_legendary",
 			"table": "elephant",
 			"rarity": "legendary",
-			"name": "Safari Hat",
-			"description": "Wear it while looking for these wonderful animals.",
-			"slot": "hat",
-			"style": "alpine"
+			"name": "Safari Cane",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "cane",
+			"colour": "#c8a26a"
+		},
+		{
+			"id": "elephant_legendary2",
+			"table": "elephant",
+			"rarity": "legendary",
+			"name": "Elephant Jumper",
+			"description": "Roomy and cosy.",
+			"slot": "top",
+			"style": "hoodie"
 		},
 		{
 			"id": "rhino_common",
@@ -888,19 +1061,27 @@
 			"id": "rhino_epic",
 			"table": "rhino",
 			"rarity": "epic",
-			"name": "Armoured Mittens",
-			"description": "Tough as anything.",
-			"slot": "gloves",
-			"style": "mittens"
+			"name": "Mud Ball",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "rhino_legendary",
 			"table": "rhino",
 			"rarity": "legendary",
-			"name": "Horn Helmet",
-			"description": "Reminiscent of the Vikings.",
-			"slot": "hat",
-			"style": "pot"
+			"name": "Stomping Boots",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "boots",
+			"colour": "#7d7f86"
+		},
+		{
+			"id": "rhino_legendary2",
+			"table": "rhino",
+			"rarity": "legendary",
+			"name": "Armoured Mittens",
+			"description": "Tough as anything.",
+			"slot": "gloves",
+			"style": "mittens"
 		},
 		{
 			"id": "leopard_common",
@@ -920,10 +1101,8 @@
 			"id": "leopard_epic",
 			"table": "leopard",
 			"rarity": "epic",
-			"name": "Spotted Scarf",
-			"description": " Very stylish.",
-			"slot": "neckwear",
-			"style": "scarf"
+			"name": "Spotted Leaf",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "leopard_legendary",
@@ -933,6 +1112,16 @@
 			"description": "",
 			"slot": "top",
 			"style": "cape"
+		},
+		{
+			"id": "leopard_legendary2",
+			"table": "leopard",
+			"rarity": "legendary",
+			"name": "Spotted Trainers",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "trainers",
+			"colour": "#e0b04a"
 		},
 		{
 			"id": "lion_common",
@@ -952,10 +1141,8 @@
 			"id": "lion_epic",
 			"table": "lion",
 			"rarity": "epic",
-			"name": "Mane Wig",
-			"description": "Fluffy and golden.",
-			"slot": "hair",
-			"style": "curly"
+			"name": "Mane Tuft",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "lion_legendary",
@@ -965,6 +1152,16 @@
 			"description": "Everything the light touches belongs to you now.",
 			"slot": "hat",
 			"style": "crown"
+		},
+		{
+			"id": "lion_legendary2",
+			"table": "lion",
+			"rarity": "legendary",
+			"name": "Lion Paws",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "paws",
+			"colour": "#d9a441"
 		},
 		{
 			"id": "eagle_common",
@@ -984,10 +1181,8 @@
 			"id": "eagle_epic",
 			"table": "eagle",
 			"rarity": "epic",
-			"name": "Mountain Cape",
-			"description": "Sweeps in the wind.",
-			"slot": "top",
-			"style": "cape"
+			"name": "Eagle Egg",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "eagle_legendary",
@@ -997,6 +1192,15 @@
 			"description": "Tough and thick. Hold your hand out and it'll come and land.",
 			"slot": "gloves",
 			"style": "falconry_glove"
+		},
+		{
+			"id": "eagle_legendary2",
+			"table": "eagle",
+			"rarity": "legendary",
+			"name": "Mountain Cape",
+			"description": "Sweeps in the wind.",
+			"slot": "top",
+			"style": "cape"
 		},
 		{
 			"id": "red_panda_common",
@@ -1016,19 +1220,27 @@
 			"id": "red_panda_epic",
 			"table": "red_panda",
 			"rarity": "epic",
-			"name": "Bamboo Stick",
-			"description": "Light and strong.",
-			"slot": "walking_stick",
-			"style": "stick"
+			"name": "Cherry Bundle",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "red_panda_legendary",
 			"table": "red_panda",
 			"rarity": "legendary",
-			"name": "Blossom Crown",
-			"description": "Pink and donned with flowers. So pretty.",
-			"slot": "hat",
-			"style": "crown"
+			"name": "Blossom Branch",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "staff",
+			"colour": "#f6c6d4"
+		},
+		{
+			"id": "red_panda_legendary2",
+			"table": "red_panda",
+			"rarity": "legendary",
+			"name": "Bamboo Stick",
+			"description": "Light and strong.",
+			"slot": "walking_stick",
+			"style": "stick"
 		},
 		{
 			"id": "mammoth_common",
@@ -1048,19 +1260,150 @@
 			"id": "mammoth_epic",
 			"table": "mammoth",
 			"rarity": "epic",
+			"name": "Ancient Tooth",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "mammoth_legendary",
+			"table": "mammoth",
+			"rarity": "legendary",
+			"name": "Tusk Cane",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "cane",
+			"colour": "#f5f0e6"
+		},
+		{
+			"id": "mammoth_legendary2",
+			"table": "mammoth",
+			"rarity": "legendary",
 			"name": "Woolly Scarf",
 			"description": "Knitted from shed mammoth fur. Very cosy.",
 			"slot": "neckwear",
 			"style": "scarf"
 		},
 		{
-			"id": "mammoth_legendary",
-			"table": "mammoth",
+			"id": "fish_common",
+			"table": "fish",
+			"rarity": "common",
+			"name": "Sea Glass",
+			"description": "Smoothed by the waves. Glows green in the light."
+		},
+		{
+			"id": "fish_rare",
+			"table": "fish",
+			"rarity": "rare",
+			"name": "Pearl",
+			"description": "Found in an oyster that didn't mind sharing."
+		},
+		{
+			"id": "fish_epic",
+			"table": "fish",
+			"rarity": "epic",
+			"name": "Message in a Bottle",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "fish_legendary",
+			"table": "fish",
 			"rarity": "legendary",
-			"name": "Tusk Helmet",
-			"description": "A placeholder legendary for Joe to rename.",
-			"slot": "hat",
-			"style": "antlers"
+			"name": "Fin Flippers",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "flippers",
+			"colour": "#ff9a3c"
+		},
+		{
+			"id": "fish_legendary2",
+			"table": "fish",
+			"rarity": "legendary",
+			"name": "Bubble Wand",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "wand",
+			"colour": "#7fd3e8"
+		},
+		{
+			"id": "crab_common",
+			"table": "crab",
+			"rarity": "common",
+			"name": "Sand Dollar",
+			"description": "Not accepted in shops, sadly."
+		},
+		{
+			"id": "crab_rare",
+			"table": "crab",
+			"rarity": "rare",
+			"name": "Hermit Shell",
+			"description": "Someone moved out. Lots of room."
+		},
+		{
+			"id": "crab_epic",
+			"table": "crab",
+			"rarity": "epic",
+			"name": "Sunken Coin",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "crab_legendary",
+			"table": "crab",
+			"rarity": "legendary",
+			"name": "Claw Mitts",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "mittens",
+			"colour": "#d9573a"
+		},
+		{
+			"id": "crab_legendary2",
+			"table": "crab",
+			"rarity": "legendary",
+			"name": "Beach Sandals",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "sandals",
+			"colour": "#e0b36a"
+		},
+		{
+			"id": "whale_common",
+			"table": "whale",
+			"rarity": "common",
+			"name": "Krill Cluster",
+			"description": "A whale's favourite snack. Very small."
+		},
+		{
+			"id": "whale_rare",
+			"table": "whale",
+			"rarity": "rare",
+			"name": "Barnacle",
+			"description": "Hitched a ride for a thousand miles."
+		},
+		{
+			"id": "whale_epic",
+			"table": "whale",
+			"rarity": "epic",
+			"name": "Song Shell",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "whale_legendary",
+			"table": "whale",
+			"rarity": "legendary",
+			"name": "Wave Wellies",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "wellies",
+			"colour": "#4a76a8"
+		},
+		{
+			"id": "whale_legendary2",
+			"table": "whale",
+			"rarity": "legendary",
+			"name": "Barnacle Boots",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "boots",
+			"colour": "#6d7b86"
 		},
 		{
 			"id": "skeleton_dog_common",
@@ -1080,11 +1423,8 @@
 			"id": "skeleton_dog_epic",
 			"table": "skeleton_dog",
 			"rarity": "epic",
-			"name": "Bone Necklace",
-			"description": " Rattles a bit.",
-			"slot": "neckwear",
-			"style": "necklace",
-			"colour": "#efe8d8"
+			"name": "Glow Bone",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "skeleton_dog_legendary",
@@ -1095,6 +1435,16 @@
 			"slot": "hat",
 			"style": "witch",
 			"colour": "#3b2f4a"
+		},
+		{
+			"id": "skeleton_dog_legendary2",
+			"table": "skeleton_dog",
+			"rarity": "legendary",
+			"name": "Bone Necklace",
+			"description": " Rattles a bit.",
+			"slot": "neckwear",
+			"style": "necklace",
+			"colour": "#efe8d8"
 		},
 		{
 			"id": "reindeer_common",
@@ -1114,11 +1464,8 @@
 			"id": "reindeer_epic",
 			"table": "reindeer",
 			"rarity": "epic",
-			"name": "Festive Jumper",
-			"description": "Itchy but worth it.",
-			"slot": "top",
-			"style": "jumper",
-			"colour": "#b8322e"
+			"name": "Sleigh Bell",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "reindeer_legendary",
@@ -1129,6 +1476,16 @@
 			"slot": "hat",
 			"style": "antlers",
 			"colour": "#8a5a3a"
+		},
+		{
+			"id": "reindeer_legendary2",
+			"table": "reindeer",
+			"rarity": "legendary",
+			"name": "Festive Jumper",
+			"description": "Itchy but worth it.",
+			"slot": "top",
+			"style": "jumper",
+			"colour": "#b8322e"
 		},
 		{
 			"id": "easter_egg_common",
@@ -1148,20 +1505,28 @@
 			"id": "easter_egg_epic",
 			"table": "easter_egg",
 			"rarity": "epic",
-			"name": "Spring Scarf",
-			"description": "Pastel and light.",
-			"slot": "neckwear",
-			"style": "scarf",
-			"colour": "#a8d8b0"
+			"name": "Chocolate Coin",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "easter_egg_legendary",
 			"table": "easter_egg",
 			"rarity": "legendary",
-			"name": "Nest Bonnet",
-			"description": "There might be come chocolate eggs inside it.",
-			"slot": "hat",
-			"style": "nest"
+			"name": "Spring Trainers",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "trainers",
+			"colour": "#a8d8b0"
+		},
+		{
+			"id": "easter_egg_legendary2",
+			"table": "easter_egg",
+			"rarity": "legendary",
+			"name": "Spring Scarf",
+			"description": "Pastel and light.",
+			"slot": "neckwear",
+			"style": "scarf",
+			"colour": "#a8d8b0"
 		},
 		{
 			"id": "birthday_cake_common",
@@ -1181,11 +1546,8 @@
 			"id": "birthday_cake_epic",
 			"table": "birthday_cake",
 			"rarity": "epic",
-			"name": "Party Bow Tie",
-			"description": "Very dapper, very colourful.",
-			"slot": "neckwear",
-			"style": "bowtie",
-			"colour": "#e0559a"
+			"name": "Candle Stub",
+			"description": "A placeholder for Joe to rename."
 		},
 		{
 			"id": "birthday_cake_legendary",
@@ -1197,24 +1559,14 @@
 			"style": "crown"
 		},
 		{
-			"id": "pumpkin_head",
-			"table": "holiday",
+			"id": "birthday_cake_legendary2",
+			"table": "birthday_cake",
 			"rarity": "legendary",
-			"name": "Pumpkin Head",
-			"description": "A present for opening the app on Halloween.",
-			"slot": "hat",
-			"style": "pumpkin",
-			"colour": "#e8812c"
-		},
-		{
-			"id": "tree_costume",
-			"table": "holiday",
-			"rarity": "legendary",
-			"name": "Christmas Tree Costume",
-			"description": "A present for opening the app at Christmas.",
-			"slot": "top",
-			"style": "tree",
-			"colour": "#3f7d45"
+			"name": "Party Bow Tie",
+			"description": "Very dapper, very colourful.",
+			"slot": "neckwear",
+			"style": "bowtie",
+			"colour": "#e0559a"
 		},
 		{
 			"id": "bunny_ears",
@@ -1235,6 +1587,26 @@
 			"slot": "hat",
 			"style": "party",
 			"colour": "#e0559a"
+		},
+		{
+			"id": "pumpkin_head",
+			"table": "holiday",
+			"rarity": "legendary",
+			"name": "Pumpkin Head",
+			"description": "A present for opening the app on Halloween.",
+			"slot": "hat",
+			"style": "pumpkin",
+			"colour": "#e8812c"
+		},
+		{
+			"id": "tree_costume",
+			"table": "holiday",
+			"rarity": "legendary",
+			"name": "Christmas Tree Costume",
+			"description": "A present for opening the app at Christmas.",
+			"slot": "top",
+			"style": "tree",
+			"colour": "#3f7d45"
 		}
 	]
 }

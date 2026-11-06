@@ -35,7 +35,7 @@ var _pie_scale := 1.0
 func _init() -> void:
 	text = Text.t("walk.end_focus")
 	custom_minimum_size.y = HEIGHT
-	focus_mode = Control.FOCUS_ALL
+	focus_mode = Control.FOCUS_NONE
 	mouse_default_cursor_shape = Cursor.HOVER
 	UI.style_button(self, UI.SURFACE, UI.INK, 999)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:

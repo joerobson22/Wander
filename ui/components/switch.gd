@@ -14,7 +14,7 @@ func _init(on: bool = false) -> void:
 	toggle_mode = true
 	button_pressed = on
 	flat = true
-	focus_mode = Control.FOCUS_ALL
+	focus_mode = Control.FOCUS_NONE
 	custom_minimum_size = Vector2(TRACK_SIZE.x, 44)
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	add_theme_stylebox_override("focus", StyleBoxEmpty.new())
@@ -42,10 +42,3 @@ func _draw() -> void:
 	var r := track_size.y * 0.5 - 4.0
 	var x := lerpf(left + r + 4.0, size.x - r - 4.0, _t)
 	draw_circle(Vector2(x, top + track_size.y * 0.5), r, knob, true, -1.0, true)
-	if has_focus():
-		var ring := StyleBoxFlat.new()
-		ring.draw_center = false
-		ring.set_border_width_all(2)
-		ring.border_color = UI.ACCENT
-		UI.corners(ring, 999)
-		draw_style_box(ring, Rect2(Vector2(left - 3, top - 3), track_size + Vector2(6, 6)))

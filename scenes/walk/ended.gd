@@ -40,11 +40,13 @@ func _ready() -> void:
 	_stage.add_child(_actors)
 	_walker = CharacterView.new()
 	_walker.holding_lead = false
+	_walker.helmet = AnimalView.helmet_in(str(_scenery.biome.get("id", "")), "")
 	_actors.add_child(_walker)
 	if pet:
 		_animal = AnimalView.new()
 		_animal.animal_id = pet.animal_id
 		_animal.colours = pet.colours
+		_animal.helmet = AnimalView.helmet_in(str(_scenery.biome.get("id", "")), pet.animal_id)
 		_actors.add_child(_animal)
 	_scenery.front_into(_stage)
 	_sheet.color = Color(0, 0, 0, 0)

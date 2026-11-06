@@ -1,8 +1,8 @@
 extends Pane
 ## Your profile, above the focus screen. One card at the top: your
 ## character head to toe on the left (the pencil changes how they look),
-## with your level badge in the bottom left and your XP filling a bar along
-## the bottom (tap the badge for everything levelling up unlocks). On the
+## with your level badge in the bottom left and your XP filling a bar up
+## the left edge (tap the badge for everything levelling up unlocks). On the
 ## right, your details at the top and your gift shelf at the bottom, with a
 ## pencil to arrange it. Under the card, as many of your best achievements
 ## as fit; "See all" lists every one. It all fits the screen without scrolling. The
@@ -39,16 +39,20 @@ func build() -> void:
 
 
 ## The character, with a pencil in the corner to change how they look. Your
-## level badge sits in the bottom left with your XP filling a bar along the
-## bottom; under the pointer the badge grows from its centre, turns a shade
+## level badge sits in the bottom left, over your XP filling a bar from the
+## bottom up the frame's left edge; under the pointer the badge grows from its centre, turns a shade
 ## lighter and shines, and tapping it shows every reward levelling up
 ## brings. It's as tall as the card.
 func _figure() -> Control:
-	var figure := UI.character_portrait({}, Vector2(220 if wide else 128, 0), false, UI.ACCENT_SOFT, 48.0)
+	var figure := UI.character_portrait({}, Vector2(220 if wide else 128, 0), false, UI.ACCENT_SOFT, 20.0)
 	var pencil := UI.round_button("edit", Text.t("profile.customise"), Customise.open, UI.SURFACE, UI.INK, 34)
 	figure.add_child(pencil)
 
 	var level := LevelBar.new(App.xp(), false, false)
+	# The XP bar runs up the frame's left edge, under the badge, filling
+	# from the bottom; the frame rounds its ends to its corners.
+	var bar := level.strip()
+	figure.add_child(bar)
 	figure.add_child(level)
 	var badge := level.badge()
 	badge.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -65,8 +69,11 @@ func _figure() -> Control:
 	figure.resized.connect(func():
 		pencil.size = pencil.get_combined_minimum_size()
 		pencil.position = Vector2(figure.size.x - pencil.size.x - 8, 8)
-		level.size = Vector2(figure.size.x - 16, level.get_combined_minimum_size().y)
-		level.position = Vector2(8, figure.size.y - level.size.y - 8))
+		bar.position = Vector2.ZERO
+		bar.size = Vector2(bar.custom_minimum_size.x, figure.size.y)
+		level.size = level.get_combined_minimum_size()
+		# The badge sits on the foot of the bar, covering its width.
+		level.position = Vector2(2, figure.size.y - level.size.y - 6))
 	return figure
 
 

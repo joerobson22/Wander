@@ -94,6 +94,10 @@ func _ready() -> void:
 	_animal.animal_id = _pet.animal_id
 	_animal.colours = _pet.colours
 	_actors.add_child(_animal)
+	# A diving helmet in the ocean, a space helmet on the Moon.
+	var where := str(_scenery.biome.get("id", ""))
+	_walker.helmet = AnimalView.helmet_in(where, "")
+	_animal.helmet = AnimalView.helmet_in(where, _pet.animal_id)
 	# The jungle's leaves and vines pass in front of you both.
 	_scenery.front_into(self)
 

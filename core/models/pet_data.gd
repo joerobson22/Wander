@@ -14,14 +14,6 @@ extends Resource
 @export var last_walked_unix: int = 0
 ## place id -> seconds it has walked there.
 @export var places: Dictionary = {}
-## When it was rehomed: it leaves your pets but still shows on the projects
-## it walked for. 0 while it's yours.
-@export var rehomed_unix: int = 0
-
-
-func is_rehomed() -> bool:
-	return rehomed_unix > 0
-
 
 func to_dict() -> Dictionary:
 	var cols: Array = []
@@ -34,7 +26,6 @@ func to_dict() -> Dictionary:
 		"colours": cols,
 		"adopted_unix": adopted_unix,
 		"last_walked_unix": last_walked_unix,
-		"rehomed_unix": rehomed_unix,
 		"places": places,
 	}
 
@@ -48,7 +39,6 @@ static func from_dict(d: Dictionary) -> PetData:
 		p.colours.append(Color.from_string(str(c), Color.WHITE))
 	p.adopted_unix = int(d.get("adopted_unix", 0))
 	p.last_walked_unix = int(d.get("last_walked_unix", 0))
-	p.rehomed_unix = int(d.get("rehomed_unix", 0))
 	var got = d.get("places", {})
 	if got is Dictionary:
 		for key in got:

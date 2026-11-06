@@ -10,7 +10,8 @@ const SHELF_SIZE := 3
 
 var profile: Dictionary = default_profile()
 var projects: Array[ProjectData] = []
-## Every pet ever adopted, rehomed ones too (they still show on projects).
+## Every pet you have, oldest first. A deleted pet goes from here and from
+## every project and day it walked on (remove_pet).
 var pets: Array[PetData] = []
 ## Focus time by local day (Stats.local_day): {day: {"projects": {project id:
 ## seconds}, "pets": {pet id: seconds}, "places": {place id: seconds}}}.
@@ -99,11 +100,46 @@ func pet(id: String) -> PetData:
 	return null
 
 
-## The pets that are still yours (not rehomed), oldest first.
+## The pets that are yours, oldest first.
 func active_pets() -> Array[PetData]:
-	var out: Array[PetData] = []
-	out.assign(pets.filter(func(p): return not p.is_rehomed()))
-	return out
+	return pets.duplicate()
+
+
+## Deletes a pet everywhere: from your pets, from every project it walked
+## for and from every day it walked on, so nothing shows it again. Returns
+## what it took away, for restore_pet() to put back (undo), or {} if there
+## was no such pet.
+func remove_pet(id: String) -> Dictionary:
+	var p := pet(id)
+	if p == null:
+		return {}
+	var taken := {"pet": p, "index": pets.find(p), "projects": {}, "days": {}}
+	pets.erase(p)
+	for project_data in projects:
+		if project_data.pets.has(id):
+			taken["projects"][project_data.id] = project_data.pets[id]
+			project_data.pets.erase(id)
+	for day in days:
+		var walked: Dictionary = days[day]["pets"]
+		if walked.has(id):
+			taken["days"][day] = walked[id]
+			walked.erase(id)
+	return taken
+
+
+## Puts back a pet remove_pet() took away, just as it was.
+func restore_pet(taken: Dictionary) -> void:
+	var p: PetData = taken.get("pet")
+	if p == null or pet(p.id) != null:
+		return
+	pets.insert(clampi(int(taken["index"]), 0, pets.size()), p)
+	for project_id in taken["projects"]:
+		var project_data := project(project_id)
+		if project_data:
+			project_data.pets[p.id] = taken["projects"][project_id]
+	for day in taken["days"]:
+		if days.has(day):
+			days[day]["pets"][p.id] = taken["days"][day]
 
 
 ## Adds `seconds` of focus on a project, with a pet, in a place, to day `day`.

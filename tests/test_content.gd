@@ -8,7 +8,9 @@ func test_the_cast() -> void:
 		check(ids.has(id), "%s is in the core cast" % id)
 	for id in ["elephant", "lion", "gorilla", "hyrax", "lizard", "spider", "snake", "eagle", "parakeet", "fox", "leopard", "tiger", "monkey", "giraffe", "red_panda", "rhino", "frog"]:
 		check(ids.has(id), "%s is unlockable" % id)
-	eq(ids.size(), 32)
+	for id in ["fish", "crab", "whale"]:
+		check(ids.has(id), "%s lives in the ocean" % id)
+	eq(ids.size(), 35)
 	for a in animals:
 		eq(a["parts"].size(), a["default_colours"].size(), "%s colours per part" % a["id"])
 
@@ -32,7 +34,7 @@ func test_unlock_rules_are_real() -> void:
 			check(places.has(rule["place"]), "%s's rule names a real place" % t[0])
 		if rule.has("table"):
 			check(tables.has(rule["table"]), "%s's rule names a real table" % t[0])
-	eq(places, ["lake", "farm", "forest", "beach", "city", "desert", "jungle", "tundra", "blossom", "safari", "moon"], "the places in picker order")
+	eq(places, ["lake", "farm", "forest", "beach", "city", "desert", "jungle", "tundra", "blossom", "safari", "ocean", "moon"], "the places in picker order")
 	eq(load_json("res://data/biomes.json")["biomes"][-1]["unlock"], {"all_tables": true}, "the Moon is the final reward")
 
 

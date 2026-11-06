@@ -14,12 +14,12 @@ extends Node2D
 ## view, or type a `y` (0 is the top of the screen, 1 the bottom).
 
 ## Every kind the walk can draw for you.
-const KINDS := "hills,mountains,trees,pines,broadleaf,canopy,palms,acacias,blossoms,mesas,cacti,water,ground,fields,barns,fences,buildings,lamps,reeds,fronds,drifts,undergrowth,vines,stalks,planet"
+const KINDS := "hills,mountains,trees,pines,broadleaf,canopy,palms,acacias,blossoms,mesas,cacti,water,ground,fields,barns,fences,buildings,lamps,reeds,fronds,drifts,undergrowth,vines,stalks,planet,coral,seaweed,rocks"
 ## The screen the editor draws the layer on, and the walk's art is made for.
 const SCREEN := Vector2(1280, 720)
 
 ## What the walk draws for this layer (unless it has art of its own).
-@export_enum("hills", "mountains", "trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms", "mesas", "cacti", "water", "ground", "fields", "barns", "fences", "buildings", "lamps", "reeds", "fronds", "drifts", "undergrowth", "vines", "stalks", "planet")
+@export_enum("hills", "mountains", "trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms", "mesas", "cacti", "water", "ground", "fields", "barns", "fences", "buildings", "lamps", "reeds", "fronds", "drifts", "undergrowth", "vines", "stalks", "planet", "coral", "seaweed", "rocks")
 var kind: String = "hills":
 	set(v):
 		kind = v

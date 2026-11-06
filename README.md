@@ -74,7 +74,7 @@ smaller than 800 × 560 points, so layouts never squash.
   off: the screen fades away but your pet, which walks over to the path;
   you walk in from the left to join it, the lead appears with the project's
   name, and a second later you set off together and the clock starts. The
-  red-rimmed bin at the bottom rehomes a pet. The × in the top left goes
+  red-rimmed bin at the bottom deletes a pet. The × in the top left goes
   back, and the screen shrinks back into the orb. The + in the top right adopts a new one (what it's for, the pet's
   name, its animal and three colours; a locked animal hides the colours):
   while you fill that in the bottom buttons go, the × cancels and the + turns
@@ -351,7 +351,7 @@ names on the left alone.
   achievements stay with the rest of their details in the other `data/` files.
 
 In code, `Text.t("profile.title")` gets a line,
-`Text.t("choose_focus.rehomed", {"pet": name})` fills one in,
+`Text.t("choose_focus.deleted", {"pet": name})` fills one in,
 `Text.count("stats.days", n)` picks one or many, and `Text.list("quotes")`
 gets a list. The unit tests check that every key the code uses is in the file.
 

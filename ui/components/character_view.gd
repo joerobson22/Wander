@@ -60,6 +60,14 @@ var holiday_hat := false:
 	set(v):
 		holiday_hat = v
 		_dress()
+## A helmet over the head: "diver" in the ocean, "astronaut" on the Moon
+## (the place's "helmet" in biomes.json), or "" for none. It hides the hat.
+var helmet := "":
+	set(v):
+		helmet = v
+		queue_redraw()
+		if _rig:
+			_helmet_over_rig()
 ## Hand position in local space, so the walk screen can draw the lead.
 var hand := Vector2(22, -78)
 ## 0 normally, up to 1 when they're dejected: shoulders down, head hung,
@@ -83,6 +91,8 @@ var _dressing: Array[Node] = []
 var _body: Array[Sprite2D] = []
 var _materials := {}
 var _rig_base := Vector2.ZERO
+## Draws the helmet over the art rig, at its head.
+var _helmet_node: Node2D
 static var _textures := {}
 
 
@@ -264,6 +274,8 @@ func _process_rig(delta: float) -> void:
 	var marker := _rig.find_child("Hand", true, false) as Node2D
 	if marker and is_inside_tree():
 		hand = global_transform.affine_inverse() * marker.global_position
+	if _helmet_node and _limbs.has("Head") and is_inside_tree():
+		_helmet_node.position = global_transform.affine_inverse() * (_limbs["Head"]["node"] as Node2D).global_position
 
 
 ## Redraws after the look it follows has changed.
@@ -515,10 +527,28 @@ func _draw_torso(top: Dictionary, sleeve: Color, bob: float) -> void:
 ## The walking stick, if they carry one, held in `hand`.
 func _draw_stick(hand_at: Vector2) -> void:
 	var stick := _item("walking_stick")
-	if _style(stick) != "none":
-		var colour := Content.cosmetic_colour(stick, STICK)
-		draw_line(hand_at + Vector2(4, -10), Vector2(hand_at.x + 14, 0), STICK, 4, true)
-		draw_circle(hand_at + Vector2(4, -11), 4.5, colour, true, -1.0, true)
+	var colour := Content.cosmetic_colour(stick, STICK)
+	match _style(stick):
+		"none":
+			pass
+		"cane":
+			# Hooked over at the top, the hook in its colour.
+			draw_line(hand_at + Vector2(4, -6), Vector2(hand_at.x + 14, 0), colour.darkened(0.2), 4, true)
+			draw_arc(hand_at + Vector2(-1, -6), 5, PI, TAU, 10, colour, 4, true)
+		"staff":
+			# Taller than you hold it, with a ball on top.
+			draw_line(hand_at + Vector2(2, -26), Vector2(hand_at.x + 14, 0), STICK, 4, true)
+			draw_circle(hand_at + Vector2(2, -28), 6, colour, true, -1.0, true)
+			draw_circle(hand_at + Vector2(0, -30), 2, colour.lightened(0.5), true, -1.0, true)
+		"wand":
+			# Short and held up, with a twinkle at the tip.
+			var tip := hand_at + Vector2(16, -16)
+			draw_line(hand_at, tip, STICK.darkened(0.2), 3, true)
+			draw_circle(tip, 5, Color(colour, 0.3), true, -1.0, true)
+			draw_circle(tip, 2.6, colour, true, -1.0, true)
+		_:
+			draw_line(hand_at + Vector2(4, -10), Vector2(hand_at.x + 14, 0), STICK, 4, true)
+			draw_circle(hand_at + Vector2(4, -11), 4.5, colour, true, -1.0, true)
 
 
 func _draw_arm(from: Vector2, to: Vector2, sleeve: Color, skin: Color, short_sleeve: bool) -> void:
@@ -537,6 +567,15 @@ func _draw_hand(at: Vector2, skin: Color, gloves: Dictionary, shade: float) -> v
 		"ring":
 			draw_circle(at, 5, skin, true, -1.0, true)
 			draw_arc(at + Vector2(1, 1), 3.2, 0, TAU, 12, Content.cosmetic_colour(gloves, UI.INK), 2.0, true)
+		"paws":
+			var fur := Content.cosmetic_colour(gloves, UI.INK).darkened(shade)
+			draw_circle(at, 7.5, fur, true, -1.0, true)
+			for k in 3:
+				draw_circle(at + Vector2(-3 + 3 * k, -3.5 - (1.0 if k == 1 else 0.0)), 1.4, fur.lightened(0.35), true, -1.0, true)
+		"falconry_glove":
+			var leather := Content.cosmetic_colour(gloves, UI.INK).darkened(shade)
+			draw_rect(Rect2(at.x - 6, at.y - 11, 12, 8), leather.darkened(0.15))
+			draw_circle(at, 6.5, leather, true, -1.0, true)
 		_:
 			draw_circle(at, 5, skin, true, -1.0, true)
 
@@ -552,6 +591,16 @@ func _draw_shoe(foot: Vector2, shade: float) -> void:
 		"wellies":
 			draw_rect(Rect2(foot.x - 6, foot.y - 16, 13, 16), colour)
 			_ellipse(foot + Vector2(5, -2), Vector2(8, 4), colour)
+		"flippers":
+			_ellipse(foot + Vector2(10, -1), Vector2(16, 3.5), colour)
+			draw_rect(Rect2(foot.x - 6, foot.y - 7, 11, 6), colour.darkened(0.15))
+		"sandals":
+			draw_rect(Rect2(foot.x - 6, foot.y - 2, 18, 3), colour)
+			draw_line(foot + Vector2(-2, -1), foot + Vector2(4, -7), colour.darkened(0.2), 2, true)
+			draw_line(foot + Vector2(4, -7), foot + Vector2(10, -1), colour.darkened(0.2), 2, true)
+		"slippers":
+			_ellipse(foot + Vector2(4, -4), Vector2(10, 5.5), colour)
+			draw_circle(foot + Vector2(11, -8), 3, colour.lightened(0.35), true, -1.0, true)
 		_:
 			draw_rect(Rect2(foot.x - 6, foot.y - 9, 12, 9), colour)
 			_ellipse(foot + Vector2(5, -3), Vector2(8, 4), colour)
@@ -585,7 +634,49 @@ func _draw_head(h: Vector2, skin: Color, hair_tone: Color) -> void:
 	_draw_face(h)
 	_draw_facial_hair(h, colour)
 	_draw_hair(h, colour, false)
-	_draw_hat(h)
+	if helmet == "" or face_only or part != "":
+		_draw_hat(h)
+	else:
+		draw_helmet(self, h + Vector2(1, -2), 25.0, helmet)
+
+
+## A round glass helmet at `at`, `r` across, with a collar under it where
+## it meets the neck: brass and bolted for diving ("diver"), white with a
+## gold visor for space ("astronaut"). Animals wear the same.
+static func draw_helmet(canvas: CanvasItem, at: Vector2, r: float, kind: String) -> void:
+	var diver := kind == "diver"
+	var metal := Color("#c9973a") if diver else Color("#eef1f5")
+	var edge := metal.darkened(0.25)
+	var collar := Rect2(at.x - r * 0.72, at.y + r * 0.7, r * 1.44, r * 0.34)
+	canvas.draw_rect(collar, metal)
+	canvas.draw_line(collar.position + Vector2(0, collar.size.y), collar.end, edge, 1.5, true)
+	canvas.draw_circle(at, r, Color(0.78, 0.92, 1.0, 0.26), true, -1.0, true)
+	if not diver:
+		# The gold visor across the front.
+		canvas.draw_arc(at, r * 0.72, -PI * 0.4, PI * 0.4, 16, Color("#e2b33c", 0.55), r * 0.5, true)
+	canvas.draw_arc(at, r, 0, TAU, 40, metal, maxf(2.5, r * 0.14), true)
+	canvas.draw_arc(at, r * 0.72, PI * 1.15, PI * 1.45, 10, Color(1, 1, 1, 0.7), maxf(1.5, r * 0.08), true)
+	if diver:
+		for k in 3:
+			canvas.draw_circle(Vector2(collar.position.x + collar.size.x * (0.2 + 0.3 * k), collar.position.y + collar.size.y * 0.5), maxf(1.2, r * 0.06), edge, true, -1.0, true)
+	else:
+		canvas.draw_line(at + Vector2(-r * 0.5, -r * 0.86), at + Vector2(-r * 0.62, -r * 1.3), metal, 2.0, true)
+		canvas.draw_circle(at + Vector2(-r * 0.62, -r * 1.32), maxf(2.0, r * 0.09), Color("#e8483c"), true, -1.0, true)
+
+
+## With art, the helmet is drawn by a node of its own over the rig, kept at
+## the head as it moves.
+func _helmet_over_rig() -> void:
+	if helmet == "" or face_only:
+		if _helmet_node:
+			_helmet_node.queue_free()
+			_helmet_node = null
+		return
+	if _helmet_node == null:
+		_helmet_node = Node2D.new()
+		_helmet_node.draw.connect(func(): draw_helmet(_helmet_node, Vector2.ZERO, 25.0, helmet))
+		add_child(_helmet_node)
+	_helmet_node.queue_redraw()
 
 
 ## The hair's colour: the player's, or a hair gift's own.

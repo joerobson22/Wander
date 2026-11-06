@@ -145,6 +145,12 @@ func _draw() -> void:
 			_slots(x0, spacing, sd, 0.0, func(x, r, i): _building(x, y, h * (0.35 + 0.65 * r), spacing * (0.7 + 0.25 * _hash(i + 9, sd)), colour.darkened(0.12 * _hash(i + 2, sd)), i, sd))
 		"lamps":
 			_slots(x0, spacing, sd, 0.0, func(x, _r, _i): _lamp(x, y, h, colour))
+		"rocks":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.25)), func(x, r, i): _rocks(x, y, h * (0.5 + 0.6 * r), colour.darkened(0.1 * _hash(i + 3, sd)), r, i, sd))
+		"coral":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.2)), func(x, r, i): _coral(x, y, h * (0.55 + 0.55 * r), colour, r, i, sd))
+		"seaweed":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.25)), func(x, r, i): _seaweed(x, y, h * (0.6 + 0.6 * r), colour.darkened(0.12 * _hash(i + 5, sd)), r))
 
 ## Calls `item(x, r, i)` for each slot starting in this chunk, skipping
 ## a share `skip` of them; `r` is the slot's random 0..1. An item belongs
@@ -623,6 +629,80 @@ func _vine(x: float, top: float, length: float, colour: Color, r: float) -> void
 		_leaf(pts[k], PI * 0.5 - out * 0.95, leaf, leaf * 0.48, out * 0.1, colour.darkened(0.06 * (k % 3)))
 	_leaf(pts[12], PI * 0.5 + 0.3, leaf * 1.1, leaf * 0.5, -0.08, colour)
 	_leaf(pts[12], PI * 0.5 - 0.35, leaf, leaf * 0.48, 0.08, colour.darkened(0.08))
+
+## A heap of rounded boulders on the sea bed, lit from above.
+func _rocks(x: float, base: float, h: float, colour: Color, r: float, i: int, sd: float) -> void:
+	var count := 2 + int(_hash(i + 11, sd) * 3.0)
+	for k in count:
+		var w := h * (0.7 + 0.5 * _hash(i * 7 + k, sd + 2.0))
+		var cx := x + (k - count * 0.5) * h * 0.55
+		var tall := h * (0.45 + 0.5 * _hash(i * 7 + k, sd + 3.0)) * (1.0 if k % 2 == 0 else 0.8)
+		var c := Vector2(cx, base - tall * 0.5)
+		var shade := colour.darkened(0.08 * (k % 2))
+		_blob(c, Vector2(w * 0.5, tall * 0.55), shade)
+		_blob(c + Vector2(-w * 0.12, -tall * 0.2), Vector2(w * 0.24, tall * 0.18), shade.lightened(0.12))
+
+
+## Coral on the sea bed, in three kinds: branching, a fan, or a round
+## brain coral. Each one's shade drifts from the layer's colour.
+func _coral(x: float, base: float, h: float, colour: Color, r: float, i: int, sd: float) -> void:
+	var c := colour
+	c.h = fposmod(c.h + (_hash(i + 21, sd) - 0.5) * 0.14, 1.0)
+	c = c.darkened(0.1 * _hash(i + 22, sd))
+	match int(_hash(i + 23, sd) * 3.0):
+		0:
+			# Branching: arms forking up, with round tips.
+			var arms := [[0.0, 1.0], [-0.5, 0.75], [0.45, 0.8], [-0.9, 0.5], [0.85, 0.55]]
+			for arm in arms:
+				var tip := Vector2(x + arm[0] * h * 0.45, base - h * arm[1])
+				var bend := Vector2(x + arm[0] * h * 0.2, base - h * arm[1] * 0.45)
+				draw_polyline(PackedVector2Array([Vector2(x, base), bend, tip]), c, maxf(3.0, h * 0.09), true)
+				draw_circle(tip, maxf(2.5, h * 0.06), c.lightened(0.15), true, -1.0, true)
+		1:
+			# A fan: a wide half disc with a lattice of ribs.
+			var fan := PackedVector2Array([Vector2(x, base)])
+			for k in 13:
+				var a := PI + PI * k / 12.0
+				fan.append(Vector2(x + cos(a) * h * 0.55, base - h * 0.15 + sin(a) * h * 0.85))
+			draw_colored_polygon(fan, Color(c, 0.9))
+			for k in 6:
+				var a := PI + PI * (k + 0.5) / 6.0
+				draw_line(Vector2(x, base), Vector2(x + cos(a) * h * 0.5, base - h * 0.15 + sin(a) * h * 0.78), c.darkened(0.2), 1.5, true)
+		_:
+			# Brain coral: a low dome with winding grooves.
+			_blob(Vector2(x, base - h * 0.22), Vector2(h * 0.42, h * 0.3), c)
+			for k in 3:
+				draw_arc(Vector2(x - h * 0.1 + k * h * 0.1, base - h * 0.2), h * (0.12 + 0.06 * k), PI * 1.1, PI * 1.9, 10, c.darkened(0.18), 1.6, true)
+
+
+## A strand of seaweed rising from the sea bed, its ribbon swaying more
+## towards the tip.
+func _seaweed(x: float, base: float, h: float, colour: Color, r: float) -> void:
+	# Near enough to pass in front of you: never over the one walking.
+	if layer.get("front", false) and _in_gap(x, h * 0.3):
+		return
+	for strand in 2:
+		var pts := PackedVector2Array()
+		var off := strand * 9.0 - 4.0
+		for k in 13:
+			var t := k / 12.0
+			var sway := sin(_now() * 1.1 + r * 6.0 + t * 3.2 + strand) * h * 0.08 * t
+			pts.append(Vector2(x + off + sway + sin(t * 7.0 + r * 9.0) * h * 0.03, base - h * t * (1.0 - 0.18 * strand)))
+		draw_polyline(pts, colour.darkened(0.12 * strand), maxf(3.0, h * 0.06), true)
+		for k in range(3, 12, 3):
+			var side := 1.0 if (k / 3) % 2 == 0 else -1.0
+			_leaf(pts[k], -PI * 0.5 + side * 0.9, h * 0.16, h * 0.06, side * 0.1, colour.lightened(0.06))
+
+
+## A soft lumpy oval (a rock, a coral dome).
+func _blob(c: Vector2, radius: Vector2, colour: Color) -> void:
+	var pts := PackedVector2Array()
+	for k in 20:
+		var a := TAU * k / 20.0
+		var wobble := 1.0 + 0.06 * sin(a * 3.0 + c.x * 0.1)
+		pts.append(c + Vector2(cos(a) * radius.x, sin(a) * radius.y) * wobble)
+	draw_colored_polygon(pts, colour)
+
 
 ## A tall leafy plant growing up from the bottom edge, close enough to
 ## pass in front of the walker (but never inside the front_gap).

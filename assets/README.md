@@ -101,7 +101,7 @@ and the Inspector shows its settings:
 
 | Setting | What it does |
 | --- | --- |
-| **Kind** | What's drawn: `hills`, `mountains`, `trees`, `pines`, `broadleaf`, `canopy`, `palms`, `acacias`, `blossoms`, `mesas`, `cacti`, `water`, `ground` (with the path), `fields`, `barns`, `fences`, `buildings`, `lamps` (lit after dark), `reeds`, `fronds`, `drifts` (snow), `undergrowth` (leaves up from the bottom), `vines` (hanging from the top), `stalks` (tall plants) and `planet` (a world in the Moon's sky). |
+| **Kind** | What's drawn: `hills`, `mountains`, `trees`, `pines`, `broadleaf`, `canopy`, `palms`, `acacias`, `blossoms`, `mesas`, `cacti`, `water`, `ground` (with the path), `fields`, `barns`, `fences`, `buildings`, `lamps` (lit after dark), `reeds`, `fronds`, `drifts` (snow), `undergrowth` (leaves up from the bottom), `vines` (hanging from the top), `stalks` (tall plants), `planet` (a world in the Moon's sky), `coral`, `seaweed` and `rocks` (the sea bed). |
 | **Parallax** | How fast it moves past. The ground is 1. Far things are slower (0.1), and growth right in front of you is faster (1.4 or more). |
 | **Y** | The line it stands on: 0 is the top of the screen, 1 the bottom. You can also drag the layer up and down in the 2D view. Things grow up from this line; water and ground run down from it. |
 | **Height** | How tall it is, as a share of the screen. |
@@ -109,7 +109,7 @@ and the Inspector shows its settings:
 | **Pattern** | Any number. A different number shuffles where things go and how hills roll. |
 | Shape: **Spacing** | The gap between trees, buildings and so on, in pixels (0 uses 70). |
 | Shape: **Wavelength** | How far apart hills or fields rise (0 uses 400). |
-| Shape: **Skip** | The share of spaces left empty, for undergrowth, vines and stalks. |
+| Shape: **Skip** | The share of spaces left empty, for undergrowth, vines, stalks, rocks, coral and seaweed. |
 | Shape: **Front** | Draws it in front of you and your pet (the jungle's big leaves). Tall front plants keep clear of your pet when you choose a walk. |
 | Shape: **Snow**, **Foam**, **Craters** | White tips on mountains and pines; surf on water; craters in the ground. |
 | Shape: **Path Colour** | The path's colour on the ground layer. Leave it see-through for sand. |
