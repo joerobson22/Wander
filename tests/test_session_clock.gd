@@ -59,3 +59,29 @@ func test_walk_left_running_stops_when_the_app_was_last_seen() -> void:
 	eq(c.left_at(0, 5000), 5000, "never after now")
 	var back := SessionClock.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
 	eq(back.last_seen_unix, 200000, "saved")
+
+
+func test_away_yes_counts_the_time_away() -> void:
+	var c := SessionClock.begin("p", "pet", 0)
+	c.step_away(600)
+	check(c.is_away() and c.is_paused(), "held while asking")
+	eq(c.elapsed(2000), 600, "frozen while asking")
+	c.come_back(true, 2000)
+	check(not c.is_away() and not c.is_paused())
+	eq(c.elapsed(2100), 2100, "the time away counts")
+
+
+func test_away_no_leaves_it_out_and_survives_reload() -> void:
+	var c := SessionClock.begin("p", "pet", 0)
+	c.step_away(600)
+	var back := SessionClock.from_dict(JSON.parse_string(JSON.stringify(c.to_dict())))
+	check(back.is_away(), "still asking after a reload")
+	back.come_back(false, 2000)
+	eq(back.elapsed(2100), 700, "the time away is left out, the walk goes on")
+
+
+func test_paused_walk_is_never_asked_about() -> void:
+	var c := SessionClock.begin("p", "pet", 0)
+	c.pause(100)
+	c.step_away(600)
+	check(not c.is_away())

@@ -14,6 +14,9 @@ var biome_id: String = "lake"
 ## The last moment the app was known to be open during this walk (kept up
 ## to date while it runs); 0 if never recorded.
 var last_seen_unix: int = 0
+## While the app is asking whether you were focused while it was away: when
+## it went away (the walk is held paused from then); 0 otherwise.
+var away_unix: int = 0
 
 
 static func begin(p_project_id: String, p_pet_id: String, now: int, p_biome_id: String = "lake") -> SessionClock:
@@ -38,6 +41,31 @@ func resume(now: int) -> void:
 	if is_paused():
 		paused_total += maxi(0, now - pause_started_unix)
 		pause_started_unix = 0
+
+
+## The app was away from `from` (closed, or in the background): hold the
+## walk there until you say whether you were focused (see come_back()).
+func step_away(from: int) -> void:
+	if is_paused():
+		return
+	away_unix = maxi(from, start_unix)
+	pause_started_unix = away_unix
+
+
+func is_away() -> bool:
+	return away_unix > 0
+
+
+## Answers step_away(): `focused` counts all the time since the app went
+## away; otherwise none of it counts, but the walk carries on from `now`.
+func come_back(focused: bool, now: int) -> void:
+	if not is_away():
+		return
+	if focused:
+		pause_started_unix = 0
+	else:
+		resume(now)
+	away_unix = 0
 
 
 func elapsed(now: int) -> int:
@@ -65,6 +93,7 @@ func to_dict() -> Dictionary:
 		"pause_started_unix": pause_started_unix,
 		"biome_id": biome_id,
 		"last_seen_unix": last_seen_unix,
+		"away_unix": away_unix,
 	}
 
 
@@ -77,6 +106,7 @@ static func from_dict(d: Dictionary) -> SessionClock:
 	c.pause_started_unix = int(d.get("pause_started_unix", 0))
 	c.biome_id = str(d.get("biome_id", "lake"))
 	c.last_seen_unix = int(d.get("last_seen_unix", 0))
+	c.away_unix = int(d.get("away_unix", 0))
 	return c
 
 

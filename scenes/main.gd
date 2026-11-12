@@ -1,7 +1,8 @@
 extends Control
 ## App shell. Five panes are laid out like a plus sign with the focus screen
-## in the middle: gifts to the left, projects to the right, your
-## profile above and stats below. Swipe between them, use the arrow keys
+## in the middle: gifts to the left, stats to the right, your
+## profile above and projects below (projects' panels swipe sideways, so
+## the screen itself moves up and down). Swipe between them, use the arrow keys
 ## (Esc comes back to the middle), click the big faint arrows at the edges
 ## (computers), or open the minimap (bottom left on computers, bottom middle
 ## on phones) and pick one. Every pane is built once and kept, so each one
@@ -15,15 +16,16 @@ extends Control
 const PANES := {
 	"focus": [Vector2i(0, 0), "res://scenes/panes/focus.gd"],
 	"gifts": [Vector2i(-1, 0), "res://scenes/panes/gifts.gd"],
-	"projects": [Vector2i(1, 0), "res://scenes/panes/projects.gd"],
+	"projects": [Vector2i(0, 1), "res://scenes/panes/projects.gd"],
 	"profile": [Vector2i(0, -1), "res://scenes/panes/profile.gd"],
-	"stats": [Vector2i(0, 1), "res://scenes/panes/stats.gd"],
+	"stats": [Vector2i(1, 0), "res://scenes/panes/stats.gd"],
 }
+## Screens that stay shut until you've a pet or a project.
+const GATED := ["gifts", "projects"]
 const FLOWS := {
 	"choose_focus": "res://scenes/choose_focus/choose_focus.gd",
 	"walk": "res://scenes/walk/walk.gd",
 	"finish": "res://scenes/walk/finish.gd",
-	"ended": "res://scenes/walk/ended.gd",
 }
 ## The UI is laid out for a short side of this many points; smaller windows
 ## (phones) get a smaller design size so text stays its intended size.
@@ -193,10 +195,10 @@ func _ready() -> void:
 	_dress_screens()
 	_give_holiday_present.call_deferred()
 
-	# Closing the app ends a walk; say so the next time it opens.
-	if not App.ended_walk.is_empty():
-		_open_flow("ended", App.ended_walk, true)
-		App.ended_walk = {}
+	# Closing the app mid-walk doesn't end it: it opens straight back onto
+	# the walk, which asks whether you were focused meanwhile.
+	if App.state.active and not _locked:
+		_open_flow("walk", {}, true)
 	elif not _locked:
 		_start_up()
 	if App.save_reset:
@@ -536,15 +538,19 @@ func _show_account(instant: bool, typed: Dictionary = {}) -> void:
 
 
 ## True if you can go to `cell`: anywhere, unless the create account screen
-## is up. Until you've a pet or a project, only up and down (see
-## _sideways_open()).
+## is up. Until you've a pet or a project, gifts and projects stay shut
+## (see _gated_open()).
 func _can_go(cell: Vector2i) -> bool:
-	return _panes.has(cell) and not _locked and (cell.x == 0 or _sideways_open())
+	return _panes.has(cell) and not _locked and _open_yet(cell)
 
 
-## The screens to either side (gifts and projects) open once you have a pet
-## or a project; before then there's only your profile and your stats.
-func _sideways_open() -> bool:
+## Gifts and projects open once you have a pet or a project; before then
+## there's only your profile and your stats.
+func _open_yet(cell: Vector2i) -> bool:
+	return not (_names.get(cell, "") in GATED) or _gated_open()
+
+
+func _gated_open() -> bool:
 	return not (App.state.active_pets().is_empty() and App.state.projects.is_empty())
 
 
@@ -552,7 +558,7 @@ func _sideways_open() -> bool:
 func _sync_map_cells() -> void:
 	var cells := {}
 	for cell in _names:
-		if cell == _at or cell.x == 0 or _sideways_open():
+		if cell == _at or _open_yet(cell):
 			cells[cell] = _names[cell]
 	if cells.keys() != _minimap.cells.keys():
 		_minimap.cells = cells

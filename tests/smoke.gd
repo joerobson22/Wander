@@ -100,13 +100,13 @@ func _run() -> void:
 	check(map.get_global_rect().position.x == corner.x and is_equal_approx(map.get_global_rect().end.y, corner.y),
 		"up and to the right, from the corner")
 	await _shot("map_open")
-	var stats_tile: Vector2 = map.get_global_transform_with_canvas() * map._cell_rect(Vector2(0, 1)).get_center()
+	var stats_tile: Vector2 = map.get_global_transform_with_canvas() * map._cell_rect(Vector2(1, 0)).get_center()
 	await _point(stats_tile)
 	await _wait(30)
 	check(map.open, "moving over its tiles keeps it big")
 	await _drag(stats_tile, stats_tile, 1)
 	await _wait(40)
-	check(main._at == Vector2i(0, 1) and map.open, "clicking the stats tile goes there, and the map stays big under the pointer")
+	check(main._at == Vector2i(1, 0) and map.open, "clicking the stats tile goes there, and the map stays big under the pointer")
 	await _point(main.size * Vector2(0.6, 0.4))
 	check(not map.open, "it starts shrinking the moment the pointer leaves")
 	await _wait(20)
@@ -136,16 +136,16 @@ func _run() -> void:
 	check(not map.open and main._at == Vector2i.ZERO, "and Esc")
 	await _drag(map.get_global_rect().get_center(), map.get_global_rect().get_center(), 1)
 	await _wait(30)
-	stats_tile = map.get_global_transform_with_canvas() * map._cell_rect(Vector2(0, 1)).get_center()
+	stats_tile = map.get_global_transform_with_canvas() * map._cell_rect(Vector2(1, 0)).get_center()
 	await _drag(stats_tile, stats_tile, 1)
 	await _wait(40)
-	check(main._at == Vector2i(0, 1) and not map.open, "tapping the stats tile goes there, and the map shrinks back")
+	check(main._at == Vector2i(1, 0) and not map.open, "tapping the stats tile goes there, and the map shrinks back")
 	map.hover_grow = true
 	await _key(KEY_ESCAPE)
 	await _wait(30)
 	await _key(KEY_RIGHT)
 	await _wait(30)
-	check(main._at == Vector2i(1, 0), "right arrow key opens completed")
+	check(main._at == Vector2i(1, 0), "right arrow key opens stats")
 	await _key(KEY_ESCAPE)
 	await _wait(30)
 	check(main._at == Vector2i.ZERO, "Esc comes back to the middle")
@@ -169,7 +169,7 @@ func _run() -> void:
 	await _wait(5)
 	check(showing.call().is_empty(), "they hide while the screens slide")
 	await _wait(40)
-	check(main._at == Vector2i(1, 0) and showing.call() == [Vector2i.LEFT], "the right arrow opens completed, with just the arrow back")
+	check(main._at == Vector2i(1, 0) and showing.call() == [Vector2i.LEFT], "the right arrow opens stats, with just the arrow back")
 	var back: Control = arrows[Vector2i.LEFT]
 	await _drag(back.get_global_rect().get_center(), back.get_global_rect().get_center(), 1)
 	await _wait(40)
@@ -435,7 +435,7 @@ func _run() -> void:
 
 	app.go("projects")
 	await _wait(50)
-	var projects_pane: Node = main._panes[Vector2i(1, 0)]
+	var projects_pane: Node = main._panes[Vector2i(0, 1)]
 	# Ongoing first: each project with its podiums of pets and places.
 	check(projects_pane._filter() == "ongoing", "projects opens on ongoing")
 	var filter: Node = _find(projects_pane, func(n): return _is(n, "dropdown.gd") and not n.sortable)
@@ -579,14 +579,14 @@ func _run() -> void:
 	var y: float = maxf(r.position.y, projects_pane.scroll.get_global_rect().position.y) + 30.0
 	await _drag(Vector2(r.end.x - 30.0, y), Vector2(r.end.x - 30.0 - r.size.x * 0.3, y), 8, 0.0, false)
 	await _wait(2)
-	check(row._offset < -r.size.x * 0.2 and main._at == Vector2i(1, 0), "the panel follows the finger, not the screen")
+	check(row._offset < -r.size.x * 0.2 and main._at == Vector2i(0, 1), "the panel follows the finger, not the screen")
 	await _shot("projects_swiping")
 	await _drag_on(Vector2(r.end.x - 30.0 - r.size.x * 0.3, y), Vector2(r.end.x - 30.0 - r.size.x * 0.5, y), 4)
 	await _wait(20)
 	await _shot("projects_confetti")
 	await _wait(80)
 	check(app.state.project(row_id).is_complete() and app.state.active_projects().size() == going - 1, "a long swipe left completes it")
-	check(main._at == Vector2i(1, 0), "and the screen stays put")
+	check(main._at == Vector2i(0, 1), "and the screen stays put")
 	check(_find(_class("res://ui/modal.gd").layer, func(n): return n is Button and n.text == "Undo") != null, "completing it offers Undo too")
 	row = _find(projects_pane, func(n): return _is(n, "swipe_row.gd"))
 	row_id = row.content.project_id
@@ -639,7 +639,7 @@ func _run() -> void:
 	await _wait(40)
 	app.go("projects")
 	await _wait(50)
-	projects_pane = main._panes[Vector2i(1, 0)]
+	projects_pane = main._panes[Vector2i(0, 1)]
 	var phone_panels: Array = _all(projects_pane, func(n): return _is(n, "project_panel.gd"))
 	var wide: Array = _all(projects_pane, func(n): return n is Control and n.is_visible_in_tree() and n.get_global_rect().end.x > main.size.x + 0.5 \
 		and not (n.get_parent() is ScrollContainer))
@@ -880,7 +880,7 @@ func _run() -> void:
 	app.go("stats")
 	await _wait(50)
 	# The projects under the chart drag sideways from anywhere on them.
-	var legend_strip: ScrollContainer = main._panes[Vector2i(0, 1)]._legend.get_parent().get_parent()
+	var legend_strip: ScrollContainer = main._panes[Vector2i(1, 0)]._legend.get_parent().get_parent()
 	var legend_bar := legend_strip.get_h_scroll_bar()
 	if legend_bar.max_value > legend_bar.page + 20.0:
 		var on_strip := legend_strip.get_global_rect().get_center()
@@ -888,7 +888,7 @@ func _run() -> void:
 		await _wait(30)
 		check(legend_strip.scroll_horizontal > 40, "dragging the projects list scrolls it (%d)" % legend_strip.scroll_horizontal)
 		check(not modal_class.is_open(), "without opening a project")
-		check(main._at == Vector2i(0, 1), "or swiping away")
+		check(main._at == Vector2i(1, 0), "or swiping away")
 		await _shot("stats_strip_dragged")
 		legend_strip.scroll_horizontal = 0
 		await _wait(5)
@@ -901,7 +901,7 @@ func _run() -> void:
 		check(is_equal_approx(chip.scale.x, 1.0), "a chip doesn't grow under the pointer (%.2f)" % chip.scale.x)
 		await _point(Vector2(4, 4))
 		await _wait(5)
-	main._panes[Vector2i(0, 1)]._show_piece(app.state.projects[0].id, 0)
+	main._panes[Vector2i(1, 0)]._show_piece(app.state.projects[0].id, 0)
 	await _wait(25)
 	await _shot("stats_popup")
 	var project_popup: Node = modal_class.top()
@@ -923,19 +923,19 @@ func _run() -> void:
 		_close_modal()
 	await _stats_and_friends(main)
 	await _stats_periods(main)
-	main._panes[Vector2i(0, 1)]._select(main._panes[Vector2i(0, 1)]._start - 7)
+	main._panes[Vector2i(1, 0)]._select(main._panes[Vector2i(1, 0)]._start - 7)
 	await _wait(10)
 
 	# A small wheel turn moves between screens, once per turn.
 	await create_timer(0.3).timeout
-	await _wheel(Vector2(main.size.x * 0.5, 30), MOUSE_BUTTON_WHEEL_UP)
-	await _wheel(Vector2(main.size.x * 0.5, 30), MOUSE_BUTTON_WHEEL_UP)
+	await _wheel(Vector2(main.size.x * 0.5, 30), MOUSE_BUTTON_WHEEL_LEFT)
+	await _wheel(Vector2(main.size.x * 0.5, 30), MOUSE_BUTTON_WHEEL_LEFT)
 	await _wait(40)
-	check(main._at == Vector2i.ZERO, "a wheel turn up from stats goes to the focus screen, and only one screen")
+	check(main._at == Vector2i.ZERO, "a wheel turn left from stats goes to the focus screen, and only one screen")
 	await create_timer(0.3).timeout
-	await _wheel(main.size * 0.5, MOUSE_BUTTON_WHEEL_DOWN)
+	await _wheel(main.size * 0.5, MOUSE_BUTTON_WHEEL_RIGHT)
 	await _wait(40)
-	check(main._at == Vector2i(0, 1), "a fresh turn down goes back to stats")
+	check(main._at == Vector2i(1, 0), "a fresh turn right goes back to stats")
 
 	app.go("focus")
 	await _wait(50)
@@ -1416,26 +1416,41 @@ func _run() -> void:
 	check(main._flows.is_empty() and main._at == Vector2i.ZERO, "home closes the flow")
 	check(absf(main._panes[Vector2i.ZERO]._orb._grow - 1.0) < 0.01, "and the orb is back to its size")
 
-	# Closing the app mid-walk ends the walk: the next launch logs it up to
-	# when the app was last open, with no gift, and shows focus ended.
+	# Closing the app mid-walk doesn't end the walk: back on it, the app
+	# asks whether you were focused meanwhile. Yes counts that time...
 	app.start_walk(app.state.projects[0].id, app.state.pets[0].id, "forest")
 	app.state.active.start_unix -= 25 * 60
-	app.state.active.last_seen_unix = app.now() - 2 * 60
-	var logged: int = app.state.total_seconds()
-	var ended: Dictionary = app._end_left_walk()
-	var stopped: int = ended["session"].focus_seconds
-	check(app.state.active == null and app.state.total_seconds() == logged + stopped, "a walk left running is logged")
-	check(stopped >= 22 * 60 and stopped <= 24 * 60, "up to when the app was last open (%ds)" % stopped)
-	check(ended["session"].gift_id == "", "with no gift")
-	main._open_flow("ended", ended, true)
-	await _wait(170)
-	var ended_screen: Node = main._flows.back().get_child(0)
-	check(ended_screen._walker.sad > 0.9 and ended_screen._animal.sad > 0.9, "you and your pet look dejected")
-	check(ended_screen._home.modulate.a > 0.5, "the way home shows")
-	await _shot("ended")
-	ended_screen.go_back()
+	check(app.check_away(app.now() - 10 * 60) and app.state.active.is_paused(), "away a while, the walk is held")
+	main._open_flow("walk", {}, true)
+	await _wait(40)
+	var away: Node = modal_class.top()
+	check(away != null and _find(away, func(n): return n is Label and n.text.contains("Were you focused for the last 10m")) != null, "and asks were you focused for the last 10m")
+	check(away != null and not away.dismissible, "which needs an answer")
+	await _shot("away_question")
+	var yes: Button = _find(away, func(n): return n is Button and n.text == "Yes, count it") if away else null
+	if yes:
+		yes.pressed.emit()
+	await _wait(20)
+	var counted: int = app.state.active.elapsed(app.now())
+	check(not app.state.active.is_paused() and counted >= 25 * 60 - 2, "yes counts the time away (%ds)" % counted)
+	# ...no doesn't, but the walk carries on.
+	app.state.active.last_seen_unix = app.now() - 5 * 60
+	app.notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	await _wait(25)
+	away = modal_class.top()
+	var no: Button = _find(away, func(n): return n is Button and n.text == "No") if away else null
+	check(no != null, "coming back from the background asks too")
+	if no:
+		no.pressed.emit()
+	await _wait(20)
+	var kept: int = app.state.active.elapsed(app.now())
+	check(app.state.active != null and not app.state.active.is_paused() and absi(kept - (counted - 5 * 60)) <= 3, "no leaves the time away out, and walks on (%ds)" % kept)
+	app.state.active.last_seen_unix = app.now() - 20
+	check(not app.check_away(app.state.active.last_seen_unix), "a short time away just counts")
+	app.cancel_walk()
+	app.go("home")
 	await _wait(60)
-	check(main._flows.is_empty(), "home from focus ended")
+	check(main._flows.is_empty(), "home again")
 
 	# In the jungle the leaves pass in front of you and your pet.
 	app.start_walk(app.state.projects[0].id, app.state.pets[0].id, "jungle")
@@ -1886,7 +1901,7 @@ func _fill_sample_data() -> void:
 func _stats_periods(main: Node) -> void:
 	var app := _app()
 	var modal_class := _class("res://ui/modal.gd")
-	var stats_pane: Control = main._panes[Vector2i(0, 1)]
+	var stats_pane: Control = main._panes[Vector2i(1, 0)]
 	var tabs: Dictionary = stats_pane._tabs
 	check(tabs.size() == 3 and tabs["week"].text == "Week", "Week · Month · Year tabs")
 	check(stats_pane._chart_title.text == "This week", "this week first")
@@ -1944,7 +1959,7 @@ func _stats_periods(main: Node) -> void:
 func _stats_and_friends(main: Node) -> void:
 	var app := _app()
 	var modal_class := _class("res://ui/modal.gd")
-	var stats_pane: Control = main._panes[Vector2i(0, 1)]
+	var stats_pane: Control = main._panes[Vector2i(1, 0)]
 	check(stats_pane.scroll == null, "stats doesn't scroll as a page")
 	var streak: Label = _find(stats_pane, func(n): return n is Label and n.text.ends_with(" days"))
 	check(streak != null and _find(stats_pane, func(n): return n is Label and n.text == "streak") == null, "the streak just says how many days")
@@ -2208,12 +2223,14 @@ func _accounts(main: Node) -> void:
 	await _wait(50)
 	check(main._minimap.modulate.a > 0.99 and home_pane._home.modulate.a > 0.99, "and last the map and the home icon")
 	# With no pets and no projects there's only up and down.
-	check(not main._can_go(Vector2i(-1, 0)) and not main._can_go(Vector2i(1, 0)) and main._can_go(Vector2i(0, 1)), "no pets or projects: only up and down")
-	check(main._minimap.cells.size() == 3 and not main._minimap.cells.has(Vector2i(1, 0)), "the map shows just those")
-	check(main._minimap.size.x < main._minimap.size.y * 0.6, "in a map one tile wide")
-	await _key(KEY_RIGHT)
+	check(not main._can_go(Vector2i(-1, 0)) and not main._can_go(Vector2i(0, 1)) and main._can_go(Vector2i(1, 0)) and main._can_go(Vector2i(0, -1)), "no pets or projects: only profile and stats")
+	check(main._minimap.cells.size() == 3 and not main._minimap.cells.has(Vector2i(0, 1)), "the map shows just those")
+	await _key(KEY_LEFT)
 	await _wait(30)
-	check(main._at == Vector2i.ZERO, "and the arrow keys can't go sideways")
+	check(main._at == Vector2i.ZERO, "and the arrow keys can't reach gifts")
+	await _key(KEY_DOWN)
+	await _wait(30)
+	check(main._at == Vector2i.ZERO, "or projects")
 	await _shot("arriving_home")
 	check(app.state.profile["username"] == "Sam" and app.state.profile["institution"] == "University of York", "with that name and place")
 	check(app.state.profile["dob"] == "2012-03-14" and app.state.profile["agreed_unix"] > 0, "and date of birth, and when they agreed")
@@ -2225,7 +2242,7 @@ func _accounts(main: Node) -> void:
 
 	app.go("stats")
 	await _wait(50)
-	var board: Control = _find(main._panes[Vector2i(0, 1)], func(n): return _is(n, "leaderboard.gd"))
+	var board: Control = _find(main._panes[Vector2i(1, 0)], func(n): return _is(n, "leaderboard.gd"))
 	check(board != null and board.rows.is_empty(), "with no friends the leaderboard is empty")
 	if board:
 		check(_find(board, func(n): return n is Label and n.text == "No friends yet!" and n.is_visible_in_tree()) != null, "and says so")
@@ -2249,7 +2266,7 @@ func _accounts(main: Node) -> void:
 				await _shot("friend_search")
 			_close_modal()
 			await _wait(15)
-		var stats_pane: Control = main._panes[Vector2i(0, 1)]
+		var stats_pane: Control = main._panes[Vector2i(1, 0)]
 		check(stats_pane._earlier.disabled and stats_pane._later.disabled,
 			"with only this week there are no weeks to step between")
 	await _shot("leaderboard_empty")

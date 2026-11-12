@@ -62,6 +62,8 @@ var _lead_alpha := 1.0
 var _finishing := false
 var _done := false
 var _result := {}
+## True while asking whether you were focused while the app was away.
+var _away_asked := false
 
 
 func _ready() -> void:
@@ -116,6 +118,9 @@ func _ready() -> void:
 	_apply_paused(clock.is_paused())
 	_gift.set_seconds(clock.elapsed(App.now()))
 	_show_quote(false)
+	App.came_back.connect(_ask_away)
+	if clock.is_away():
+		_ask_away.call_deferred()
 
 
 ## Ready to set off: your pet on the path, you just off the left edge, and
@@ -455,6 +460,26 @@ func _draw_lead() -> void:
 func _update_ambience() -> void:
 	_ambience_check = 30.0
 	Audio.ambience(_scenery.ambience())
+
+
+## Back after a while away mid-walk (the app was closed, or in the
+## background): were you focused meanwhile? Yes counts the time, no
+## doesn't; the walk carries on either way.
+func _ask_away() -> void:
+	if _away_asked or App.state.active == null or not App.state.active.is_away():
+		return
+	_away_asked = true
+	_apply_paused(true)
+	var m := Modal.confirm(Text.t("walk.away_title"),
+		Text.t("walk.away_body", {"time": Stats.format_long(App.away_seconds())}),
+		Text.t("walk.away_yes"), "success", Text.t("walk.away_no"))
+	m.dismissible = false
+	m.closed.connect(func(focused):
+		_away_asked = false
+		App.answer_away(bool(focused))
+		if App.state.active:
+			_apply_paused(App.state.active.is_paused())
+			_gift.set_seconds(App.state.active.elapsed(App.now())))
 
 
 func _toggle_pause() -> void:

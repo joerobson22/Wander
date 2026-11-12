@@ -219,7 +219,8 @@ sleeves swing with the arms and a hat bobs with the head.
 after the limb: `torso.png`, `head.png`, `arm_back.png`, `arm_front.png`,
 `leg_back.png`, `leg_front.png`. A jumper is `torso.png`, `arm_front.png`
 and `arm_back.png`; a hat is just `head.png`. Add `_behind` to draw behind
-the limb (`torso_behind.png` for a cape), and `_sad` for a version shown
+the limb (`torso_behind.png` for a cape, `head_behind.png` for the hair
+behind the head or a hat brim's far side), and `_sad` for a version shown
 when the character is sad (`head_sad.png`). There's an example in
 `art/templates/cosmetics/`.
 
@@ -235,7 +236,9 @@ so draw the starter items first (the first in each slot is the default).
 Save a square picture (256 × 256 or bigger) as `art/gifts/<gift>.png`, e.g.
 `art/gifts/dog_common.png`. `.svg` and `.webp` work too. It shows
 everywhere the gift appears, on a disc in its rarity's colour. Names,
-descriptions and rarities are in `data/gifts.json`.
+descriptions and rarities are in `data/gifts.json`. Every gift starts with a
+placeholder `art/gifts/<gift>.svg`; a `.png` of the same name takes over from
+it (delete the `.svg` once yours is in).
 
 ---
 
