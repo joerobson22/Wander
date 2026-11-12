@@ -21,7 +21,8 @@ static func open(id: String, fresh: bool = false, yours: bool = true, first: boo
 		m.body.add_child(UI.label(message, 15, UI.ACCENT, false, 800))
 	var head := m.heading_row(g["name"])
 	# NEW (one you'd never had) and COSMETIC (one you can wear) sit right
-	# after the name, which keeps only the room it needs.
+	# after the name, which keeps only the room it needs (or, for a name
+	# too long to share the line, on a line of their own under it).
 	var badges: Array[Control] = []
 	if first:
 		badges.append(UI.tag(Text.t("gift.new"), UI.INK, UI.BG))
@@ -34,8 +35,10 @@ static func open(id: String, fresh: bool = false, yours: bool = true, first: boo
 		var gap := UI.spacer()
 		head.add_child(gap)
 		head.move_child(gap, 1 + badges.size())
-		UI.fit_name(head.get_child(0) as Label, head)
-	m.body.add_child(head)
+		m.body.add_child(head)
+		UI.fit_name(head.get_child(0) as Label, head, badges)
+	else:
+		m.body.add_child(head)
 	var art := GiftArt.new(id, 1.0)
 	art.custom_minimum_size = Vector2(0, 170)
 	m.body.add_child(art)

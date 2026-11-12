@@ -781,20 +781,23 @@ static func tag(text: String, fill: Color, colour: Color, size: int = 12) -> Pan
 ## spare room by stretch ratio, the name's being what it needs. Ratios never
 ## change the row's minimum width, so a long name can't push the row (and a
 ## close button at its end) off the edge of a popup.
-static func fit_name(l: Label, row: HBoxContainer) -> void:
-	l.autowrap_mode = TextServer.AUTOWRAP_OFF
-	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	l.clip_text = true
+## With `tags` (the tags right after the name), a name too long to fit
+## beside them keeps its whole width instead: the tags move to a line of
+## their own under the row, and the name wraps rather than being cut off.
+static func fit_name(l: Label, row: HBoxContainer, tags: Array = []) -> void:
 	l.custom_minimum_size.x = 0
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name_mode(l, false)
+	var state := {"under": null, "busy": false}
 	var fit := func():
-		if not is_instance_valid(l):
+		if not is_instance_valid(l) or state.busy:
 			return
+		var sep := row.get_theme_constant("separation")
 		var room := row.size.x
 		var gap: Control = null
 		var shown := 0
 		for c in row.get_children():
-			if not (c is Control and (c as Control).visible):
+			if not (c is Control and (c as Control).visible) or c in tags:
 				continue
 			shown += 1
 			if c == l:
@@ -803,14 +806,69 @@ static func fit_name(l: Label, row: HBoxContainer) -> void:
 				gap = c
 			else:
 				room -= (c as Control).get_combined_minimum_size().x
-		room -= row.get_theme_constant("separation") * maxi(shown - 1, 0)
+		room -= sep * maxi(shown - 1, 0)
+		var tag_room := 0.0
+		for t in tags:
+			if is_instance_valid(t) and (t as Control).visible:
+				tag_room += (t as Control).get_combined_minimum_size().x + sep
 		var want := l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x + 2.0
-		var name_part := clampf(want, 1.0, maxf(room, 1.0))
+		# Too long to share the line with its tags: they go under it. The
+		# row can be narrow for a moment while it's laid out, so this goes
+		# back if the name fits after all.
+		var under_now: bool = state.under != null
+		var under_wanted := not tags.is_empty() and row.size.x > 0.0 and row.get_parent() != null and want > room - tag_room + 0.5
+		if under_wanted != under_now:
+			state.busy = true
+			_move_tags.call_deferred(l, row, tags, gap, state, under_wanted)
+			return
+		if under_now:
+			return
+		var name_part := clampf(want, 1.0, maxf(room - tag_room, 1.0))
 		l.size_flags_stretch_ratio = name_part
 		if gap:
-			gap.size_flags_stretch_ratio = maxf(room - name_part, 0.0001)
+			gap.size_flags_stretch_ratio = maxf(room - tag_room - name_part, 0.0001)
 	row.resized.connect(fit)
 	fit.call_deferred()
+
+
+## A name on one line, cut off with "…" if it must be, or wrapping.
+static func _name_mode(l: Label, wrap: bool) -> void:
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
+	l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING if wrap else TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.clip_text = not wrap
+
+
+## fit_name()'s way out for a long name: its tags go on a line of their
+## own under `row` and the name wraps instead of being cut off; or, with
+## `under` false, they come back up beside it.
+static func _move_tags(l: Label, row: HBoxContainer, tags: Array, gap: Control, state: Dictionary, under: bool) -> void:
+	state.busy = false
+	if not is_instance_valid(row) or not is_instance_valid(l) or row.get_parent() == null:
+		return
+	if under:
+		var line := hbox(8)
+		row.get_parent().add_child(line)
+		row.get_parent().move_child(line, row.get_index() + 1)
+		for t in tags:
+			if is_instance_valid(t):
+				(t as Node).reparent(line, false)
+		state.under = line
+		_name_mode(l, true)
+		l.size_flags_stretch_ratio = 1.0
+		if is_instance_valid(gap):
+			gap.size_flags_stretch_ratio = 0.0001
+	else:
+		var at := l.get_index() + 1
+		for t in tags:
+			if is_instance_valid(t):
+				(t as Node).reparent(row, false)
+				row.move_child(t, at)
+				at += 1
+		if is_instance_valid(state.under):
+			(state.under as Node).queue_free()
+		state.under = null
+		_name_mode(l, false)
+	row.resized.emit()
 
 
 ## The "COSMETIC" tag beside a gift's name when it can be worn.

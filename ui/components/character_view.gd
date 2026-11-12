@@ -464,7 +464,10 @@ func _draw_part(skin: Color, hair: Color) -> void:
 		"facial_hair":
 			_draw_facial_hair(HEAD, _hair_colour(hair))
 		"neckwear":
-			_draw_neckwear(0.0, true)
+			# On its own, only a scarf or collar shows its back: a bow tie's
+			# band and a necklace's string would just float there.
+			if _style(item) in ["scarf", "collar"]:
+				_draw_neckwear(0.0, true)
 			_draw_neckwear(0.0, false)
 		"top":
 			_draw_top_flat(item, skin)
@@ -500,6 +503,12 @@ func _draw_top_flat(top: Dictionary, skin: Color) -> void:
 		else:
 			draw_line(shoulder, cuff, body.darkened(0.06), 9, true)
 	draw_style_box(UI.box(body, Color.TRANSPARENT, 3), Rect2(-12, -110, 24, 40))
+	if style == "cape":
+		if _pattern(top) == "spots":
+			for p in [Vector2(-17, -78), Vector2(17, -74), Vector2(-14, -70), Vector2(15, -84)]:
+				draw_circle(p, 2.0, UI.INK.lightened(0.15), true, -1.0, true)
+	else:
+		_draw_pattern(_pattern(top), Rect2(-12, -106, 24, 34), body)
 	match style:
 		"jumper":
 			draw_rect(Rect2(-12, -74, 24, 4), body.darkened(0.15))
