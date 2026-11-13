@@ -440,14 +440,15 @@ func _draw_body(skin: Color, top: Dictionary, sleeve: Color, shoulder: Vector2, 
 		_draw_shoe(foot, shade)
 
 	_draw_torso(top, sleeve, bob)
+	# The picture sits on the chest, the front of the body, under the arm:
+	# you only see it when the arm swings out of the way.
+	if top.has("emblem"):
+		_draw_emblem(str(top["emblem"]), Vector2(9, -84 - bob), 0.9, sleeve)
 
 	# Front arm, holding the lead (or hanging down when there isn't one).
 	hand = Vector2(22, -78 - bob) if holding_lead else shoulder + Vector2(3, 40).rotated(sin(_phase) * 0.35 if walking else 0.0)
 	_draw_arm(shoulder, hand, sleeve, skin, tee)
 	_draw_cuff(shoulder, hand, top)
-	# A picture on the chest goes over the arm hanging in front of it.
-	if top.has("emblem"):
-		_draw_emblem(str(top["emblem"]), Vector2(4, -86 - bob), 1.0, sleeve)
 	_draw_stick(hand)
 	_draw_hand(hand, skin, gloves, 0.0)
 
