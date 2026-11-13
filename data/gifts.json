@@ -1,5 +1,5 @@
 {
-	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
+	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold) and an optional 'pattern' over it ('stripes', 'spots' or 'patches'). Optional extras for the placeholder drawing: 'emblem' (a small picture on a top: leaf, tree, snowflake, lilypad, elephant, oasis, feather_gold, feather_colour or mountain), 'trim' (a second colour on a top's edges), 'detail' (a hat, glove or walking stick's own look: paw, plain_back, claw, spike, gem, vines, bear, bamboo or giraffe), 'accent' (the colour of that detail) and 'gems' false (no jewels on a crown). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
 	"rarities": [
 		{
 			"id": "common",
@@ -250,7 +250,9 @@
 			"name": "Seasonal Jumper",
 			"description": "Makes you feel very autumnal.",
 			"slot": "top",
-			"style": "jumper"
+			"style": "jumper",
+			"colour": "#c46a2c",
+			"emblem": "leaf"
 		},
 		{
 			"id": "cat_common",
@@ -280,7 +282,8 @@
 			"name": "Cat Ear Beanie",
 			"description": "Meow.",
 			"slot": "hat",
-			"style": "ears"
+			"style": "ears",
+			"colour": "#3b3b46"
 		},
 		{
 			"id": "cat_legendary2",
@@ -289,7 +292,8 @@
 			"name": "Jade Ring",
 			"description": "Makes you feel royal.",
 			"slot": "gloves",
-			"style": "ring"
+			"style": "ring",
+			"colour": "#2e9e6a"
 		},
 		{
 			"id": "rabbit_common",
@@ -319,7 +323,8 @@
 			"name": "Magic Hat",
 			"description": "I'm pretty sure there's a rabbit underneath.",
 			"slot": "hat",
-			"style": "top_hat"
+			"style": "top_hat",
+			"colour": "#2b2523"
 		},
 		{
 			"id": "rabbit_legendary2",
@@ -328,7 +333,8 @@
 			"name": "Ruby Ring",
 			"description": "Looks very shiny.",
 			"slot": "gloves",
-			"style": "ring"
+			"style": "ring",
+			"colour": "#c0392b"
 		},
 		{
 			"id": "sheep_common",
@@ -358,7 +364,8 @@
 			"name": "Shepherd's Crook",
 			"description": "Shoo! Shoo!",
 			"slot": "walking_stick",
-			"style": "stick"
+			"style": "crook",
+			"colour": "#8a6248"
 		},
 		{
 			"id": "sheep_legendary2",
@@ -367,7 +374,8 @@
 			"name": "Wool Mittens",
 			"description": "Knitted from the finest fleece.",
 			"slot": "gloves",
-			"style": "mittens"
+			"style": "mittens",
+			"colour": "#efe6d4"
 		},
 		{
 			"id": "bird_common",
@@ -397,7 +405,9 @@
 			"name": "Feather Cape",
 			"description": "You can almost fly away wearing this.",
 			"slot": "top",
-			"style": "cape"
+			"style": "cape",
+			"colour": "#4a8fd9",
+			"emblem": "feather_gold"
 		},
 		{
 			"id": "bird_legendary2",
@@ -406,7 +416,8 @@
 			"name": "Nest Hat",
 			"description": "'Hand' made just for you!",
 			"slot": "hat",
-			"style": "nest"
+			"style": "nest",
+			"colour": "#8a6a45"
 		},
 		{
 			"id": "pig_common",
@@ -446,7 +457,8 @@
 			"name": "Tweed Scarf",
 			"description": "Pink and purple and exciting to wear.",
 			"slot": "neckwear",
-			"style": "scarf"
+			"style": "scarf",
+			"colour": "#c25a9a"
 		},
 		{
 			"id": "snail_common",
@@ -476,7 +488,8 @@
 			"name": "Snail Slippers",
 			"description": "Comfy + stylish. Dream combo.",
 			"slot": "shoes",
-			"style": "slippers"
+			"style": "slippers",
+			"colour": "#a7c66a"
 		},
 		{
 			"id": "snail_legendary2",
@@ -485,7 +498,8 @@
 			"name": "Bow Tie",
 			"description": "Makes you look fancy.",
 			"slot": "neckwear",
-			"style": "bowtie"
+			"style": "bowtie",
+			"colour": "#7a3fa0"
 		},
 		{
 			"id": "tortoise_common",
@@ -515,7 +529,10 @@
 			"name": "Ancient Staff",
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
-			"style": "staff"
+			"style": "staff",
+			"colour": "#8a6248",
+			"detail": "gem",
+			"accent": "#8e5ad0"
 		},
 		{
 			"id": "tortoise_legendary2",
@@ -524,7 +541,8 @@
 			"name": "Shell Necklace",
 			"description": "Tiny shells on a string.",
 			"slot": "neckwear",
-			"style": "necklace"
+			"style": "necklace",
+			"colour": "#e8c9a8"
 		},
 		{
 			"id": "bear_common",
@@ -554,7 +572,8 @@
 			"name": "Salmon Hat",
 			"description": "Smelly fishy. An abnormally large salmon.",
 			"slot": "hat",
-			"style": "salmon_hat"
+			"style": "salmon_hat",
+			"colour": "#e98a6a"
 		},
 		{
 			"id": "bear_legendary2",
@@ -563,7 +582,10 @@
 			"name": "Bear Walking Stick",
 			"description": "Can be equipped to walk with. Looks super cool.",
 			"slot": "walking_stick",
-			"style": "stick"
+			"style": "stick",
+			"colour": "#6b4c38",
+			"detail": "bear",
+			"accent": "#d9a441"
 		},
 		{
 			"id": "frog_common",
@@ -593,7 +615,8 @@
 			"name": "Frog Bucket Hat",
 			"description": "Cute. Wear it!",
 			"slot": "hat",
-			"style": "bucket_hat"
+			"style": "bucket_hat",
+			"colour": "#5fa84a"
 		},
 		{
 			"id": "frog_legendary2",
@@ -602,7 +625,9 @@
 			"name": "Pond Hoodie",
 			"description": "Green, damp and cosy.",
 			"slot": "top",
-			"style": "hoodie"
+			"style": "hoodie",
+			"colour": "#4f8f5a",
+			"emblem": "lilypad"
 		},
 		{
 			"id": "fox_common",
@@ -642,7 +667,8 @@
 			"name": "Fox Scarf",
 			"description": "Bushy and orange.",
 			"slot": "neckwear",
-			"style": "scarf"
+			"style": "scarf",
+			"colour": "#e07b39"
 		},
 		{
 			"id": "parakeet_common",
@@ -672,7 +698,9 @@
 			"name": "Parrot Cape",
 			"description": "",
 			"slot": "top",
-			"style": "cape"
+			"style": "cape",
+			"colour": "#3cb371",
+			"emblem": "feather_colour"
 		},
 		{
 			"id": "parakeet_legendary2",
@@ -763,7 +791,9 @@
 			"name": "Desert Tee",
 			"description": "Sandy coloured and breezy.",
 			"slot": "top",
-			"style": "tee"
+			"style": "tee",
+			"colour": "#d8b07a",
+			"emblem": "oasis"
 		},
 		{
 			"id": "lizard_common",
@@ -793,7 +823,8 @@
 			"name": "Frill Collar",
 			"description": "Like a mane for a lizard. Look at it!",
 			"slot": "neckwear",
-			"style": "collar"
+			"style": "collar",
+			"colour": "#d9822b"
 		},
 		{
 			"id": "lizard_legendary2",
@@ -802,7 +833,8 @@
 			"name": "Scale Ring",
 			"description": "Shimmers in the sun.",
 			"slot": "gloves",
-			"style": "ring"
+			"style": "ring",
+			"colour": "#5aa88a"
 		},
 		{
 			"id": "snake_common",
@@ -842,7 +874,8 @@
 			"name": "Snake Scarf",
 			"description": "Looks like a friendly snake is giving your neck a hug.",
 			"slot": "neckwear",
-			"style": "necklace"
+			"style": "necklace",
+			"colour": "#7fae5a"
 		},
 		{
 			"id": "monkey_common",
@@ -914,7 +947,9 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "staff",
-			"colour": "#5a8f3a"
+			"colour": "#5a8f3a",
+			"detail": "vines",
+			"accent": "#4f9a3a"
 		},
 		{
 			"id": "gorilla_legendary2",
@@ -923,7 +958,9 @@
 			"name": "Jungle Jumper",
 			"description": "Big, warm and green.",
 			"slot": "top",
-			"style": "jumper"
+			"style": "jumper",
+			"colour": "#4f7a3a",
+			"emblem": "tree"
 		},
 		{
 			"id": "tiger_common",
@@ -953,7 +990,10 @@
 			"name": "Tiger Paws",
 			"description": "Big big paws. Fuzzy and warm.",
 			"slot": "gloves",
-			"style": "paws"
+			"style": "paws",
+			"colour": "#e8892c",
+			"pattern": "stripes",
+			"detail": "plain_back"
 		},
 		{
 			"id": "tiger_legendary2",
@@ -962,7 +1002,9 @@
 			"name": "Stripy Scarf",
 			"description": "Orange and black. Wear it to tea.",
 			"slot": "neckwear",
-			"style": "scarf"
+			"style": "scarf",
+			"colour": "#e8892c",
+			"pattern": "stripes"
 		},
 		{
 			"id": "giraffe_common",
@@ -992,7 +1034,9 @@
 			"name": "Tall Cane",
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
-			"style": "cane"
+			"style": "cane",
+			"colour": "#c9a46a",
+			"detail": "giraffe"
 		},
 		{
 			"id": "giraffe_legendary2",
@@ -1001,7 +1045,9 @@
 			"name": "Spotty Tee",
 			"description": "Patches all over, helps you blend in.",
 			"slot": "top",
-			"style": "tee"
+			"style": "tee",
+			"colour": "#e2b45a",
+			"pattern": "patches"
 		},
 		{
 			"id": "elephant_common",
@@ -1041,7 +1087,9 @@
 			"name": "Elephant Jumper",
 			"description": "Roomy and cosy.",
 			"slot": "top",
-			"style": "hoodie"
+			"style": "hoodie",
+			"colour": "#8e97a6",
+			"emblem": "elephant"
 		},
 		{
 			"id": "rhino_common",
@@ -1081,7 +1129,9 @@
 			"name": "Armoured Mittens",
 			"description": "Tough as anything.",
 			"slot": "gloves",
-			"style": "mittens"
+			"style": "mittens",
+			"colour": "#7d7f86",
+			"detail": "spike"
 		},
 		{
 			"id": "leopard_common",
@@ -1111,7 +1161,9 @@
 			"name": "Leopard Cape",
 			"description": "",
 			"slot": "top",
-			"style": "cape"
+			"style": "cape",
+			"colour": "#d9a441",
+			"pattern": "spots"
 		},
 		{
 			"id": "leopard_legendary2",
@@ -1121,6 +1173,7 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "shoes",
 			"style": "trainers",
+			"pattern": "spots",
 			"colour": "#e0b04a"
 		},
 		{
@@ -1151,7 +1204,9 @@
 			"name": "Lion King Crown",
 			"description": "Everything the light touches belongs to you now.",
 			"slot": "hat",
-			"style": "crown"
+			"style": "crown",
+			"gems": false,
+			"detail": "paw"
 		},
 		{
 			"id": "lion_legendary2",
@@ -1161,7 +1216,8 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "gloves",
 			"style": "paws",
-			"colour": "#d9a441"
+			"colour": "#d9a441",
+			"detail": "plain_back"
 		},
 		{
 			"id": "eagle_common",
@@ -1191,7 +1247,8 @@
 			"name": "Falconry Glove",
 			"description": "Tough and thick. Hold your hand out and it'll come and land.",
 			"slot": "gloves",
-			"style": "falconry_glove"
+			"style": "falconry_glove",
+			"colour": "#8a5a3a"
 		},
 		{
 			"id": "eagle_legendary2",
@@ -1200,7 +1257,9 @@
 			"name": "Mountain Cape",
 			"description": "Sweeps in the wind.",
 			"slot": "top",
-			"style": "cape"
+			"style": "cape",
+			"colour": "#6b5440",
+			"emblem": "mountain"
 		},
 		{
 			"id": "red_panda_common",
@@ -1231,7 +1290,9 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "staff",
-			"colour": "#f6c6d4"
+			"colour": "#f6c6d4",
+			"detail": "vines",
+			"accent": "#ee8fb0"
 		},
 		{
 			"id": "red_panda_legendary2",
@@ -1240,7 +1301,9 @@
 			"name": "Bamboo Stick",
 			"description": "Light and strong.",
 			"slot": "walking_stick",
-			"style": "stick"
+			"style": "stick",
+			"colour": "#a8c464",
+			"detail": "bamboo"
 		},
 		{
 			"id": "mammoth_common",
@@ -1280,7 +1343,8 @@
 			"name": "Woolly Scarf",
 			"description": "Knitted from shed mammoth fur. Very cosy.",
 			"slot": "neckwear",
-			"style": "scarf"
+			"style": "scarf",
+			"colour": "#8a5a3a"
 		},
 		{
 			"id": "fish_common",
@@ -1352,7 +1416,8 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "gloves",
 			"style": "mittens",
-			"colour": "#d9573a"
+			"colour": "#d9573a",
+			"detail": "claw"
 		},
 		{
 			"id": "crab_legendary2",
@@ -1485,7 +1550,9 @@
 			"description": "Itchy but worth it.",
 			"slot": "top",
 			"style": "jumper",
-			"colour": "#b8322e"
+			"colour": "#b8322e",
+			"emblem": "snowflake",
+			"trim": "#2f7a46"
 		},
 		{
 			"id": "easter_egg_common",

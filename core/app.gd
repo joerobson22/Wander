@@ -3,8 +3,8 @@ extends Node
 ## asks the app shell to move between screens.
 
 ## Screens: the five panes ("focus", "gifts", "projects", "profile",
-## "stats"), the full-screen flows ("choose_focus", "walk", "finish",
-## "ended"), and "home", which closes any flow and returns to the focus pane.
+## "stats"), the full-screen flows ("choose_focus", "walk", "finish"),
+## and "home", which closes any flow and returns to the focus pane.
 ## The debug bar's time of day is being dragged: the sky follows.
 @warning_ignore("unused_signal")
 signal sky_moved
@@ -12,15 +12,18 @@ signal navigate(screen: String, params: Dictionary)
 ## A full-screen flow to build out of sight, ready for App.go() (see prepare()).
 signal prepare_screen(screen: String, params: Dictionary)
 signal state_changed
+## The app came back from the background mid-walk after a while away: the
+## walk is held until you say whether you were focused (see check_away()).
+signal came_back
 
 var state: GameState
 var rng := RandomNumberGenerator.new()
 ## Set when this launch found a save from another version: it was put aside
 ## (as .old) and a fresh one started, and the app says so.
 var save_reset := false
-## Set when this launch found a walk still running from before the app was
-## closed: {session, biome}. The shell shows the focus ended screen for it.
-var ended_walk := {}
+## Away from a walk (closed, or in the background) this long or more, the
+## app asks whether you were focused meanwhile; shorter, it just counts.
+const AWAY_ASK := 60
 ## Friends for the leaderboard and their profiles (the shape is in
 ## Friends). Filled by the friends service once accounts exist (roadmap
 ## phase 4); never saved locally. Debug builds give the first save slot
@@ -64,7 +67,8 @@ func _ready() -> void:
 		state = _first_launch_state()
 		save()
 	elif state.active:
-		ended_walk = _end_left_walk()
+		# Closed mid-walk: the walk carries on, and the shell opens it.
+		check_away(state.active.left_at(SaveSystem.saved_unix(), now()))
 		save()
 	var heartbeat := Timer.new()
 	heartbeat.wait_time = HEARTBEAT
@@ -81,6 +85,9 @@ func _notification(what: int) -> void:
 				if state.active:
 					state.active.last_seen_unix = now()
 				save()
+		NOTIFICATION_APPLICATION_RESUMED:
+			if state and state.active and check_away(state.active.last_seen_unix):
+				came_back.emit()
 
 
 ## While walking, notes every so often that the app is still open, so a walk
@@ -266,7 +273,6 @@ func _enter_slot(id: String, next: GameState, index: Dictionary) -> void:
 	state = next
 	friends = _friends_for(id)
 	save_reset = false
-	ended_walk = {}
 	# Only the slot in use can have a walk running, but just in case.
 	if state.active:
 		_end_left_walk()
@@ -706,15 +712,40 @@ func cancel_walk() -> void:
 	_changed()
 
 
-## A walk still running at launch means the app was closed (or killed) in
-## the middle of it. It stops where the app was last seen open and the time
-## still counts, but the pet never got to finish looking: no gift.
-func _end_left_walk() -> Dictionary:
+## The app was away from a running walk since `left` (unix seconds; it was
+## closed, or in the background). Long enough away (AWAY_ASK) and the walk
+## is held there until you say whether you were focused (answer_away());
+## the walk screen asks. True while there's a question to answer.
+func check_away(left: int) -> bool:
 	var clock := state.active
-	var s := _log_walk(clock, clock.left_at(SaveSystem.saved_unix(), now()), "")
+	if clock == null:
+		return false
+	if not clock.is_away() and not clock.is_paused() and left > 0 and now() - left >= AWAY_ASK:
+		clock.step_away(left)
+		_changed()
+	return clock.is_away()
+
+
+## How long the app was away from the walk it's asking about.
+func away_seconds() -> int:
+	return maxi(0, now() - state.active.away_unix) if state.active and state.active.is_away() else 0
+
+
+## Were you focused while the app was away? Yes counts that time; no
+## doesn't, but the walk carries on either way.
+func answer_away(focused: bool) -> void:
+	if state.active:
+		state.active.come_back(focused, now())
+		_changed()
+
+
+## A walk left running in a slot you're switching into stops where the app
+## was last seen open; its time still counts, with no gift.
+func _end_left_walk() -> void:
+	var clock := state.active
+	_log_walk(clock, clock.left_at(SaveSystem.saved_unix(), now()), "")
 	state.active = null
 	_changes += 1
-	return {"session": s, "biome": clock.biome_id}
 
 
 ## Logs a walk that ended at `end_unix`: its time goes on the days it

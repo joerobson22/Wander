@@ -12,6 +12,8 @@ extends PanelContainer
 ## knows its size, so it's above the gift from its first frame.
 
 const WIDTH := 260.0
+## Wider for something you can wear, so its name has room beside both tags.
+const WIDTH_WORN := 360.0
 ## The gap between the card and the gift.
 const GAP := 6.0
 const BAR_HEIGHT := 8
@@ -81,7 +83,7 @@ func _init(id: String) -> void:
 	var sb := UI.with_shadow(UI.box(UI.SURFACE, Color.TRANSPARENT, 18))
 	sb.set_content_margin_all(14)
 	add_theme_stylebox_override("panel", sb)
-	custom_minimum_size.x = WIDTH
+	custom_minimum_size.x = WIDTH_WORN if g.has("slot") else WIDTH
 	var col := UI.vbox(6)
 	add_child(col)
 
@@ -91,12 +93,12 @@ func _init(id: String) -> void:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	if g.has("slot"):
-		# Right after the name; the name gives way if it's long.
+		# Right after the name, or under it when the name is too long.
 		var worn := UI.cosmetic_tag(11)
 		worn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		head.add_child(worn)
 		head.add_child(UI.spacer())
-		UI.fit_name(title, head)
+		UI.fit_name(title, head, [worn])
 	var tag := UI.tag(Content.rarity_name(rarity).to_upper(), Content.rarity_text_colour(rarity), UI.ON_COLOUR, 11)
 	tag.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	head.add_child(tag)

@@ -24,7 +24,6 @@ macOS, Windows, Linux and Steam from one project. See [ROADMAP.md](ROADMAP.md).
 
 <p>
   <img src="docs/screenshots/weather.png" width="600" alt="Weather at the lakeside: sun and cloud, cloud, rain and a storm, then snow in the forest and a blizzard in the tundra">
-  <img src="docs/screenshots/focus-ended-phone.png" width="160" alt="Focus ended: the walker and pet hang their heads after the app was closed mid-walk">
 </p>
 
 ## How it's laid out
@@ -94,7 +93,7 @@ smaller than 800 × 560 points, so layouts never squash.
   again and its arrow flips over to reverse it). Tap a gift for a closer look
   and its trade-in (10 commons for a rare, 5 rares for an epic, 3 epics for a
   legendary); trading away the last of a shelf gift takes it off the shelf.
-- **Completed** (right): four headline numbers (projects finished, their
+- **Projects** (down): four headline numbers (projects finished, their
   total focus time, the biggest by focus time and the longest from start to
   finish), then a scrolling list with a panel per finished project. "Sort by"
   orders it by most gifts, biggest, longest, grade, pet type or A–Z; pick the
@@ -123,7 +122,7 @@ smaller than 800 × 560 points, so layouts never squash.
   that stay apart) and Reduce motion. The Privacy Policy, Terms of Service
   and open source Licences are linked at the bottom (see
   [legal/README.md](legal/README.md)).
-- **Stats** (down): your focus for a week, month or year, split by
+- **Stats** (right): your focus for a week, month or year, split by
   project, pet or place, with arrows either side of the period's name to step
   back and forward through earlier ones. Your streak is a flame with the days
   beside it (any missed day ends it); tap it for your best streak, under a
@@ -175,9 +174,11 @@ moon has no weather at all. Your rough location comes from your internet
 connection (get.geojs.io) and the weather from Open-Meteo; nothing else is
 sent anywhere.
 
-**Closing the app ends your walk.** Next time you open it, a focus ended screen
-shows you and your pet with your heads hung. The time up to when you closed it
-still counts, but there's no gift.
+**Closing the app doesn't end your walk.** Close it (or leave it in the
+background on a phone) for a minute or more mid-walk, and when you're back
+the walk asks "Were you focused for the last 10m?". Yes counts that time;
+no leaves it out. Either way the walk carries on. A paused walk just stays
+paused.
 
 **Easter egg.** On the focus complete screen, press and hold the gift to take
 it, then flick it. Your pet will fetch it, wading in if it lands in the water.
@@ -289,9 +290,9 @@ data/            all content: animals, gifts, drop table, places (biomes),
 scenes/
   main.gd          the app shell: panes, swiping, minimap, edge arrows,
                    flows, popups
-  panes/           focus, gifts, completed, profile, stats (and their base, Pane)
+  panes/           focus, gifts, projects, profile, stats (and their base, Pane)
   choose_focus/    choosing and adopting pets
-  walk/            the walk, its chunked scenery, focus complete, focus ended
+  walk/            the walk, its chunked scenery, focus complete
   customise/       the character popup
 ui/
   ui.gd            palette, type, theme and builders every screen uses
