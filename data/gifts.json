@@ -1,5 +1,5 @@
 {
-	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold) and an optional 'pattern' over it ('stripes', 'spots' or 'patches'). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
+	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold) and an optional 'pattern' over it ('stripes', 'spots' or 'patches'). Optional extras for the placeholder drawing: 'emblem' (a small picture on a top: leaf, tree, snowflake, lilypad, elephant, oasis, feather_gold, feather_colour or mountain), 'trim' (a second colour on a top's edges), 'detail' (a hat, glove or walking stick's own look: paw, plain_back, claw, spike, gem, vines, bear, bamboo or giraffe), 'accent' (the colour of that detail) and 'gems' false (no jewels on a crown). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
 	"rarities": [
 		{
 			"id": "common",
@@ -251,7 +251,8 @@
 			"description": "Makes you feel very autumnal.",
 			"slot": "top",
 			"style": "jumper",
-			"colour": "#c46a2c"
+			"colour": "#c46a2c",
+			"emblem": "leaf"
 		},
 		{
 			"id": "cat_common",
@@ -405,7 +406,8 @@
 			"description": "You can almost fly away wearing this.",
 			"slot": "top",
 			"style": "cape",
-			"colour": "#4a8fd9"
+			"colour": "#4a8fd9",
+			"emblem": "feather_gold"
 		},
 		{
 			"id": "bird_legendary2",
@@ -528,7 +530,9 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "staff",
-			"colour": "#8a6248"
+			"colour": "#8a6248",
+			"detail": "gem",
+			"accent": "#8e5ad0"
 		},
 		{
 			"id": "tortoise_legendary2",
@@ -579,7 +583,9 @@
 			"description": "Can be equipped to walk with. Looks super cool.",
 			"slot": "walking_stick",
 			"style": "stick",
-			"colour": "#6b4c38"
+			"colour": "#6b4c38",
+			"detail": "bear",
+			"accent": "#d9a441"
 		},
 		{
 			"id": "frog_common",
@@ -620,7 +626,8 @@
 			"description": "Green, damp and cosy.",
 			"slot": "top",
 			"style": "hoodie",
-			"colour": "#4f8f5a"
+			"colour": "#4f8f5a",
+			"emblem": "lilypad"
 		},
 		{
 			"id": "fox_common",
@@ -692,7 +699,8 @@
 			"description": "",
 			"slot": "top",
 			"style": "cape",
-			"colour": "#3cb371"
+			"colour": "#3cb371",
+			"emblem": "feather_colour"
 		},
 		{
 			"id": "parakeet_legendary2",
@@ -784,7 +792,8 @@
 			"description": "Sandy coloured and breezy.",
 			"slot": "top",
 			"style": "tee",
-			"colour": "#d8b07a"
+			"colour": "#d8b07a",
+			"emblem": "oasis"
 		},
 		{
 			"id": "lizard_common",
@@ -938,7 +947,9 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "staff",
-			"colour": "#5a8f3a"
+			"colour": "#5a8f3a",
+			"detail": "vines",
+			"accent": "#4f9a3a"
 		},
 		{
 			"id": "gorilla_legendary2",
@@ -948,7 +959,8 @@
 			"description": "Big, warm and green.",
 			"slot": "top",
 			"style": "jumper",
-			"colour": "#4f7a3a"
+			"colour": "#4f7a3a",
+			"emblem": "tree"
 		},
 		{
 			"id": "tiger_common",
@@ -980,7 +992,8 @@
 			"slot": "gloves",
 			"style": "paws",
 			"colour": "#e8892c",
-			"pattern": "stripes"
+			"pattern": "stripes",
+			"detail": "plain_back"
 		},
 		{
 			"id": "tiger_legendary2",
@@ -1022,7 +1035,8 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "cane",
-			"colour": "#c9a46a"
+			"colour": "#c9a46a",
+			"detail": "giraffe"
 		},
 		{
 			"id": "giraffe_legendary2",
@@ -1074,7 +1088,8 @@
 			"description": "Roomy and cosy.",
 			"slot": "top",
 			"style": "hoodie",
-			"colour": "#8e97a6"
+			"colour": "#8e97a6",
+			"emblem": "elephant"
 		},
 		{
 			"id": "rhino_common",
@@ -1115,7 +1130,8 @@
 			"description": "Tough as anything.",
 			"slot": "gloves",
 			"style": "mittens",
-			"colour": "#7d7f86"
+			"colour": "#7d7f86",
+			"detail": "spike"
 		},
 		{
 			"id": "leopard_common",
@@ -1188,7 +1204,9 @@
 			"name": "Lion King Crown",
 			"description": "Everything the light touches belongs to you now.",
 			"slot": "hat",
-			"style": "crown"
+			"style": "crown",
+			"gems": false,
+			"detail": "paw"
 		},
 		{
 			"id": "lion_legendary2",
@@ -1198,7 +1216,8 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "gloves",
 			"style": "paws",
-			"colour": "#d9a441"
+			"colour": "#d9a441",
+			"detail": "plain_back"
 		},
 		{
 			"id": "eagle_common",
@@ -1239,7 +1258,8 @@
 			"description": "Sweeps in the wind.",
 			"slot": "top",
 			"style": "cape",
-			"colour": "#6b5440"
+			"colour": "#6b5440",
+			"emblem": "mountain"
 		},
 		{
 			"id": "red_panda_common",
@@ -1270,7 +1290,9 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "walking_stick",
 			"style": "staff",
-			"colour": "#f6c6d4"
+			"colour": "#f6c6d4",
+			"detail": "vines",
+			"accent": "#ee8fb0"
 		},
 		{
 			"id": "red_panda_legendary2",
@@ -1280,7 +1302,8 @@
 			"description": "Light and strong.",
 			"slot": "walking_stick",
 			"style": "stick",
-			"colour": "#a8c464"
+			"colour": "#a8c464",
+			"detail": "bamboo"
 		},
 		{
 			"id": "mammoth_common",
@@ -1393,7 +1416,8 @@
 			"description": "A placeholder for Joe to rename.",
 			"slot": "gloves",
 			"style": "mittens",
-			"colour": "#d9573a"
+			"colour": "#d9573a",
+			"detail": "claw"
 		},
 		{
 			"id": "crab_legendary2",
@@ -1526,7 +1550,9 @@
 			"description": "Itchy but worth it.",
 			"slot": "top",
 			"style": "jumper",
-			"colour": "#b8322e"
+			"colour": "#b8322e",
+			"emblem": "snowflake",
+			"trim": "#2f7a46"
 		},
 		{
 			"id": "easter_egg_common",
