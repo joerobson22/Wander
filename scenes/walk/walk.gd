@@ -370,7 +370,7 @@ func _unit() -> float:
 func _layout() -> void:
 	if _scenery == null:
 		return
-	var spots := ChooseFocus.walk_spots(size, _scenery.path_y())
+	var spots := ChooseFocus.walk_spots(size, _scenery.path_y(), _pet.animal_id)
 	var s: float = spots["unit"]
 	_walker.scale = Vector2(s, s)
 	# (While walking in, only the height follows a resize.)

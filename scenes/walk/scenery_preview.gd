@@ -44,7 +44,7 @@ func _ready() -> void:
 
 
 func _layout() -> void:
-	var spots := ChooseFocus.walk_spots(size, _scenery.path_y())
+	var spots := ChooseFocus.walk_spots(size, _scenery.path_y(), _animal.animal_id)
 	var s: float = spots["unit"]
 	_walker.scale = Vector2(s, s)
 	_walker.position = spots["walker"]

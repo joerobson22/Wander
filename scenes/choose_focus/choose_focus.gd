@@ -636,7 +636,7 @@ func _head_out(i: int, project: ProjectData) -> void:
 	move_child(view, _pick.get_index())
 	Motion.fade(stage, 0.0, Motion.style.leave_fade)
 	_scenery.front_gap = Vector2.ZERO
-	var spot := walk_spots(size, _scenery.path_y())
+	var spot := walk_spots(size, _scenery.path_y(), view.animal_id)
 	var to: Vector2 = spot["animal"]
 	var unit: float = spot["unit"]
 	var left := to.x < view.position.x - 1.0
@@ -659,11 +659,13 @@ func _head_out(i: int, project: ProjectData) -> void:
 
 ## Where the walk puts you and your pet on a `view` sized screen whose path
 ## is at `feet`: {walker, animal, unit}. Shared with walk.gd, so heading out
-## ends exactly where the walk begins.
-static func walk_spots(view: Vector2, feet: float) -> Dictionary:
+## ends exactly where the walk begins. A very big animal (the whale) walks
+## further ahead on a longer lead, so its tail stays clear of you.
+static func walk_spots(view: Vector2, feet: float, animal_id: String = "") -> Dictionary:
 	var unit := minf(view.x, view.y) / 720.0
 	var x := view.x * (0.3 if view.x < view.y else 0.38)
-	return {"walker": Vector2(x, feet), "animal": Vector2(x + 170.0 * unit, feet + 4.0 * unit), "unit": unit}
+	var big := maxf(0.0, float(Content.animal(animal_id).get("size", 1.0)) - 1.6) if animal_id != "" else 0.0
+	return {"walker": Vector2(x, feet), "animal": Vector2(x + (170.0 + 150.0 * big) * unit, feet + 4.0 * unit), "unit": unit}
 
 
 func _on_left() -> void:
