@@ -1,8 +1,9 @@
 class_name GiftArt
 extends Control
 ## A gift's picture: the image at art/gifts/<gift id>.png (or .svg, .webp)
-## when there is one, else a gift box, on a disc of its rarity's colour with
-## an optional glow. Every screen that shows a gift uses this.
+## when there is one, else a gift box in its rarity's colour, with an optional
+## glow. It stands on its own, with nothing behind it. Every screen that shows
+## a gift uses this.
 
 const DIR := "res://art/gifts/"
 const EXTENSIONS := ["png", "svg", "webp"]
@@ -57,12 +58,10 @@ func _draw() -> void:
 		for i in 10:
 			var t := 1.0 + i * 0.09
 			draw_circle(c, r * t, Color(col, 0.05 * glow * (1.0 - i / 10.0)), true, -1.0, true)
-	draw_circle(c, r * 0.92, UI.SURFACE.lerp(col, 0.18), true, -1.0, true)
-	draw_circle(c, r * 0.74, UI.SURFACE.lerp(col, 0.32), true, -1.0, true)
 	var art := texture_for(gift_id)
 	if art:
-		var box := Vector2.ONE * r * 1.5
+		var box := Vector2.ONE * r * 2.0
 		draw_texture_rect(art, Rect2(c - box * 0.5, box), false, Color(1, 1, 1, 0.45) if faded else Color.WHITE)
 		return
-	var px := maxi(8, int(r * 0.95))
+	var px := maxi(8, int(r * 1.3))
 	draw_texture(Icons.texture("gift", px, col.darkened(0.12), 2.0), c - Vector2(px, px) * 0.5)

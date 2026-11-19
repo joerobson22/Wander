@@ -294,7 +294,7 @@ func _zoom_target() -> Dictionary:
 	var k := 1.6
 	var focus := size * Vector2(0.5, 0.6)
 	if _animal:
-		k = clampf(2.5 / float(Content.animal(_animal.animal_id).get("size", 1.0)), 1.6, 3.0)
+		k = clampf(2.5 / float(Content.animal(_animal.animal_id).get("size", 1.0)), 1.2, 3.0)
 		focus = _animal.position + Vector2(0, -45.0 * _unit)
 	var p := size * Vector2(0.5, 0.42) - focus * k
 	p.x = clampf(p.x, size.x - k * size.x, 0.0)
@@ -592,7 +592,8 @@ func _run(from: Vector2, to: Vector2, from_scale: float, to_scale: float) -> voi
 	await Motion.method(self, "run", step, 0.0, 1.0, seconds).finished
 
 
-## A soft glow round the gift, in its rarity's colour.
+## A soft glow round the gift, in its rarity's colour, with no pale disc
+## behind the gift itself.
 class _Glow extends Node2D:
 	var colour := Color.WHITE
 	var radius := 70.0
@@ -611,7 +612,6 @@ class _Glow extends Node2D:
 		for i in 14:
 			var t := 1.0 - i / 14.0
 			draw_circle(Vector2.ZERO, radius * breathe * (0.3 + 0.7 * t), Color(colour, 0.06 * strength), true, -1.0, true)
-		draw_circle(Vector2.ZERO, radius * 0.22 * breathe, Color(colour.lightened(0.45), 0.4 * strength), true, -1.0, true)
 
 
 ## Rings spreading out where the gift splashed down.

@@ -13,6 +13,9 @@ func test_the_cast() -> void:
 	eq(ids.size(), 35)
 	for a in animals:
 		eq(a["parts"].size(), a["default_colours"].size(), "%s colours per part" % a["id"])
+	var shapes: Array = animals.map(func(a): return a["shape"])
+	for a in animals:
+		eq(shapes.count(a["shape"]), 1, "%s has a drawing of its own" % a["id"])
 
 
 ## Unlock rules and homes point at things that exist, or an animal could

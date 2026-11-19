@@ -1,5 +1,5 @@
 {
-	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists; 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in). 'aquatic': true lives underwater, so it wears no diving helmet in the ocean (only an astronaut's on the Moon); 'only_in': a place id it can only walk in (fish and whales stay in the ocean): the place picker keeps to it and it swims rather than walks.",
+	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists (every animal has its own); 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in). 'aquatic': true lives underwater, so it wears no diving helmet in the ocean (only an astronaut's on the Moon); 'only_in': a place id it can only walk in (fish and whales stay in the ocean): the place picker keeps to it and it swims rather than walks.",
 	"animals": [
 		{
 			"id": "dog1",
@@ -45,7 +45,7 @@
 			"table": "dog",
 			"home": "farm",
 			"unlock": {},
-			"shape": "dog",
+			"shape": "dog2",
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#c9a46a", "#e2c48f", "#f3e3c3"],
 			"walk_speed": 1.0,
@@ -150,7 +150,7 @@
 			"unlock": {
 				"level": 9
 			},
-			"shape": "dog",
+			"shape": "fox",
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#3a2a22", "#d46a2c", "#f5ead8"],
 			"walk_speed": 1.0,
@@ -213,7 +213,7 @@
 			"unlock": {
 				"level": 15
 			},
-			"shape": "bear",
+			"shape": "mammoth",
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#4a3528", "#6b4c38", "#a07e62"],
 			"walk_speed": 0.5,
@@ -301,7 +301,7 @@
 				"hours": 3,
 				"place": "city"
 			},
-			"shape": "bird",
+			"shape": "parakeet",
 			"parts": ["Wings", "Body", "Pattern"],
 			"default_colours": ["#2f8a4a", "#6fcf5a", "#e04a3a"],
 			"walk_speed": 1.0,
@@ -345,7 +345,7 @@
 				"hours": 3,
 				"place": "desert"
 			},
-			"shape": "rabbit",
+			"shape": "hyrax",
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#6e5a48", "#9c8468", "#d9c6a8"],
 			"walk_speed": 0.7,
@@ -389,7 +389,7 @@
 				"hours": 3,
 				"place": "jungle"
 			},
-			"shape": "bear",
+			"shape": "monkey",
 			"parts": ["Legs", "Body", "Face"],
 			"default_colours": ["#5a3b28", "#7a5236", "#e2c4a0"],
 			"walk_speed": 1.0,
@@ -411,7 +411,7 @@
 				"hours": 10,
 				"place": "jungle"
 			},
-			"shape": "bear",
+			"shape": "gorilla",
 			"parts": ["Legs", "Body", "Face"],
 			"default_colours": ["#2a2628", "#3a3434", "#6e625a"],
 			"walk_speed": 0.75,
@@ -433,7 +433,7 @@
 				"hours": 25,
 				"place": "jungle"
 			},
-			"shape": "cat",
+			"shape": "tiger",
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#c9662a", "#e07a30", "#e2c046"],
 			"walk_speed": 0.9,
@@ -521,7 +521,7 @@
 				"hours": 30,
 				"place": "safari"
 			},
-			"shape": "cat",
+			"shape": "leopard",
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#c99a4a", "#e2b85a", "#9ac04a"],
 			"walk_speed": 0.85,
@@ -542,7 +542,7 @@
 			"unlock": {
 				"table": "cat"
 			},
-			"shape": "cat",
+			"shape": "lion",
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#b8863a", "#d9a85a", "#c98a2a"],
 			"walk_speed": 0.8,
@@ -563,7 +563,7 @@
 			"unlock": {
 				"table": "bird"
 			},
-			"shape": "bird",
+			"shape": "eagle",
 			"parts": ["Wings", "Body", "Pattern"],
 			"default_colours": ["#4a3528", "#6b4c38", "#f5f0e6"],
 			"walk_speed": 1.1,
@@ -585,7 +585,7 @@
 				"hours": 10,
 				"place": "blossom"
 			},
-			"shape": "cat",
+			"shape": "red_panda",
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#3a2420", "#b8502a", "#2b2523"],
 			"walk_speed": 0.7,
@@ -657,7 +657,7 @@
 			"parts": ["Fins", "Body", "Belly"],
 			"default_colours": ["#34557d", "#4a76a8", "#d6e3ec"],
 			"walk_speed": 0.45,
-			"size": 1.0,
+			"size": 2.4,
 			"sound": "whale_song",
 			"dive": {
 				"hops": 0,
