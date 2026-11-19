@@ -173,6 +173,8 @@ func _build_words(session: FocusSession, roll: Dictionary) -> void:
 	level_row.modulate.a = 0.0
 	var gap := Control.new()
 	gap.custom_minimum_size.y = 10
+	# It mustn't catch a press meant for the gift below it.
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(gap)
 	col.add_child(level_row)
 	_xp_label = _word(UI.label(Text.t("finish.xp", {"xp": earned}), 18, UI.ON_DARK, true, 600))
