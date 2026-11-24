@@ -101,6 +101,7 @@ var held_gift := "":
 var sad := 0.0:
 	set(v):
 		sad = v
+		_animate()
 		queue_redraw()
 
 var _phase: float = 0.0
@@ -160,6 +161,8 @@ func set_rig(scene: PackedScene) -> void:
 	add_child(_rig)
 	_overlay = _Overlay.new()
 	_overlay.view = self
+	# Pixel art (and the pixel gifts it holds) stays crisp.
+	_overlay.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(_overlay)
 	_player = _rig.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	_tint_rig()
@@ -198,6 +201,8 @@ func _animate() -> void:
 	if _player == null:
 		return
 	var anim := "walk" if walking else "idle"
+	if not walking and sad > 0.5 and _player.has_animation("sad"):
+		anim = "sad"
 	if not _player.has_animation(anim):
 		if walking or not _player.has_animation("walk"):
 			return
@@ -241,7 +246,7 @@ func _process(delta: float) -> void:
 func _animate_rig(delta: float) -> void:
 	if _player and _player.has_animation("walk"):
 		_player.speed_scale = _anim_speed()
-	if sad > 0.0:
+	if sad > 0.0 and (_player == null or not _player.has_animation("sad")):
 		_sigh += delta
 		_rig.position = Vector2(2, 3) * sad + Vector2(0, (sin(_sigh * 1.3) * 0.5 + 0.5) * sad)
 

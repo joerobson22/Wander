@@ -28,6 +28,8 @@ const CHUNK := SceneryPainter.CHUNK
 const ART_HEIGHT := 720.0
 ## Layers that move with the time and so redraw every frame.
 const ANIMATED := ["water", "reeds", "fronds", "undergrowth", "vines", "stalks", "seaweed"]
+## How many times a second the animated layers redraw.
+const ANIMATION_FPS := 8.0
 ## How often the light catches up with the clock, in seconds.
 const LIGHT_EVERY := 5.0
 ## Every scenery's front growth is in this group, wherever it's been moved.
@@ -57,6 +59,7 @@ var weather := "":
 		_update_light()
 
 var _time: float = 0.0
+var _anim_step := -1
 ## Whether the lights (LIGHTS) were last drawn on.
 var _lights_on := false
 ## DayCycle.at() for the hour shown, with the weather's cloud cover, plus
@@ -371,6 +374,12 @@ func ambience() -> String:
 ## moves the rest. Positions are worked out in full precision here, so hours
 ## of walking never make the scenery jitter.
 func _place_chunks() -> void:
+	# Everything moves a whole pixel at a time, and the swaying plants and
+	# water step at 8 frames a second, as pixel art does.
+	var p := PixelDraw.size_for(size.y)
+	var step := floori(_time * ANIMATION_FPS)
+	var redraw := step != _anim_step
+	_anim_step = step
 	for layer in _layers:
 		var offset := scroll * float(layer["data"]["parallax"])
 		if layer["tile"] != null:
@@ -392,8 +401,8 @@ func _place_chunks() -> void:
 				chunk.index = i
 				layer["node"].add_child(chunk)
 				chunks[i] = chunk
-			chunk.position.x = i * CHUNK - offset
-			if layer["animated"]:
+			chunk.position.x = i * CHUNK - floorf(offset / p) * p
+			if layer["animated"] and redraw:
 				chunk.queue_redraw()
 
 
@@ -467,8 +476,10 @@ static func _hash(i: int, sd: float) -> float:
 ## walked its snow_pile_minutes. It moves with the ground as you go.
 class _Pile extends Node2D:
 	var scenery: Scenery
+	var _px: PixelDraw
 
 	func _draw() -> void:
+		_px = PixelDraw.new(self, PixelDraw.size_for(scenery.size.y))
 		var look := scenery._holiday
 		if look == null:
 			return
@@ -487,8 +498,8 @@ class _Pile extends Node2D:
 		pts.append(Vector2(size.x + 16.0, size.y + 2.0))
 		pts.append(Vector2(-16.0, size.y + 2.0))
 		var light := scenery.tint().lightened(0.25)
-		draw_colored_polygon(pts, Color(0.93, 0.95, 1.0) * Color(light, 1.0))
-		draw_polyline(top, Color(1, 1, 1) * Color(light, 1.0), 3.0, true)
+		_px.poly(pts, Color(0.93, 0.95, 1.0) * Color(light, 1.0))
+		_px.polyline(top, Color(1, 1, 1) * Color(light, 1.0), 3.0)
 
 
 ## The sky behind everything, with the sun or moon on its way across:
@@ -496,16 +507,16 @@ class _Pile extends Node2D:
 ## place with its own sky (the Moon) keeps it whatever the time.
 class _Sky extends Node2D:
 	var scenery: Scenery
+	var _px: PixelDraw
 
 	func _draw() -> void:
+		_px = PixelDraw.new(self, PixelDraw.size_for(scenery.size.y))
 		var size := scenery.size
 		var sky: Dictionary = scenery.biome.get("sky", {})
 		var light := scenery._light
 		var top: Color = Color.from_string(sky["top"], Color.BLACK) if sky.has("top") else light.get("sky_top", Color("#8ec3e6"))
 		var bottom: Color = Color.from_string(sky["bottom"], Color.BLACK) if sky.has("bottom") else light.get("sky_bottom", Color("#d7ecf6"))
-		draw_polygon(
-			PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), Vector2(size.x, size.y), Vector2(0, size.y)]),
-			PackedColorArray([top, top, bottom, bottom]))
+		_px.gradient(Rect2(Vector2.ZERO, size), top, bottom, 12)
 		var glow := float(light.get("glow", 1.0))
 		if not sky.has("top") and glow > 0.01:
 			var r := clampf(size.y * 0.045, 16.0, 40.0)
@@ -531,28 +542,27 @@ class _Sky extends Node2D:
 	func _sun(c: Vector2, r: float, progress: float, glow: float) -> void:
 		var high := sin(progress * PI)
 		var colour := Color("#ff9b54").lerp(Color("#fff3b0"), clampf(high * 1.6, 0.0, 1.0))
-		draw_circle(c, r * 3.2, Color(colour, 0.08 * glow), true, -1.0, true)
-		draw_circle(c, r * 1.9, Color(colour, 0.16 * glow), true, -1.0, true)
-		draw_circle(c, r, Color(colour, glow), true, -1.0, true)
+		_px.circle(c, r * 3.2, Color(colour, 0.08 * glow))
+		_px.circle(c, r * 1.9, Color(colour, 0.16 * glow))
+		_px.circle(c, r, Color(colour, glow))
 
 	func _moon(c: Vector2, r: float, glow: float) -> void:
 		var colour := Color("#f2efe0")
-		draw_circle(c, r * 2.6, Color(colour, 0.06 * glow), true, -1.0, true)
-		draw_circle(c, r * 1.6, Color(colour, 0.1 * glow), true, -1.0, true)
-		draw_circle(c, r, Color(colour, glow), true, -1.0, true)
+		_px.circle(c, r * 2.6, Color(colour, 0.06 * glow))
+		_px.circle(c, r * 1.6, Color(colour, 0.1 * glow))
+		_px.circle(c, r, Color(colour, glow))
 		var shade := Color("#cfcab6", glow)
-		draw_circle(c + Vector2(-r * 0.3, -r * 0.2), r * 0.22, shade, true, -1.0, true)
-		draw_circle(c + Vector2(r * 0.35, r * 0.15), r * 0.16, shade, true, -1.0, true)
-		draw_circle(c + Vector2(-r * 0.05, r * 0.45), r * 0.12, shade, true, -1.0, true)
+		_px.circle(c + Vector2(-r * 0.3, -r * 0.2), r * 0.22, shade)
+		_px.circle(c + Vector2(r * 0.35, r * 0.15), r * 0.16, shade)
+		_px.circle(c + Vector2(-r * 0.05, r * 0.45), r * 0.12, shade)
 
 	## A big blue planet hanging still in the sky (the Earth, seen from the Moon).
 	func _planet(c: Vector2, r: float, colour: Color) -> void:
-		draw_circle(c, r * 1.25, Color(colour, 0.12), true, -1.0, true)
-		draw_circle(c, r, colour, true, -1.0, true)
-		draw_circle(c + Vector2(-r * 0.3, -r * 0.2), r * 0.35, Color("#5fa65a"), true, -1.0, true)
-		draw_circle(c + Vector2(r * 0.35, r * 0.3), r * 0.28, Color("#5fa65a"), true, -1.0, true)
-		draw_circle(c + Vector2(r * 0.1, -r * 0.55), r * 0.25, Color(1, 1, 1, 0.75), true, -1.0, true)
-		draw_arc(c, r * 0.8, PI * 0.1, PI * 0.9, 16, Color(0, 0, 0, 0.18), r * 0.45, true)
+		_px.circle(c, r * 1.25, Color(colour, 0.12))
+		_px.circle(c, r, colour)
+		_px.circle(c + Vector2(-r * 0.3, -r * 0.2), r * 0.35, Color("#5fa65a"))
+		_px.circle(c + Vector2(r * 0.35, r * 0.3), r * 0.28, Color("#5fa65a"))
+		_px.circle(c + Vector2(r * 0.1, -r * 0.55), r * 0.25, Color(1, 1, 1, 0.75))
 
 
 ## Clouds drifting across the sky: in front of the sun and moon, behind the
@@ -560,12 +570,14 @@ class _Sky extends Node2D:
 ## blanket as it clouds over; dark and quick in a storm.
 class _Clouds extends Node2D:
 	var scenery: Scenery
+	var _px: PixelDraw
 
 	func _process(_delta: float) -> void:
 		if int(scenery._look.get("clouds", 0)) > 0:
 			queue_redraw()
 
 	func _draw() -> void:
+		_px = PixelDraw.new(self, PixelDraw.size_for(scenery.size.y))
 		var look := scenery._look
 		var count := int(look.get("clouds", 0))
 		if count <= 0:
@@ -578,9 +590,7 @@ class _Clouds extends Node2D:
 		if o >= 0.4:
 			var a := (o - 0.3) * 0.9
 			var low := scenery.horizon_y()
-			draw_polygon(
-				PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), Vector2(size.x, low), Vector2(0, low)]),
-				PackedColorArray([Color(colour, a), Color(colour, a), Color(colour, 0.0), Color(colour, 0.0)]))
+			_px.gradient(Rect2(0, 0, size.x, low), Color(colour, a), Color(colour, 0.0), 8)
 		var wind := 1.0 + float(look.get("wind", 0.0)) * 2.5
 		var span := size.x + 400.0 * unit
 		for i in count:
@@ -593,8 +603,8 @@ class _Clouds extends Node2D:
 	## One cloud: overlapping puffs on a flat base.
 	func _cloud(at: Vector2, s: float, colour: Color) -> void:
 		for p in [[-60, 0, 30], [-24, -18, 42], [20, -22, 46], [58, -4, 34], [0, -10, 40]]:
-			draw_circle(at + Vector2(p[0], p[1]) * s, p[2] * s, colour, true, -1.0, true)
-		draw_rect(Rect2(at + Vector2(-60, 0) * s, Vector2(118, 30) * s), colour)
+			_px.circle(at + Vector2(p[0], p[1]) * s, p[2] * s, colour)
+		_px.rect(Rect2(at + Vector2(-60, 0) * s, Vector2(118, 30) * s), colour)
 
 
 ## Weather on top of the scenery: stars coming out as it gets dark (unless
@@ -604,8 +614,10 @@ class _Clouds extends Node2D:
 ## hundred dots and lines a frame at most.
 class _Fx extends Node2D:
 	var scenery: Scenery
+	var _px: PixelDraw
 
 	func _draw() -> void:
+		_px = PixelDraw.new(self, PixelDraw.size_for(scenery.size.y))
 		var fx: Array = scenery.biome.get("fx", [])
 		var size := scenery.size
 		var t := scenery.time()
@@ -621,25 +633,25 @@ class _Fx extends Node2D:
 					continue
 				var at := Vector2(Scenery._hash(i, 1.0) * size.x, Scenery._hash(i, 2.0) * size.y * 0.45)
 				var twinkle := 0.5 + 0.5 * sin(t * 2.0 + i)
-				draw_circle(at, 1.0 + bright * 1.2, Color(1, 1, 0.9, (0.4 + 0.5 * twinkle) * shown))
+				_px.circle(at, 1.0 + bright * 1.2, Color(1, 1, 0.9, (0.4 + 0.5 * twinkle) * shown))
 		var flies := clampf((dark - 0.15) / 0.4, 0.0, 1.0)
 		if fx.has("fireflies") and flies > 0.0:
 			for i in 18:
 				var base := Vector2(Scenery._hash(i, 4.0) * size.x, size.y * (0.6 + 0.3 * Scenery._hash(i, 5.0)))
 				var drift := Vector2(sin(t * 0.6 + i) * 18.0, cos(t * 0.8 + i * 1.3) * 12.0)
 				var glow := (0.4 + 0.6 * absf(sin(t * 1.3 + i * 2.1))) * flies
-				draw_circle(base + drift, 6.0, Color(1.0, 0.92, 0.5, 0.15 * glow))
-				draw_circle(base + drift, 2.2, Color(1.0, 0.95, 0.6, glow))
+				_px.circle(base + drift, 6.0, Color(1.0, 0.92, 0.5, 0.15 * glow))
+				_px.circle(base + drift, 2.2, Color(1.0, 0.95, 0.6, glow))
 		# Cherry blossom petals drifting down and across.
 		if fx.has("petals"):
 			var petal := Color("#f6c6d4") * Color(scenery.tint(), 1.0)
 			for i in 40:
 				var fall := fposmod(Scenery._hash(i, 21.0) * size.y + t * (24.0 + 20.0 * Scenery._hash(i, 22.0)), size.y + 20.0) - 10.0
 				var x := fposmod(Scenery._hash(i, 23.0) * size.x - t * 30.0 + sin(t * 1.2 + i) * 16.0, size.x + 20.0) - 10.0
-				var spin := t * 2.0 + i
-				draw_set_transform(Vector2(x, fall), spin, Vector2(1.0, 0.55 + 0.45 * absf(sin(spin))))
-				draw_circle(Vector2.ZERO, 3.2, petal, true, -1.0, true)
-			draw_set_transform(Vector2.ZERO)
+				# A petal turning over: two pixels wide, then one.
+				_px.dot(Vector2(x, fall), petal)
+				if sin(t * 2.0 + i) > 0.0:
+					_px.dot(Vector2(x + _px.p, fall), petal)
 		# Under the sea: shafts of light swaying down from the surface, and
 		# bubbles wobbling up.
 		if fx.has("rays"):
@@ -657,8 +669,8 @@ class _Fx extends Node2D:
 				var rise := size.y + 20.0 - fposmod(Scenery._hash(i, 54.0) * size.y + t * speed, size.y + 40.0)
 				var x := fposmod(Scenery._hash(i, 55.0) * size.x - scenery.scroll * 0.3, size.x) + sin(t * 2.0 + i) * 5.0 * unit_b
 				var r := (2.0 + 4.5 * Scenery._hash(i, 56.0)) * unit_b
-				draw_arc(Vector2(x, rise), r, 0, TAU, 14, Color(1, 1, 1, 0.55), 1.4, true)
-				draw_circle(Vector2(x - r * 0.35, rise - r * 0.35), r * 0.25, Color(1, 1, 1, 0.7))
+				_px.ring(Vector2(x, rise), maxf(r, _px.p * 1.5), Color(1, 1, 1, 0.55))
+				_px.circle(Vector2(x - r * 0.35, rise - r * 0.35), r * 0.25, Color(1, 1, 1, 0.7))
 		var gust := 0.6 + 0.4 * sin(t * 0.45)
 		var area := clampf(size.x * size.y / (720.0 * 720.0), 0.5, 3.0)
 		var unit := minf(size.x, size.y) / 720.0
@@ -675,7 +687,7 @@ class _Fx extends Node2D:
 			var length := (14.0 + 16.0 * Scenery._hash(i, 15.0)) * unit
 			var y := fposmod(Scenery._hash(i, 16.0) * size.y + t * speed * unit, size.y + length * 2.0) - length
 			var x := fposmod(Scenery._hash(i, 17.0) * size.x * 1.3 - y * slant, size.x + 40.0) - 20.0
-			draw_line(Vector2(x, y), Vector2(x + length * slant, y - length), rain, 1.4, true)
+			_px.line(Vector2(x, y), Vector2(x + length * slant, y - length), rain, 1.4)
 		# Snow: the tundra's own flurries, or the weather's. Flakes fall and
 		# are blown sideways, harder in the gusts.
 		var flakes := int(maxi(90 if fx.has("snow") else 0, int(look.get("snow", 0))) * area)
@@ -684,18 +696,18 @@ class _Fx extends Node2D:
 			var speed := (30.0 + 50.0 * Scenery._hash(i, 6.0)) * (1.0 + wind * 0.5)
 			var fall := fposmod(Scenery._hash(i, 7.0) * size.y + t * speed, size.y + 20.0) - 10.0
 			var blown := fposmod(Scenery._hash(i, 8.0) * size.x - t * (20.0 + 120.0 * wind * gust) - fall * 0.6 * wind, size.x + 20.0) - 10.0
-			draw_circle(Vector2(blown, fall), 1.2 + 2.0 * Scenery._hash(i, 9.0), flake)
+			_px.circle(Vector2(blown, fall), 1.2 + 2.0 * Scenery._hash(i, 9.0), flake)
 		if wind >= 0.5:
 			for i in int(6 + 8 * wind):
 				var speed := 380.0 + 260.0 * Scenery._hash(i, 10.0)
 				var x := size.x - fposmod(Scenery._hash(i, 11.0) * size.x * 2.0 + t * speed * (0.6 + wind * 0.5), size.x * 2.0)
 				var y := size.y * (0.15 + 0.7 * Scenery._hash(i, 12.0)) + sin(t * 2.0 + i) * 6.0
 				var length := 60.0 + 90.0 * Scenery._hash(i, 13.0)
-				draw_line(Vector2(x, y), Vector2(x + length, y - 4.0), Color(1, 1, 1, 0.25 * gust * minf(1.0, wind)), 1.5, true)
+				_px.line(Vector2(x, y), Vector2(x + length, y - 4.0), Color(1, 1, 1, 0.25 * gust * minf(1.0, wind)), 1.5)
 		# A blizzard whites everything out, more in the gusts.
 		var haze := float(look.get("haze", 0.0))
 		if haze > 0.0:
-			draw_rect(Rect2(Vector2.ZERO, size), Color(0.94, 0.96, 1.0, haze * (0.7 + 0.3 * gust)) * Color(light.lightened(0.4), 1.0))
+			_px.rect(Rect2(Vector2.ZERO, size), Color(0.94, 0.96, 1.0, haze * (0.7 + 0.3 * gust)) * Color(light.lightened(0.4), 1.0))
 
 	## The flash lights up the whole scene; the bolt forks down from the
 	## clouds for a moment.
@@ -708,7 +720,7 @@ class _Fx extends Node2D:
 			for j in range(1, 9):
 				at = Vector2(at.x + (Scenery._hash(k * 9 + j, 35.0) - 0.5) * size.x * 0.06, low * j / 8.0)
 				bolt.append(at)
-			draw_polyline(bolt, Color(1, 1, 1, 0.35), 7.0, true)
-			draw_polyline(bolt, Color(1, 1, 0.92, 0.95), 2.5, true)
+			_px.polyline(bolt, Color(1, 1, 1, 0.35), 7.0)
+			_px.polyline(bolt, Color(1, 1, 0.92, 0.95), 2.5)
 		if scenery._flash > 0.0:
-			draw_rect(Rect2(Vector2.ZERO, size), Color(0.92, 0.94, 1.0, scenery._flash * 0.55))
+			_px.rect(Rect2(Vector2.ZERO, size), Color(0.92, 0.94, 1.0, scenery._flash * 0.55))

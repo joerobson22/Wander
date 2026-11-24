@@ -1,12 +1,12 @@
 [gd_resource type="Resource" script_class="HolidayLook" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://core/holiday_look.gd" id="1"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/pumpkin.svg" id="2"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/jack_o_lantern.svg" id="3"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/pumpkin.png" id="2"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/jack_o_lantern.png" id="3"]
 [ext_resource type="PackedScene" path="res://art/holidays/halloween/home.tscn" id="4"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/3_forest_far.svg" id="5"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/4_forest_near.svg" id="6"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/5_hilltop.svg" id="7"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/3_forest_far.png" id="5"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/4_forest_near.png" id="6"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/home/5_hilltop.png" id="7"]
 
 [resource]
 script = ExtResource("1")

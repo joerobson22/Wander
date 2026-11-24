@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="HolidayLook" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://core/holiday_look.gd" id="1"]
-[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_pink.svg" id="2"]
-[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_blue.svg" id="3"]
-[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_yellow.svg" id="4"]
-[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_green.svg" id="5"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_pink.png" id="2"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_blue.png" id="3"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_yellow.png" id="4"]
+[ext_resource type="Texture2D" path="res://art/holidays/easter/egg_green.png" id="5"]
 [ext_resource type="PackedScene" path="res://art/holidays/easter/home.tscn" id="6"]
 
 [resource]

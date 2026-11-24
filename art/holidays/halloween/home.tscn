@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/pumpkin.svg" id="2"]
-[ext_resource type="Texture2D" path="res://art/holidays/halloween/jack_o_lantern.svg" id="3"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/pumpkin.png" id="2"]
+[ext_resource type="Texture2D" path="res://art/holidays/halloween/jack_o_lantern.png" id="3"]
 
 [node name="HomeDecor" type="Node2D"]
 

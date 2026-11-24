@@ -1691,7 +1691,11 @@ func _art_check(main: Node) -> void:
 	var view: Node2D = view_class.new()
 	view.animal_id = "dog1"
 	root.add_child(view)
-	check(not view.has_art() and view_class.rig_path("dog1") == "", "no art yet means the placeholder")
+	# Every animal has its pixel art; a puppet of separate limbs still drops in.
+	var cast: Array = (JSON.parse_string(FileAccess.get_file_as_string("res://data/animals.json")) as Dictionary)["animals"]
+	var missing := cast.filter(func(a): return view_class.rig_path(a["id"]) == "")
+	check(missing.is_empty(), "every animal has art (%s)" % ", ".join(missing.map(func(a): return a["id"])))
+	await _wait(2)
 	var placeholder_mouth: Vector2 = view.mouth()
 	view.set_rig(rig)
 	view.colours = [Color("#112233"), Color("#445566"), Color("#778899")] as Array[Color]

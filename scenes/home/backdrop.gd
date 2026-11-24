@@ -194,6 +194,7 @@ func _dress(id: String) -> void:
 			continue
 		group.owner = null
 		group.reparent(l, false)
+		group.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_decor[l] = group
 	scene.free()
 
