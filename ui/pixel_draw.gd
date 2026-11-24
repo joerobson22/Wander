@@ -151,3 +151,52 @@ func gradient(r: Rect2, top: Color, bottom: Color, bands: int = 10) -> void:
 				canvas.draw_rect(Rect2(x, y, p, p), next)
 				x += p * 2.0
 		y += p
+
+
+# The same calls as a CanvasItem's draw_*, so code written for a canvas
+# (CharacterView.draw_helmet) can draw on the grid instead. Each fills every
+# pixel once, so see-through colours stay even.
+
+func draw_rect(r: Rect2, colour: Color, filled: bool = true, width: float = -1.0, _aa: bool = false) -> void:
+	if filled:
+		rect(r, colour)
+	else:
+		var w := maxf(width, p)
+		rect(Rect2(r.position, Vector2(r.size.x, w)), colour)
+		rect(Rect2(r.position + Vector2(0, r.size.y - w), Vector2(r.size.x, w)), colour)
+		rect(Rect2(r.position + Vector2(0, w), Vector2(w, r.size.y - w * 2)), colour)
+		rect(Rect2(r.position + Vector2(r.size.x - w, w), Vector2(w, r.size.y - w * 2)), colour)
+
+
+func draw_circle(at: Vector2, r: float, colour: Color, filled: bool = true, width: float = -1.0, _aa: bool = false) -> void:
+	if filled:
+		circle(at, r, colour)
+	else:
+		draw_arc(at, r, 0.0, TAU, 32, colour, width)
+
+
+func draw_arc(at: Vector2, r: float, a0: float, a1: float, _points: int, colour: Color, width: float = -1.0, _aa: bool = false) -> void:
+	var w := maxf(width, p)
+	var steps := maxi(6, ceili(absf(a1 - a0) * r / p))
+	var outer := PackedVector2Array()
+	var inner := PackedVector2Array()
+	for k in steps + 1:
+		var a := lerpf(a0, a1, float(k) / steps)
+		outer.append(at + Vector2.from_angle(a) * (r + w * 0.5))
+		inner.append(at + Vector2.from_angle(a) * maxf(0.0, r - w * 0.5))
+	inner.reverse()
+	outer.append_array(inner)
+	poly(outer, colour)
+
+
+func draw_line(a: Vector2, b: Vector2, colour: Color, width: float = -1.0, _aa: bool = false) -> void:
+	var w := maxf(width, p)
+	var side := (b - a).orthogonal().normalized() * w * 0.5
+	if side == Vector2.ZERO:
+		dot(a, colour)
+		return
+	poly(PackedVector2Array([a + side, b + side, b - side, a - side]), colour)
+
+
+func draw_colored_polygon(pts: PackedVector2Array, colour: Color) -> void:
+	poly(pts, colour)

@@ -202,6 +202,8 @@ python3 art/pixel_src/make.py --pxl path/to/claude-pxl [animals] [gifts] [scener
 - `gifts.px.js`: every gift, 16 × 16.
 - `home.px.js`: the home view's layers, sky, sun and moon.
 - `scenery.px.js`: the dive bush, pumpkins and Easter eggs.
+- The character and its clothes are drawn in code on the same grid (see
+  [Your character and its clothes](#your-character-and-its-clothes)).
 
 You can also paint straight over the PNGs in any pixel editor. Keep the size
 and use no smoothing: every picture uses nearest-neighbour filtering. The
@@ -211,6 +213,12 @@ art pixel is 3 screen pixels on a screen 720 tall.
 ---
 
 ## Your character and its clothes
+
+Until you add your own, the character and every item are drawn in code
+(`ui/components/character_view.gd`) as pixel art on the animals' grid: the
+shapes go into a small picture, a pixel per art pixel, shown 3 times bigger
+with the same dark outline as the animals. The face is placed pixel by pixel
+in `_draw_face`. Your own art below replaces all of it.
 
 The character is one puppet that every item is laid onto, so a jumper's
 sleeves swing with the arms and a hat bobs with the head.

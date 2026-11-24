@@ -393,7 +393,8 @@ func _draw_helmet(canvas: CanvasItem, shape: String) -> void:
 		at = n.lerp(m, 0.62) + Vector2(0, -3)
 		r = clampf(n.distance_to(m) * 0.62 + 6.0, 16.0, 30.0)
 	at += _droop() * 0.6
-	CharacterView.draw_helmet(canvas, at, r, helmet)
+	# On the animals' pixel grid: an art pixel is 3 / size of this node's units.
+	CharacterView.draw_helmet(PixelDraw.new(canvas, PixelDraw.size_for(720.0) / s), at, r, helmet)
 
 
 ## Where a lead clips on, in this node's own space: the neck, just behind

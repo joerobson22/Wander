@@ -6,6 +6,7 @@ How to add and change every picture, place, animation and sound is in
 ```
 art/
   animal_colours.gdshader     maps red/green/blue paint to an animal's colours
+  pixel_outline.gdshader      the dark outline round the code-drawn character
   animals/<animal id>/animal.tscn   an animal's rig: a pixel-art strip (frames.png)
   character/character.tscn     the player's character rig
   cosmetics/<item id>/         an item's pieces, one image per limb it covers
