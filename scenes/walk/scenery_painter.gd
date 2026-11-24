@@ -62,21 +62,6 @@ func _holiday() -> HolidayLook:
 	return scenery._holiday if scenery else holiday_look
 
 
-## A rounded box with the app's hand-cut corners (as UI.box draws them),
-## kept here so the editor can draw it too.
-static func _box(fill: Color, _border: Color, radius: int) -> StyleBoxFlat:
-	var b := StyleBoxFlat.new()
-	b.bg_color = fill
-	if radius >= 99 or radius < 8:
-		b.set_corner_radius_all(radius)
-	else:
-		b.corner_radius_top_left = radius
-		b.corner_radius_top_right = roundi(radius * 1.35)
-		b.corner_radius_bottom_right = roundi(radius * 0.8)
-		b.corner_radius_bottom_left = roundi(radius * 1.2)
-	return b
-
-
 static func _noise(t: float, sd: float) -> float:
 	return 0.55 * sin(t * TAU + sd) + 0.3 * sin(t * TAU * 2.3 + sd * 1.7) + 0.15 * sin(t * TAU * 5.1 + sd * 2.9)
 
@@ -86,8 +71,18 @@ static func _hash(i: int, sd: float) -> float:
 	return fposmod(sin(i * 12.9898 + sd * 78.233) * 43758.5453, 1.0)
 
 
+## Draws on the pixel grid shared with the animals and gifts.
+var _px: PixelDraw
+
+
+func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
 func _draw() -> void:
 	var size := _view()
+	# The grid starts at the world's 0, so neighbouring chunks line up.
+	_px = PixelDraw.new(self, PixelDraw.size_for(size.y), index * CHUNK)
 	var colour := Color.from_string(layer["colour"], Color.WHITE)
 	var y := size.y * float(layer["y"])
 	var h := size.y * float(layer["height"])
@@ -176,10 +171,10 @@ func _hills(x0: float, y: float, h: float, wavelength: float, sd: float, colour:
 	pts[pts.size() - 1] = Vector2(CHUNK + 1.0, pts[pts.size() - 1].y)
 	pts.append(Vector2(CHUNK + 1.0, size.y))
 	pts.append(Vector2(-1.0, size.y))
-	draw_colored_polygon(pts, colour)
+	_px.poly(pts, colour)
 
 func _water(x0: float, y: float, h: float, sd: float, colour: Color) -> void:
-	draw_rect(Rect2(-1.0, y, CHUNK + 2.0, h), colour)
+	_px.rect(Rect2(-1.0, y, CHUNK + 2.0, h), colour)
 	var shimmer := Color(1, 1, 1, 0.35)
 	var spacing := 38.0
 	var t := _now()
@@ -188,7 +183,7 @@ func _water(x0: float, y: float, h: float, sd: float, colour: Color) -> void:
 		var x := i * spacing - x0
 		var ly := y + h * (0.15 + 0.7 * r)
 		var a := 0.5 + 0.5 * sin(t * 1.5 + r * TAU)
-		draw_line(Vector2(x, ly), Vector2(x + 10 + 14 * r, ly), Color(shimmer, shimmer.a * a), 2.0)
+		_px.line(Vector2(x, ly), Vector2(x + 10 + 14 * r, ly), Color(shimmer, shimmer.a * a), 2.0)
 	if layer.get("foam", false):
 		# Surf rolling up the sand, in and out.
 		var pts := PackedVector2Array()
@@ -197,7 +192,7 @@ func _water(x0: float, y: float, h: float, sd: float, colour: Color) -> void:
 		while x <= CHUNK + 0.5:
 			pts.append(Vector2(x, y + h - 3.0 + reach + 3.0 * _noise((x0 + x) / 90.0, sd + t * 0.05)))
 			x += 12.0
-		draw_polyline(pts, Color(1, 1, 1, 0.8), 4.0, true)
+		_px.polyline(pts, Color(1, 1, 1, 0.8), 4.0)
 
 func _ground(x0: float, y: float, h: float, sd: float, colour: Color, size: Vector2) -> void:
 	# A bank with a gently uneven top edge, then the path.
@@ -210,33 +205,31 @@ func _ground(x0: float, y: float, h: float, sd: float, colour: Color, size: Vect
 	pts[pts.size() - 1] = Vector2(CHUNK + 1.0, pts[pts.size() - 1].y)
 	pts.append(Vector2(CHUNK + 1.0, size.y))
 	pts.append(Vector2(-1.0, size.y))
-	draw_colored_polygon(pts, colour)
+	_px.poly(pts, colour)
 	var py := _path()
 	var path_colour := Color.from_string(layer.get("path", "#d9c49a"), Color.TAN)
-	draw_rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
+	_px.rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
 	if layer.get("craters", false):
 		for i in range(floori(x0 / 140.0), floori((x0 + CHUNK) / 140.0) + 1):
 			var r := _hash(i, sd + 3.0)
 			var c := Vector2(i * 140.0 - x0 + 60.0 * r, y + h * (0.12 + 0.75 * _hash(i, sd + 8.0)))
 			if absf(c.y - py) < h * 0.12:
 				continue
-			draw_set_transform(c, 0.0, Vector2(1.0, 0.35))
-			draw_circle(Vector2.ZERO, 10.0 + 22.0 * r, colour.darkened(0.12), true, -1.0, true)
-			draw_circle(Vector2(0, 3), 8.0 + 18.0 * r, colour.darkened(0.2), true, -1.0, true)
-			draw_set_transform(Vector2.ZERO)
+			_px.ellipse(c, Vector2(1.0, 0.35) * (10.0 + 22.0 * r), colour.darkened(0.12))
+			_px.ellipse(c + Vector2(0, 1), Vector2(1.0, 0.35) * (8.0 + 18.0 * r), colour.darkened(0.2))
 	var look := _holiday()
 	if look and look.snow:
 		path_colour = path_colour.lerp(SNOW, 0.35)
-		draw_rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
+		_px.rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
 		var edge := PackedVector2Array()
 		for k in pts.size() - 2:
 			edge.append(pts[k] + Vector2(0, 3.0))
-		draw_polyline(edge, SNOW, clampf(h * 0.05, 4.0, 10.0), true)
+		_px.polyline(edge, SNOW, clampf(h * 0.05, 4.0, 10.0))
 	# Pebbles on the path so movement reads even with flat placeholder art.
 	var spacing := 54.0
 	for i in range(floori(x0 / spacing), floori((x0 + CHUNK) / spacing) + 1):
 		var r := _hash(i, sd + 11.0)
-		draw_circle(Vector2(i * spacing - x0 + 20.0 * r, py - h * 0.08 + h * 0.16 * _hash(i, sd + 5.0)), 2.0 + 3.0 * r, path_colour.darkened(0.15))
+		_px.circle(Vector2(i * spacing - x0 + 20.0 * r, py - h * 0.08 + h * 0.16 * _hash(i, sd + 5.0)), 2.0 + 3.0 * r, path_colour.darkened(0.15))
 	if look and not look.ground_props.is_empty():
 		_props(x0, y, py, h, sd, look, size)
 
@@ -260,13 +253,13 @@ func _props(x0: float, top: float, py: float, h: float, sd: float, look: Holiday
 		var foot := lerpf(top + tall * 0.6, py - h * 0.1, _hash(i, sd + 45.0)) if behind \
 			else py + h * 0.1 + tall * (1.1 + 0.6 * _hash(i, sd + 45.0))
 		var x := i * spacing - x0 + spacing * 0.6 * _hash(i, sd + 46.0)
-		draw_texture_rect(tex, Rect2(x - wide * 0.5, foot - tall, wide, tall), false)
+		draw_texture_rect(tex, Rect2(_px.snap_x(x - wide * 0.5), _px.snap_y(foot - tall), wide, tall), false)
 
 func _reed_tuft(x: float, top: float, h: float, colour: Color, r: float, size: Vector2) -> void:
 	var sway := sin(_now() * 1.2 + r * 6.0) * 6.0
 	for k in 3:
 		var bx := x + k * 6.0
-		draw_line(Vector2(bx, size.y), Vector2(bx + sway + (k - 1) * 5.0, top - h), colour.darkened(0.1 * k), 3.0, true)
+		_px.line(Vector2(bx, size.y), Vector2(bx + sway + (k - 1) * 5.0, top - h), colour.darkened(0.1 * k), 3.0)
 
 ## A broad leaf on a stem, bending in the breeze (forest and jungle floor).
 func _frond(x: float, h: float, colour: Color, r: float, size: Vector2) -> void:
@@ -276,7 +269,7 @@ func _frond(x: float, h: float, colour: Color, r: float, size: Vector2) -> void:
 		var tip := Vector2(x, size.y) + Vector2(cos(angle), sin(angle)) * h
 		var mid := Vector2(x, size.y).lerp(tip, 0.55)
 		var side := Vector2(-sin(angle), cos(angle)) * h * 0.16
-		draw_colored_polygon(PackedVector2Array([Vector2(x, size.y), mid + side, tip, mid - side]), colour.darkened(0.08 * k))
+		_px.poly(PackedVector2Array([Vector2(x, size.y), mid + side, tip, mid - side]), colour.darkened(0.08 * k))
 
 ## Any kind of tree (TREES), as a holiday has it: bare and dead, or with
 ## snow on top and, now and then, lights strung through it.
@@ -306,7 +299,7 @@ func _any_tree(kind: String, x: float, y: float, th: float, colour: Color, r: fl
 	if look.snow and kind not in ["pines", "palms"]:
 		if kind == "trees":
 			var half := th * 0.38 * 0.5
-			draw_colored_polygon(PackedVector2Array([Vector2(x - half * 0.4, y - th * 0.68), Vector2(x, y - th), Vector2(x + half * 0.4, y - th * 0.68)]), SNOW)
+			_px.poly(PackedVector2Array([Vector2(x - half * 0.4, y - th * 0.68), Vector2(x, y - th), Vector2(x + half * 0.4, y - th * 0.68)]), SNOW)
 		else:
 			# Snow lying on top of the leaves: thickest in the middle,
 			# thinning out down either side.
@@ -320,7 +313,7 @@ func _any_tree(kind: String, x: float, y: float, th: float, colour: Color, r: fl
 			for k in range(9, 0, -1):
 				var a := PI * (1.2 + 0.6 * k / 10.0)
 				cap.append(c + Vector2(cos(a) * radius.x, sin(a) * radius.y + thick * sin(PI * k / 10.0)))
-			draw_colored_polygon(cap, SNOW)
+			_px.poly(cap, SNOW)
 	if look.lit_trees > 0.0 and _hash(i, sd + 50.0) < look.lit_trees:
 		var bulb := clampf(th * 0.022, 1.6, 4.0)
 		var pointed := kind in ["trees", "pines"]
@@ -360,15 +353,15 @@ func _dead_tree(x: float, y: float, th: float, i: int, sd: float) -> void:
 	var lean := (_hash(i, sd + 8.0) - 0.5) * th * 0.16
 	var top := Vector2(x + lean, y - th * 0.9)
 	var width := maxf(2.0, th * 0.06)
-	draw_line(Vector2(x, y + 2.0), top, wood, width, true)
+	_px.line(Vector2(x, y + 2.0), top, wood, width)
 	for k in 5:
 		var along := 0.35 + 0.13 * k
 		var from := Vector2(x, y).lerp(top, along)
 		var side := -1.0 if (k + i) % 2 == 0 else 1.0
 		var length := th * (0.32 - 0.04 * k) * (0.8 + 0.4 * _hash(i * 7 + k, sd))
 		var tip := from + Vector2(side * length * 0.8, -length * 0.65)
-		draw_line(from, tip, wood, maxf(1.5, width * (0.7 - 0.08 * k)), true)
-		draw_line(from.lerp(tip, 0.6), from.lerp(tip, 0.6) + Vector2(side * length * 0.1, -length * 0.4), wood, maxf(1.0, width * 0.35), true)
+		_px.line(from, tip, wood, maxf(1.5, width * (0.7 - 0.08 * k)))
+		_px.line(from.lerp(tip, 0.6), from.lerp(tip, 0.6) + Vector2(side * length * 0.1, -length * 0.4), wood, maxf(1.0, width * 0.35))
 
 
 ## Snow along the top of a stretch of hills (as _hills draws them).
@@ -378,46 +371,46 @@ func _snow_line(x0: float, y: float, h: float, wavelength: float, sd: float) -> 
 	while x <= CHUNK + 17.0:
 		pts.append(Vector2(x, y - h * (0.5 + 0.5 * _noise((x0 + x) / wavelength, sd)) + 2.0))
 		x += 16.0
-	draw_polyline(pts, SNOW, clampf(h * 0.12, 4.0, 14.0), true)
+	_px.polyline(pts, SNOW, clampf(h * 0.12, 4.0, 14.0))
 
 
 func _tree(x: float, y: float, th: float, colour: Color) -> void:
 	var w := th * 0.38
-	draw_rect(Rect2(x - w * 0.07, y - th * 0.25, w * 0.14, th * 0.3), colour.darkened(0.35))
-	draw_colored_polygon(PackedVector2Array([
+	_px.rect(Rect2(x - w * 0.07, y - th * 0.25, w * 0.14, th * 0.3), colour.darkened(0.35))
+	_px.poly(PackedVector2Array([
 		Vector2(x - w * 0.5, y - th * 0.2), Vector2(x, y - th), Vector2(x + w * 0.5, y - th * 0.2)]), colour)
 
 ## A tall, layered conifer, with snow on its tiers in the tundra.
 func _pine(x: float, y: float, th: float, colour: Color, snow: bool) -> void:
 	var w := th * 0.42
-	draw_rect(Rect2(x - w * 0.06, y - th * 0.18, w * 0.12, th * 0.2), colour.darkened(0.4))
+	_px.rect(Rect2(x - w * 0.06, y - th * 0.18, w * 0.12, th * 0.2), colour.darkened(0.4))
 	for k in 3:
 		var top := y - th * (0.45 + 0.27 * k) - th * 0.1
 		var bottom := y - th * (0.12 + 0.24 * k)
 		var half := w * (0.5 - 0.12 * k)
-		draw_colored_polygon(PackedVector2Array([Vector2(x - half, bottom), Vector2(x, top), Vector2(x + half, bottom)]), colour)
+		_px.poly(PackedVector2Array([Vector2(x - half, bottom), Vector2(x, top), Vector2(x + half, bottom)]), colour)
 		if snow:
 			var s := Color(0.95, 0.97, 1.0)
-			draw_colored_polygon(PackedVector2Array([Vector2(x - half * 0.45, top + (bottom - top) * 0.45), Vector2(x, top), Vector2(x + half * 0.45, top + (bottom - top) * 0.45)]), s)
+			_px.poly(PackedVector2Array([Vector2(x - half * 0.45, top + (bottom - top) * 0.45), Vector2(x, top), Vector2(x + half * 0.45, top + (bottom - top) * 0.45)]), s)
 
 ## A round-topped deciduous tree.
 func _broadleaf(x: float, y: float, th: float, colour: Color) -> void:
-	draw_rect(Rect2(x - th * 0.04, y - th * 0.45, th * 0.08, th * 0.45), colour.darkened(0.45))
+	_px.rect(Rect2(x - th * 0.04, y - th * 0.45, th * 0.08, th * 0.45), colour.darkened(0.45))
 	for k in 4:
 		var a := TAU * k / 4.0 + 0.4
-		draw_circle(Vector2(x, y - th * 0.7) + Vector2(cos(a), sin(a) * 0.6) * th * 0.13, th * 0.22, colour.darkened(0.06 * k), true, -1.0, true)
-	draw_circle(Vector2(x, y - th * 0.82), th * 0.2, colour.lightened(0.05), true, -1.0, true)
+		_px.circle(Vector2(x, y - th * 0.7) + Vector2(cos(a), sin(a) * 0.6) * th * 0.13, th * 0.22, colour.darkened(0.06 * k))
+	_px.circle(Vector2(x, y - th * 0.82), th * 0.2, colour.lightened(0.05))
 
 ## Dense jungle: big overlapping leaf clusters with vines hanging down.
 func _canopy(x: float, y: float, th: float, colour: Color, i: int, sd: float) -> void:
-	draw_rect(Rect2(x - th * 0.035, y - th * 0.6, th * 0.07, th * 0.6), colour.darkened(0.5))
+	_px.rect(Rect2(x - th * 0.035, y - th * 0.6, th * 0.07, th * 0.6), colour.darkened(0.5))
 	for k in 5:
 		var a := TAU * k / 5.0 + _hash(i, sd + 4.0) * 3.0
 		var c := Vector2(x, y - th * 0.78) + Vector2(cos(a) * th * 0.22, sin(a) * th * 0.1)
-		draw_circle(c, th * (0.16 + 0.05 * _hash(i + k, sd)), colour.darkened(0.07 * (k % 3)), true, -1.0, true)
+		_px.circle(c, th * (0.16 + 0.05 * _hash(i + k, sd)), colour.darkened(0.07 * (k % 3)))
 	for k in 2:
 		var vx := x + (k - 0.5) * th * 0.3
-		draw_line(Vector2(vx, y - th * 0.72), Vector2(vx + 4.0, y - th * (0.3 + 0.15 * k)), colour.lightened(0.15), 2.0, true)
+		_px.line(Vector2(vx, y - th * 0.72), Vector2(vx + 4.0, y - th * (0.3 + 0.15 * k)), colour.lightened(0.15), 2.0)
 
 func _palm(x: float, y: float, th: float, colour: Color, r: float) -> void:
 	var lean := (r - 0.5) * th * 0.25
@@ -426,7 +419,7 @@ func _palm(x: float, y: float, th: float, colour: Color, r: float) -> void:
 	for k in 9:
 		var t := k / 8.0
 		trunk.append(Vector2(x, y).lerp(top, t) + Vector2(sin(t * PI) * th * 0.05, 0))
-	draw_polyline(trunk, Color("#8a6a45"), maxf(3.0, th * 0.05), true)
+	_px.polyline(trunk, Color("#8a6a45"), maxf(3.0, th * 0.05))
 	for k in 7:
 		var angle := -PI + PI * k / 6.0 + 0.15 * sin(_now() * 0.6 + r * 4.0)
 		# Each frond arcs up then droops at the tip.
@@ -436,39 +429,40 @@ func _palm(x: float, y: float, th: float, colour: Color, r: float) -> void:
 		# A thick curved stroke rather than a filled shape: at some angles
 		# a four-point leaf folds over itself and can't be filled.
 		var shade := colour.darkened(0.08 * (k % 2))
-		draw_polyline(PackedVector2Array([top, mid, tip]), shade, th * 0.075, true)
-		draw_polyline(PackedVector2Array([top.lerp(mid, 0.5), mid, mid.lerp(tip, 0.6)]), shade, th * 0.11, true)
-	draw_circle(top, th * 0.035, Color("#6b4f33"), true, -1.0, true)
+		_px.polyline(PackedVector2Array([top, mid, tip]), shade, th * 0.075)
+		_px.polyline(PackedVector2Array([top.lerp(mid, 0.5), mid, mid.lerp(tip, 0.6)]), shade, th * 0.11)
+	_px.circle(top, th * 0.035, Color("#6b4f33"))
 
 func _mountain(x: float, y: float, th: float, w: float, colour: Color, snow: bool) -> void:
 	var peak := Vector2(x, y - th)
-	draw_colored_polygon(PackedVector2Array([Vector2(x - w * 0.6, y + 2.0), peak, Vector2(x + w * 0.6, y + 2.0)]), colour)
-	draw_colored_polygon(PackedVector2Array([peak, Vector2(x + w * 0.6, y + 2.0), Vector2(x + w * 0.12, y + 2.0)]), colour.darkened(0.1))
+	_px.poly(PackedVector2Array([Vector2(x - w * 0.6, y + 2.0), peak, Vector2(x + w * 0.6, y + 2.0)]), colour)
+	_px.poly(PackedVector2Array([peak, Vector2(x + w * 0.6, y + 2.0), Vector2(x + w * 0.12, y + 2.0)]), colour.darkened(0.1))
 	if snow:
 		var s := Color(0.96, 0.98, 1.0)
 		var k := 0.3
 		# A jagged lower edge, with every point inside the slopes so the
 		# outline never crosses itself.
-		draw_colored_polygon(PackedVector2Array([
+		_px.poly(PackedVector2Array([
 			peak, peak + Vector2(w * 0.6 * k, th * k), peak + Vector2(w * 0.1, th * k * 0.8),
 			peak + Vector2(0, th * k), peak + Vector2(-w * 0.08, th * k * 0.78), peak + Vector2(-w * 0.6 * k, th * k)]), s)
 
 ## A flat-topped desert rock.
 func _mesa(x: float, y: float, th: float, w: float, colour: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([
+	_px.poly(PackedVector2Array([
 		Vector2(x - w * 0.7, y + 2.0), Vector2(x - w * 0.45, y - th), Vector2(x + w * 0.45, y - th), Vector2(x + w * 0.7, y + 2.0)]), colour)
-	draw_rect(Rect2(x - w * 0.45, y - th, w * 0.9, th * 0.12), colour.lightened(0.12))
-	draw_rect(Rect2(x - w * 0.6, y - th * 0.45, w * 1.2, th * 0.06), colour.darkened(0.12))
+	_px.rect(Rect2(x - w * 0.45, y - th, w * 0.9, th * 0.12), colour.lightened(0.12))
+	_px.rect(Rect2(x - w * 0.6, y - th * 0.45, w * 1.2, th * 0.06), colour.darkened(0.12))
 
 func _cactus(x: float, y: float, th: float, colour: Color, r: float) -> void:
 	var w := th * 0.16
-	var body := _box(colour, Color.TRANSPARENT, int(w * 0.5))
-	draw_style_box(body, Rect2(x - w * 0.5, y - th, w, th))
 	var arm_y := y - th * (0.45 + 0.2 * r)
-	draw_style_box(body, Rect2(x - w * 1.5, arm_y - th * 0.3, w * 0.7, th * 0.32))
-	draw_rect(Rect2(x - w * 1.5, arm_y - w * 0.35, w * 1.2, w * 0.6), colour)
-	draw_style_box(body, Rect2(x + w * 0.8, arm_y - th * 0.15, w * 0.7, th * 0.25))
-	draw_rect(Rect2(x + w * 0.3, arm_y + th * 0.02, w * 1.2, w * 0.6), colour)
+	_rounded(Rect2(x - w * 0.5, y - th, w, th), colour)
+	_rounded(Rect2(x - w * 1.5, arm_y - th * 0.3, w * 0.7, th * 0.32), colour)
+	_px.rect(Rect2(x - w * 1.5, arm_y - w * 0.35, w * 1.2, w * 0.6), colour)
+	_rounded(Rect2(x + w * 0.8, arm_y - th * 0.15, w * 0.7, th * 0.25), colour)
+	_px.rect(Rect2(x + w * 0.3, arm_y + th * 0.02, w * 1.2, w * 0.6), colour)
+	# Ribs down the stem, a pixel darker.
+	_px.line(Vector2(x, y - th * 0.9), Vector2(x, y - th * 0.1), colour.darkened(0.12))
 
 ## Rolling farmland: hills striped with rows of crops, a shade either side.
 func _fields(x0: float, y: float, h: float, wavelength: float, sd: float, colour: Color, size: Vector2) -> void:
@@ -477,43 +471,44 @@ func _fields(x0: float, y: float, h: float, wavelength: float, sd: float, colour
 	var x := -fposmod(x0, 28.0)
 	while x < CHUNK:
 		var top := y - h * (0.5 + 0.5 * _noise((x0 + x) / wavelength, sd))
-		draw_line(Vector2(x, top + 3.0), Vector2(x - 40.0, size.y), stripe, 5.0, true)
+		_px.line(Vector2(x, top + 3.0), Vector2(x - 40.0, size.y), stripe, 5.0)
 		x += 28.0
 
 ## A red barn with a white-trimmed door, and now and then a silo beside it.
 func _barn(x: float, y: float, th: float, colour: Color, i: int) -> void:
 	var w := th * 1.1
 	var trim := Color("#f4efe2")
-	draw_colored_polygon(PackedVector2Array([
+	_px.poly(PackedVector2Array([
 		Vector2(x - w * 0.5, y + 2.0), Vector2(x - w * 0.5, y - th * 0.6), Vector2(x, y - th),
 		Vector2(x + w * 0.5, y - th * 0.6), Vector2(x + w * 0.5, y + 2.0)]), colour)
-	draw_polyline(PackedVector2Array([Vector2(x - w * 0.55, y - th * 0.58), Vector2(x, y - th - 2.0), Vector2(x + w * 0.55, y - th * 0.58)]), colour.darkened(0.35), maxf(2.0, th * 0.06), true)
+	_px.polyline(PackedVector2Array([Vector2(x - w * 0.55, y - th * 0.58), Vector2(x, y - th - 2.0), Vector2(x + w * 0.55, y - th * 0.58)]), colour.darkened(0.35), maxf(2.0, th * 0.06))
 	var door := Rect2(x - w * 0.16, y - th * 0.42, w * 0.32, th * 0.42)
-	draw_rect(door, colour.darkened(0.25))
-	draw_rect(door, trim, false, 2.0)
-	draw_line(door.position, door.end, trim, 2.0, true)
-	draw_line(Vector2(door.position.x, door.end.y), Vector2(door.end.x, door.position.y), trim, 2.0, true)
+	_px.rect(door, colour.darkened(0.25))
+	_px.line(door.position, Vector2(door.end.x, door.position.y), trim)
+	_px.line(door.position, Vector2(door.position.x, door.end.y), trim)
+	_px.line(Vector2(door.end.x, door.position.y), door.end, trim)
+	_px.line(door.position, door.end, trim, 2.0)
+	_px.line(Vector2(door.position.x, door.end.y), Vector2(door.end.x, door.position.y), trim, 2.0)
 	if i % 2 == 0:
-		var silo := _box(Color("#b9b4a8"), Color.TRANSPARENT, int(w * 0.12))
-		draw_style_box(silo, Rect2(x + w * 0.56, y - th * 1.1, w * 0.26, th * 1.1 + 2.0))
-		draw_circle(Vector2(x + w * 0.69, y - th * 1.08), w * 0.13, Color("#8e8a80"), true, -1.0, true)
+		_rounded(Rect2(x + w * 0.56, y - th * 1.1, w * 0.26, th * 1.1 + 2.0), Color("#b9b4a8"))
+		_px.circle(Vector2(x + w * 0.69, y - th * 1.08), w * 0.13, Color("#8e8a80"))
 
 ## A post-and-rail fence along the far side of the path.
 func _fence(x0: float, y: float, h: float, spacing: float, colour: Color) -> void:
 	var top := y - h
 	for k in 2:
 		var ry := top + h * (0.2 + 0.4 * k)
-		draw_line(Vector2(-1.0, ry), Vector2(CHUNK + 1.0, ry), colour, maxf(2.0, h * 0.16), true)
+		_px.line(Vector2(-1.0, ry), Vector2(CHUNK + 1.0, ry), colour, maxf(2.0, h * 0.16))
 	var x := -fposmod(x0, spacing)
 	while x <= CHUNK:
-		draw_rect(Rect2(x - h * 0.09, top - h * 0.1, h * 0.18, h * 1.1), colour.darkened(0.15))
+		_px.rect(Rect2(x - h * 0.09, top - h * 0.1, h * 0.18, h * 1.1), colour.darkened(0.15))
 		x += spacing
 
 ## A block of flats or an office: flat roof, rows of windows, and the
 ## windows lit warm after dark.
 func _building(x: float, y: float, th: float, w: float, colour: Color, i: int, sd: float) -> void:
-	draw_rect(Rect2(x - w * 0.5, y - th, w, th + 2.0), colour)
-	draw_rect(Rect2(x - w * 0.5, y - th, w, maxf(2.0, th * 0.03)), colour.lightened(0.12))
+	_px.rect(Rect2(x - w * 0.5, y - th, w, th + 2.0), colour)
+	_px.rect(Rect2(x - w * 0.5, y - th, w, maxf(2.0, th * 0.03)), colour.lightened(0.12))
 	var cols := maxi(2, floori(w / 14.0))
 	var rows := maxi(2, floori(th / 18.0))
 	var cell := Vector2(w / cols, th / rows)
@@ -523,28 +518,28 @@ func _building(x: float, y: float, th: float, w: float, colour: Color, i: int, s
 			var glass := colour.lightened(0.22)
 			if _lit() and lit > 0.45:
 				glass = Color("#f5d77a")
-			draw_rect(Rect2(x - w * 0.5 + c * cell.x + cell.x * 0.28, y - th + (r + 0.6) * cell.y, cell.x * 0.44, cell.y * 0.45), glass)
+			_px.rect(Rect2(x - w * 0.5 + c * cell.x + cell.x * 0.28, y - th + (r + 0.6) * cell.y, cell.x * 0.44, cell.y * 0.45), glass)
 
 ## A street lamp: a thin post with a lantern that glows after dark.
 func _lamp(x: float, y: float, h: float, colour: Color) -> void:
-	draw_line(Vector2(x, y + 2.0), Vector2(x, y - h), colour, maxf(2.0, h * 0.04), true)
-	draw_line(Vector2(x, y - h), Vector2(x + h * 0.12, y - h - h * 0.04), colour, maxf(2.0, h * 0.035), true)
+	_px.line(Vector2(x, y + 2.0), Vector2(x, y - h), colour, maxf(2.0, h * 0.04))
+	_px.line(Vector2(x, y - h), Vector2(x + h * 0.12, y - h - h * 0.04), colour, maxf(2.0, h * 0.035))
 	var lantern := Vector2(x + h * 0.14, y - h + h * 0.02)
 	if _lit():
-		draw_circle(lantern, h * 0.16, Color(1.0, 0.9, 0.55, 0.2), true, -1.0, true)
-	draw_circle(lantern, h * 0.045, Color("#f5d77a") if _lit() else colour.lightened(0.3), true, -1.0, true)
+		_px.circle(lantern, h * 0.16, Color(1.0, 0.9, 0.55, 0.2))
+	_px.circle(lantern, h * 0.045, Color("#f5d77a") if _lit() else colour.lightened(0.3))
 
 ## A flat-topped savanna tree on a thin, forking trunk.
 func _acacia(x: float, y: float, th: float, colour: Color, r: float) -> void:
 	var trunk := colour.darkened(0.45)
 	var top := Vector2(x + (r - 0.5) * th * 0.2, y - th * 0.78)
-	draw_line(Vector2(x, y + 2.0), top, trunk, maxf(2.0, th * 0.05), true)
-	draw_line(top.lerp(Vector2(x, y), 0.35), top + Vector2(-th * 0.25, -th * 0.04), trunk, maxf(1.5, th * 0.03), true)
-	draw_line(top.lerp(Vector2(x, y), 0.25), top + Vector2(th * 0.28, 0), trunk, maxf(1.5, th * 0.03), true)
+	_px.line(Vector2(x, y + 2.0), top, trunk, maxf(2.0, th * 0.05))
+	_px.line(top.lerp(Vector2(x, y), 0.35), top + Vector2(-th * 0.25, -th * 0.04), trunk, maxf(1.5, th * 0.03))
+	_px.line(top.lerp(Vector2(x, y), 0.25), top + Vector2(th * 0.28, 0), trunk, maxf(1.5, th * 0.03))
 	var w := th * 0.75
 	for k in 5:
 		var t := k / 4.0
-		draw_circle(top + Vector2((t - 0.5) * w, -th * 0.05 - sin(t * PI) * th * 0.06), th * 0.12, colour.darkened(0.06 * (k % 2)), true, -1.0, true)
+		_px.circle(top + Vector2((t - 0.5) * w, -th * 0.05 - sin(t * PI) * th * 0.06), th * 0.12, colour.darkened(0.06 * (k % 2)))
 	_ellipse_flat(top + Vector2(0, -th * 0.06), Vector2(w * 0.56, th * 0.08), colour)
 
 ## A cherry tree: a dark crooked trunk under a pink cloud of blossom.
@@ -552,21 +547,21 @@ func _blossom(x: float, y: float, th: float, colour: Color, i: int, sd: float) -
 	var bark := Color("#5a3b35")
 	var lean := (_hash(i, sd + 8.0) - 0.5) * th * 0.18
 	var fork := Vector2(x + lean, y - th * 0.5)
-	draw_line(Vector2(x, y + 2.0), fork, bark, maxf(2.0, th * 0.06), true)
-	draw_line(fork, fork + Vector2(-th * 0.16, -th * 0.18), bark, maxf(1.5, th * 0.035), true)
-	draw_line(fork, fork + Vector2(th * 0.18, -th * 0.16), bark, maxf(1.5, th * 0.035), true)
+	_px.line(Vector2(x, y + 2.0), fork, bark, maxf(2.0, th * 0.06))
+	_px.line(fork, fork + Vector2(-th * 0.16, -th * 0.18), bark, maxf(1.5, th * 0.035))
+	_px.line(fork, fork + Vector2(th * 0.18, -th * 0.16), bark, maxf(1.5, th * 0.035))
 	for k in 6:
 		var a := TAU * k / 6.0 + _hash(i, sd) * 2.0
 		var c := fork + Vector2(0, -th * 0.22) + Vector2(cos(a) * th * 0.2, sin(a) * th * 0.11)
-		draw_circle(c, th * (0.13 + 0.04 * _hash(i + k, sd)), colour.darkened(0.05 * (k % 3)), true, -1.0, true)
-	draw_circle(fork + Vector2(0, -th * 0.3), th * 0.15, colour.lightened(0.12), true, -1.0, true)
+		_px.circle(c, th * (0.13 + 0.04 * _hash(i + k, sd)), colour.darkened(0.05 * (k % 3)))
+	_px.circle(fork + Vector2(0, -th * 0.3), th * 0.15, colour.lightened(0.12))
 
 func _ellipse_flat(c: Vector2, radius: Vector2, colour: Color) -> void:
 	var pts := PackedVector2Array()
 	for k in 20:
 		var a := TAU * k / 20.0
 		pts.append(c + Vector2(cos(a) * radius.x, sin(a) * radius.y))
-	draw_colored_polygon(pts, colour)
+	_px.poly(pts, colour)
 
 ## A low mound along the bottom edge (snow drifts, moon dust).
 ## Whether something at `x` (this chunk's space), `reach` wide either
@@ -601,8 +596,8 @@ func _leaf(base: Vector2, angle: float, length: float, width: float, bend: float
 	pts.append(tip)
 	right.reverse()
 	pts.append_array(right)
-	draw_colored_polygon(pts, colour)
-	draw_polyline(spine, colour.lightened(0.16), maxf(1.0, width * 0.05), true)
+	_px.poly(pts, colour)
+	_px.polyline(spine, colour.lightened(0.16), maxf(1.0, width * 0.05))
 
 ## A clump of big leaves fanning up from the bottom edge.
 func _undergrowth(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
@@ -622,7 +617,7 @@ func _vine(x: float, top: float, length: float, colour: Color, r: float) -> void
 	for k in 13:
 		var t := k / 12.0
 		pts.append(Vector2(x + sin(t * 3.0 + r * 6.0) * length * 0.05 + sway * t * t, top - 2.0 + length * t))
-	draw_polyline(pts, colour.darkened(0.2), maxf(2.0, length * 0.012), true)
+	_px.polyline(pts, colour.darkened(0.2), maxf(2.0, length * 0.012))
 	var leaf := clampf(length * 0.14, 14.0, 48.0)
 	for k in range(2, 13, 2):
 		var out := 1.0 if k % 4 == 0 else -1.0
@@ -656,23 +651,27 @@ func _coral(x: float, base: float, h: float, colour: Color, r: float, i: int, sd
 			for arm in arms:
 				var tip := Vector2(x + arm[0] * h * 0.45, base - h * arm[1])
 				var bend := Vector2(x + arm[0] * h * 0.2, base - h * arm[1] * 0.45)
-				draw_polyline(PackedVector2Array([Vector2(x, base), bend, tip]), c, maxf(3.0, h * 0.09), true)
-				draw_circle(tip, maxf(2.5, h * 0.06), c.lightened(0.15), true, -1.0, true)
+				_px.polyline(PackedVector2Array([Vector2(x, base), bend, tip]), c, maxf(3.0, h * 0.09))
+				_px.circle(tip, maxf(2.5, h * 0.06), c.lightened(0.15))
 		1:
 			# A fan: a wide half disc with a lattice of ribs.
 			var fan := PackedVector2Array([Vector2(x, base)])
 			for k in 13:
 				var a := PI + PI * k / 12.0
 				fan.append(Vector2(x + cos(a) * h * 0.55, base - h * 0.15 + sin(a) * h * 0.85))
-			draw_colored_polygon(fan, Color(c, 0.9))
+			_px.poly(fan, Color(c, 0.9))
 			for k in 6:
 				var a := PI + PI * (k + 0.5) / 6.0
-				draw_line(Vector2(x, base), Vector2(x + cos(a) * h * 0.5, base - h * 0.15 + sin(a) * h * 0.78), c.darkened(0.2), 1.5, true)
+				_px.line(Vector2(x, base), Vector2(x + cos(a) * h * 0.5, base - h * 0.15 + sin(a) * h * 0.78), c.darkened(0.2), 1.5)
 		_:
 			# Brain coral: a low dome with winding grooves.
 			_blob(Vector2(x, base - h * 0.22), Vector2(h * 0.42, h * 0.3), c)
 			for k in 3:
-				draw_arc(Vector2(x - h * 0.1 + k * h * 0.1, base - h * 0.2), h * (0.12 + 0.06 * k), PI * 1.1, PI * 1.9, 10, c.darkened(0.18), 1.6, true)
+				var arc := PackedVector2Array()
+				for j in 11:
+					var a := PI * (1.1 + 0.8 * j / 10.0)
+					arc.append(Vector2(x - h * 0.1 + k * h * 0.1, base - h * 0.2) + Vector2(cos(a), sin(a)) * h * (0.12 + 0.06 * k))
+				_px.polyline(arc, c.darkened(0.18))
 
 
 ## A strand of seaweed rising from the sea bed, its ribbon swaying more
@@ -688,10 +687,17 @@ func _seaweed(x: float, base: float, h: float, colour: Color, r: float) -> void:
 			var t := k / 12.0
 			var sway := sin(_now() * 1.1 + r * 6.0 + t * 3.2 + strand) * h * 0.08 * t
 			pts.append(Vector2(x + off + sway + sin(t * 7.0 + r * 9.0) * h * 0.03, base - h * t * (1.0 - 0.18 * strand)))
-		draw_polyline(pts, colour.darkened(0.12 * strand), maxf(3.0, h * 0.06), true)
+		_px.polyline(pts, colour.darkened(0.12 * strand), maxf(3.0, h * 0.06))
 		for k in range(3, 12, 3):
 			var side := 1.0 if (k / 3) % 2 == 0 else -1.0
 			_leaf(pts[k], -PI * 0.5 + side * 0.9, h * 0.16, h * 0.06, side * 0.1, colour.lightened(0.06))
+
+
+## A box with its corners rounded off by a pixel (cactus arms, a silo).
+func _rounded(r: Rect2, colour: Color) -> void:
+	var p := _px.p
+	_px.rect(Rect2(r.position.x, r.position.y + p, r.size.x, r.size.y - p), colour)
+	_px.rect(Rect2(r.position.x + p, r.position.y, r.size.x - p * 2.0, p), colour)
 
 
 ## A soft lumpy oval (a rock, a coral dome).
@@ -701,7 +707,7 @@ func _blob(c: Vector2, radius: Vector2, colour: Color) -> void:
 		var a := TAU * k / 20.0
 		var wobble := 1.0 + 0.06 * sin(a * 3.0 + c.x * 0.1)
 		pts.append(c + Vector2(cos(a) * radius.x, sin(a) * radius.y) * wobble)
-	draw_colored_polygon(pts, colour)
+	_px.poly(pts, colour)
 
 
 ## A tall leafy plant growing up from the bottom edge, close enough to
@@ -714,7 +720,7 @@ func _stalk(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
 	for k in 11:
 		var t := k / 10.0
 		stem.append(Vector2(x + lean * t * t, bottom + 10.0 - (h + 10.0) * t))
-	draw_polyline(stem, colour.darkened(0.15), maxf(4.0, h * 0.025), true)
+	_px.polyline(stem, colour.darkened(0.15), maxf(4.0, h * 0.025))
 	for k in 4:
 		var at := stem[3 + k * 2]
 		var out := 1.0 if k % 2 == 0 else -1.0
@@ -723,7 +729,5 @@ func _stalk(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
 	_leaf(stem[10], -PI * 0.5 + (r - 0.5) * 0.5, h * 0.22, h * 0.09, 0.05, colour)
 
 func _drift(x: float, bottom: float, h: float, colour: Color) -> void:
-	draw_set_transform(Vector2(x, bottom), 0.0, Vector2(1.0, h / 40.0))
-	draw_circle(Vector2.ZERO, 40.0, colour, true, -1.0, true)
-	draw_circle(Vector2(34, 8), 30.0, colour, true, -1.0, true)
-	draw_set_transform(Vector2.ZERO)
+	_px.ellipse(Vector2(x, bottom), Vector2(40.0, h), colour)
+	_px.ellipse(Vector2(x + 34.0, bottom + 8.0 * h / 40.0), Vector2(30.0, 30.0 * h / 40.0), colour)

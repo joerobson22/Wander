@@ -11,6 +11,7 @@ app makes for itself, so you can swap things in one at a time.
 2. [Where everything lives](#where-everything-lives)
 3. [Places (the walk's scenery)](#places-the-walks-scenery)
 4. [Animals](#animals)
+   - [Pixel art](#pixel-art)
 5. [Your character and its clothes](#your-character-and-its-clothes)
 6. [Gifts](#gifts)
 7. [The home view behind every screen](#the-home-view-behind-every-screen)
@@ -164,35 +165,60 @@ there and make its scene: duplicate another place's folder in
 
 ## Animals
 
-An animal is a little puppet: each limb is its own picture, moved by an
-animation. Until an animal has one, the app draws a placeholder.
+An animal is a pixel-art strip of 7 frames in `art/animals/<animal>/frames.png`:
+walk (frames 1 to 4), standing, blinking and sad. Its `animal.tscn` shows one
+frame at a time and is made for you (see [Pixel art](#pixel-art)).
 
-1. Copy `art/templates/animal/` to `art/animals/<animal>/` (e.g.
-   `art/animals/dog1/`). Its `sprite_dir` in `data/animals.json` already
-   points there.
-2. Open `animal.tscn`. Each limb (body, head, tail, four legs) is a
-   **Sprite2D**. Click one and drag your image onto its **Texture** in the
-   Inspector. Move its pivot by moving the node, and its picture with its
-   **Offset**.
-3. Paint the limbs in pure red, green and blue (see
-   [Painting in red, green and blue](#painting-in-red-green-and-blue)).
-   Red becomes the animal's first colour, green its second and blue its
-   third: the ones picked when adopting.
-4. Click the **AnimationPlayer** to animate. You need a looping `walk`,
-   and can add a looping `idle` (standing still). Feet rest on the origin
-   (0, 0) and the animal faces right. How fast it plays follows the
-   animal's `walk_speed`.
-5. Move the **Neck** marker to where the lead clips on and the **Mouth**
-   marker to where it holds a gift. Both follow the animation.
-6. Size is set by `size` in `animals.json`, so you never scale the rig.
+- Paint in red, green and blue shades (see
+  [Painting in red, green and blue](#painting-in-red-green-and-blue)).
+  Red becomes the animal's first colour, green its second and blue its third:
+  the ones picked when adopting. Greys and black (outline, eyes, claws) show
+  exactly as painted.
+- The **AnimationPlayer** has `walk`, `idle` (a blink every few seconds) and
+  `sad`. Feet rest on the origin (0, 0) and the animal faces right. How fast
+  `walk` plays follows the animal's `walk_speed`.
+- The **Neck** marker is where the lead clips on, the **Mouth** marker where
+  it holds a gift. Both follow each frame.
+- Size is set by `size` in `animals.json`, so you never scale the rig. Every
+  animal shares one pixel grid, whatever its size.
 
-You can add and remove limbs freely; only the names `AnimationPlayer`,
-`Neck` and `Mouth` matter. Its sound, how it dives for a gift and its
-colours are in `data/animals.json`.
+You can still swap in a puppet of separate limbs: only the names
+`AnimationPlayer`, `Neck` and `Mouth` matter (`art/templates/animal/` is an
+example). Its sound, how it dives for a gift and its colours are in
+`data/animals.json`.
+
+### Pixel art
+
+The animals, gifts, home view, bush and holiday props are pixel art. Their
+source is in `art/pixel_src/` (Godot skips that folder), written for
+[claude-pxl](https://github.com/crsolver/claude-pxl):
+
+```
+git clone https://github.com/crsolver/claude-pxl.git
+python3 art/pixel_src/make.py --pxl path/to/claude-pxl [animals] [gifts] [scenery] [home]
+```
+
+- `animals.px.js`: every animal, with its frames, Neck and Mouth.
+- `gifts.px.js`: every gift, 16 × 16.
+- `home.px.js`: the home view's layers, sky, sun and moon.
+- `scenery.px.js`: the dive bush, pumpkins and Easter eggs.
+- The character and its clothes are drawn in code on the same grid (see
+  [Your character and its clothes](#your-character-and-its-clothes)).
+
+You can also paint straight over the PNGs in any pixel editor. Keep the size
+and use no smoothing: every picture uses nearest-neighbour filtering. The
+walk's layers are drawn in code on the same grid (`ui/pixel_draw.gd`): one
+art pixel is 3 screen pixels on a screen 720 tall.
 
 ---
 
 ## Your character and its clothes
+
+Until you add your own, the character and every item are drawn in code
+(`ui/components/character_view.gd`) as pixel art on the animals' grid: the
+shapes go into a small picture, a pixel per art pixel, shown 3 times bigger
+with the same dark outline as the animals. The face is placed pixel by pixel
+in `_draw_face`. Your own art below replaces all of it.
 
 The character is one puppet that every item is laid onto, so a jumper's
 sleeves swing with the arms and a hat bobs with the head.
@@ -233,12 +259,12 @@ so draw the starter items first (the first in each slot is the default).
 
 ## Gifts
 
-Save a square picture (256 × 256 or bigger) as `art/gifts/<gift>.png`, e.g.
-`art/gifts/dog_common.png`. `.svg` and `.webp` work too. It shows
-everywhere the gift appears, on a disc in its rarity's colour. Names,
-descriptions and rarities are in `data/gifts.json`. Every gift starts with a
-placeholder `art/gifts/<gift>.svg`; a `.png` of the same name takes over from
-it (delete the `.svg` once yours is in).
+Each gift is a 16 × 16 pixel-art picture, `art/gifts/<gift>.png` (e.g.
+`art/gifts/dog_common.png`), made from `art/pixel_src/gifts.px.js` (see
+[Pixel art](#pixel-art)). Paint over it, or save your own picture with the
+gift's id as its name (`.svg` and `.webp` work too). It shows everywhere the
+gift appears, on a disc in its rarity's colour, without smoothing. Names,
+descriptions and rarities are in `data/gifts.json`.
 
 ---
 
@@ -250,7 +276,7 @@ it (delete the `.svg` once yours is in).
   `ForestFar`, `ForestNear`, `Hilltop`). Paint each in one colour (white is
   easiest) and set its colour with the node's **Modulate**. Each covers the
   screen with its bottom on the screen's bottom, so draw them all on the
-  same canvas (1600 × 1000 now). Swap a picture by dragging yours onto the
+  same canvas (1600 × 1000 now: pixel art drawn at 400 × 250 and scaled up 4x). Swap a picture by dragging yours onto the
   node's **Texture**.
 - Each layer has **Parallax** (how far it moves as you slide between
   screens), **Drift** (a slow sway, in pixels) and **Night Brightness**
@@ -301,7 +327,7 @@ flag's width) and **Colours**. Make the node as tall as you want the string
 to dip. The fireworks are **Fireworks** nodes (**Bursts**, **Life**,
 **Reach**, **Colours**).
 
-The pictures (`pumpkin.svg`, `egg_pink.svg`...) sit beside each look.
+The pictures (`pumpkin.png`, `egg_pink.png`...) sit beside each look.
 Replace one with your own and it shows everywhere it's used.
 
 **Presents and pets.** Opening the app on a holiday gives you its present
@@ -326,9 +352,10 @@ its present and counts towards its pet.
 ## The bush your pet dives into
 
 When a walk ends with a gift, your pet dives into a bush and comes back
-with it. The bush is `art/walk/bush.tscn`. Until it has sprites inside, it
-draws a round leafy placeholder (change its **Greens** and **Highlight** in
-the Inspector). Drag your own images onto the `Bush` node to replace it.
+with it. The bush is `art/walk/bush.tscn`: its `Leaves` sprite shows
+`art/walk/bush.png`, pixel art scaled up 3x. Paint over that picture, or drag
+your own onto `Leaves`. With no sprites inside, it draws a round leafy
+placeholder (its **Greens** and **Highlight** in the Inspector).
 Its origin is where it meets the ground; it's drawn for a screen 720 tall.
 
 ---
