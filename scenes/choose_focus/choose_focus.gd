@@ -767,7 +767,8 @@ func _open_projects() -> void:
 	var scroll := UI.scroll_area()
 	# Exactly three rows tall, with a scroll bar beside them when there are
 	# more (the list glides, as every list does: SmoothScroll).
-	scroll.custom_minimum_size.y = PROJECT_ROW * PROJECTS_SHOWN + PROJECT_GAP * (PROJECTS_SHOWN - 1)
+	# (A few pixels more, so the bottom row's raised edge isn't cut off.)
+	scroll.custom_minimum_size.y = PROJECT_ROW * PROJECTS_SHOWN + PROJECT_GAP * (PROJECTS_SHOWN - 1) + 4
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)

@@ -1121,7 +1121,7 @@ func _run() -> void:
 	check(_find(popup.footer, func(n): return n is Button and n.text == "New project") != null, "with New project at the bottom")
 	check(_find(popup.header, func(n): return n is Label and n.text == "Your projects") != null, "and the title stays at the top")
 	var list_area: Control = popup.body.get_child(0)
-	check(is_equal_approx(list_area.size.y, chooser.PROJECT_ROW * 3 + chooser.PROJECT_GAP * 2), "the list is three rows tall (%d)" % list_area.size.y)
+	check(is_equal_approx(list_area.size.y, chooser.PROJECT_ROW * 3 + chooser.PROJECT_GAP * 2 + 4), "the list is three rows tall, with room for the last edge (%d)" % list_area.size.y)
 	var card_height: float = popup.card.size.y
 	var picked: String = rows[1].content.accessibility_name
 	rows[1].content.get_meta("press").tapped.emit()
