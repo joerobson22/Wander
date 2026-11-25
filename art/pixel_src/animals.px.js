@@ -46,10 +46,41 @@ function eye(c, x, y, f, size = 1) {
 
 function animal(id, size, move, draw) {
   MARKS[id] = { w: size[0], h: size[1], ax: size[2], move: MOVES[move], neck: size[3], mouth: size[4] }
-  anim(id, { w: size[0], h: size[1], frames: 7, fps: 6, outline: "k" }, (c) => {
+  const k = BIG[id] ?? 1
+  anim(id, { w: Math.ceil(size[0] * k), h: Math.ceil(size[1] * k), frames: 7, fps: 6, outline: "k" }, (c) => {
     const f = c.frame
-    draw(c, f, MOVES[move][f], f === SAD ? 2 : 0, size[1] - 1)
+    draw(k === 1 ? c : scaled(c, k), f, MOVES[move][f], f === SAD ? 2 : 0, size[1] - 1)
   })
+}
+
+// The big animals tower over you: each is drawn this many times bigger than
+// its plan says, on the same pixel grid (shapes are drawn afresh at the new
+// size, not stretched; one-pixel details stay crisp, round(k) thick).
+// animals.json "size" grows by the same factor, so the lead, the camera and
+// the pictures in the app make room for them.
+const BIG = { giraffe: 2, elephant: 2, mammoth: 2, rhino: 1.7, bear: 1.8, lion: 1.7, tiger: 1.7 }
+
+/** A canvas that draws everything `k` times bigger onto `c`. Corners
+ *  (rect, poly) scale as they are; centres (circles, line ends) scale from
+ *  the middle of their pixel. */
+function scaled(c, k) {
+  const at = (n) => Math.round(n * k)
+  const mid = (n) => Math.round((n + 0.5) * k - 0.5)
+  const t = Math.max(1, Math.round(k))
+  const span = (x, w) => Math.max(1, at(x + w) - at(x))
+  return {
+    frame: c.frame,
+    px: (x, y, col) => c.rect(at(x), at(y), t, t, col),
+    rect: (x, y, w, h, col) => c.rect(at(x), at(y), span(x, w), span(y, h), col),
+    hline: (x, y, len, col) => c.rect(at(x), at(y), span(x, len), t, col),
+    vline: (x, y, len, col) => c.rect(at(x), at(y), t, span(y, len), col),
+    line: (x0, y0, x1, y1, col, w = 1) => c.line(mid(x0), mid(y0), mid(x1), mid(y1), col, Math.max(1, Math.round(w * k))),
+    circ: (x, y, r, col) => c.circ(mid(x), mid(y), at(r), col),
+    ring: (x, y, r, col) => c.ring(mid(x), mid(y), at(r), col),
+    ellipse: (x, y, rx, ry, col, ring) => c.ellipse(mid(x), mid(y), at(rx), at(ry), col, ring),
+    poly: (pts, col) => c.poly(pts.map(at), col),
+    clip: (region, ...items) => c.clip(region.length === 3 ? [mid(region[0]), mid(region[1]), at(region[2])] : region.map(at), ...items),
+  }
 }
 
 /** Four legs, a body, a head and a tail: the plan most animals share.
@@ -600,4 +631,9 @@ animal("birthday_cake", [24, 26, 12, [6, 12], [18, 16]], "walk", (c, f, b, sad, 
   if (!sad) { c.px(14, 19 + y, "k"); c.px(15, 20 + y, "k"); c.px(16, 19 + y, "k") } else c.hline(14, 20 + y, 3, "k")
 })
 
+// The big ones' markers, at their drawn size.
+for (const [id, k] of Object.entries(BIG)) {
+  const m = MARKS[id], at = (n) => Math.round(n * k)
+  Object.assign(m, { w: Math.ceil(m.w * k), h: Math.ceil(m.h * k), ax: at(m.ax), move: m.move.map(at), neck: m.neck.map(at), mouth: m.mouth.map(at) })
+}
 console.log("@@MARKS " + JSON.stringify(MARKS))

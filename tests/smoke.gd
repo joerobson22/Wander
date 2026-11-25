@@ -61,6 +61,8 @@ func _run() -> void:
 	app.set_setting("debug_theme", "light")
 	# An ordinary day, whatever today's date (holidays are tried at the end).
 	app.set_setting("debug_holiday", "none")
+	# The sample data's unlocks aren't news: no popup for them.
+	app.take_unlocks()
 
 	# Long enough for the first frames to settle on a slow machine (CI), so
 	# the map is laid out before the pointer moves over it.
@@ -79,6 +81,34 @@ func _run() -> void:
 		quit(1 if _failed else 0)
 		return
 	await _shot("focus")
+
+	# Anything unlocked away from a walk pops up too: here the last cat gift
+	# arrives (as a trade-in would bring it) and finishes the table the lion
+	# needs.
+	var unlock_all = app.state.settings.get("debug_unlock_all", false)
+	var kept_gifts: Dictionary = app.state.inventory.duplicate()
+	app.state.settings["debug_unlock_all"] = false
+	for g in _content().gifts:
+		if g["table"] == "cat":
+			app.state.inventory.erase(g["id"])
+	app._changed()
+	check(not app.is_unlocked("animal", "lion") and app.take_unlocks().is_empty(), "without the cat gifts the lion is locked")
+	for g in _content().gifts:
+		if g["table"] == "cat":
+			app.state.inventory[g["id"]] = 1
+	app._changed()
+	await _wait(20)
+	var unlock_modal = _class("res://ui/modal.gd").top()
+	check(unlock_modal != null and _find(unlock_modal, func(n): return n is Label and n.text == "Lion") != null, "finishing the cat gifts pops up the lion")
+	var still_pending: Array = app.take_unlocks()
+	check(still_pending.is_empty(), "and it pops up once (%s)" % [still_pending])
+	await _shot("unlocked_popup")
+	_class("res://ui/modal.gd").close_all()
+	app.state.inventory = kept_gifts
+	app.state.settings["debug_unlock_all"] = unlock_all
+	app._changed()
+	await _wait(30)
+	check(_class("res://ui/modal.gd").top() == null, "and putting things back pops nothing more up")
 
 	# The map sits in the bottom left corner. With a mouse it grows up and to
 	# the right while the pointer is over it (an icon fading in on each
@@ -1197,9 +1227,16 @@ func _run() -> void:
 	var swatch: Button = swatch_rows[0].get_child(0)
 	check(is_equal_approx(swatch.size.x, swatch.size.y), "the swatches are circles (%s)" % swatch.size)
 	await _shot("colour_picker")
+	swatch_rows[1].get_child(6).pressed.emit()
+	await _wait(5)
 	_find(picker_modal.footer, func(n): return n is Button and n.text == "Done").pressed.emit()
 	await _wait(10)
 	check(str(app.state.settings["recent_colours"][0]) == chooser._draft.colours[0].to_html(false), "Done puts the colour first in the recents")
+	# The preview animal shows the picked colour straight away.
+	var preview = chooser._animals.items[chooser._animals.index].get_meta("view")
+	var tinted: Color = preview._material.get_shader_parameter("colour_r") if preview._material else Color.TRANSPARENT
+	check(tinted.is_equal_approx(chooser._draft.colours[0]), "the preview animal takes the picked colour (%s)" % tinted)
+	await _shot("new_pet_coloured")
 	var count: int = app.state.pets.size()
 	chooser._on_new()
 	await _wait(30)
@@ -1372,6 +1409,13 @@ func _run() -> void:
 	await _shot("finish_zoom")
 	await _wait(420)
 	check(finish._home.modulate.a > 0.9, "the home button fades in at the end")
+	# Whatever the walk unlocked pops up once the XP has poured in.
+	if not result.get("unlocked", []).is_empty():
+		var walk_unlocks = _class("res://ui/modal.gd").top()
+		check(walk_unlocks != null, "what the walk unlocked pops up (%s)" % [result["unlocked"]])
+		await _shot("finish_unlocked")
+		_class("res://ui/modal.gd").close_all()
+		await _wait(20)
 	check(finish._state == "ready", "the gift can be picked up")
 	check(finish._scenery.front.get_index() > finish._scenery.get_index(), "the growth stays in front of the pet")
 	check(finish._animal.get_index() > finish._walker.get_index(), "the pet stands in front of you at home")
@@ -2216,7 +2260,7 @@ func _accounts(main: Node) -> void:
 			break
 		await process_frame
 	check(home_pane._greeting.modulate.a > 0.3 and home_pane._hint.modulate.a < 0.05,
-		"then the greeting drops in, before Tap to focus (stage %d)" % home_pane._intro_stage)
+		"then the greeting drops in, before Tap to focus (stage %d, popup %s)" % [home_pane._intro_stage, _class("res://ui/modal.gd").top()])
 	await _shot("arriving_greeting")
 	check(home_pane._greeting.text.contains("Sam") or not home_pane._greeting.text.contains("{"), "greeting you by your new name")
 	for i in 120:

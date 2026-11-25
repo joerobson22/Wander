@@ -196,7 +196,7 @@
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#4a3528", "#6b4c38", "#a07e62"],
 			"walk_speed": 0.8,
-			"size": 1.4,
+			"size": 2.52,
 			"sound": "bear_roar",
 			"dive": {
 				"hops": 0,
@@ -217,7 +217,7 @@
 			"parts": ["Legs", "Body", "Pattern"],
 			"default_colours": ["#4a3528", "#6b4c38", "#a07e62"],
 			"walk_speed": 0.5,
-			"size": 1.4,
+			"size": 2.8,
 			"sound": "mammoth_trumpet",
 			"dive": {
 				"hops": 0,
@@ -437,7 +437,7 @@
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#c9662a", "#e07a30", "#e2c046"],
 			"walk_speed": 0.9,
-			"size": 1.25,
+			"size": 2.12,
 			"sound": "tiger_roar",
 			"dive": {
 				"hops": 1,
@@ -459,7 +459,7 @@
 			"parts": ["Legs", "Body", "Patches"],
 			"default_colours": ["#c99a5a", "#e8c07a", "#9a5a2c"],
 			"walk_speed": 0.85,
-			"size": 1.0,
+			"size": 2.0,
 			"sound": "giraffe_hum",
 			"dive": {
 				"hops": 0,
@@ -481,7 +481,7 @@
 			"parts": ["Legs", "Body", "Ears"],
 			"default_colours": ["#7d7f86", "#9a9ca3", "#b8a5a5"],
 			"walk_speed": 0.6,
-			"size": 1.6,
+			"size": 3.2,
 			"sound": "elephant_trumpet",
 			"dive": {
 				"hops": 0,
@@ -503,7 +503,7 @@
 			"parts": ["Legs", "Body", "Horn"],
 			"default_colours": ["#6e6a66", "#8c8782", "#e2dccf"],
 			"walk_speed": 0.65,
-			"size": 1.4,
+			"size": 2.38,
 			"sound": "rhino_snort",
 			"dive": {
 				"hops": 0,
@@ -546,7 +546,7 @@
 			"parts": ["Legs", "Body", "Eyes"],
 			"default_colours": ["#b8863a", "#d9a85a", "#c98a2a"],
 			"walk_speed": 0.8,
-			"size": 1.25,
+			"size": 2.12,
 			"sound": "lion_roar",
 			"dive": {
 				"hops": 1,

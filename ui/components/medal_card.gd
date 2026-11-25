@@ -143,8 +143,8 @@ class Disc extends Control:
 			var pet := AnimalView.new()
 			pet.animal_id = row["animal"]
 			pet.colours = Content.animal_default_colours(row["animal"])
-			pet.scale = Vector2.ONE * 0.3 * side / 52.0
-			pet.position = Vector2(side * 0.42, side * 0.78)
+			# Small enough that even the whale and the giraffe sit inside.
+			AnimalView.fit(pet, Vector2(side, side), 0.84, true)
 			pet.modulate = Color.WHITE if row["earned"] else Color(1, 1, 1, 0.35)
 			add_child(pet)
 		else:

@@ -112,6 +112,15 @@ func table_of(animal_id: String) -> String:
 	return str(animal(animal_id).get("table", animal_id))
 
 
+## The first animal (in the cast's order) that brings gifts from a table,
+## or "" if none does.
+func table_animal(table_id: String) -> String:
+	for a in animals:
+		if table_of(a["id"]) == table_id:
+			return a["id"]
+	return ""
+
+
 ## Every gift in a table, commonest first.
 func table_gifts(table_id: String) -> Array:
 	return gifts.filter(func(g): return g["table"] == table_id)

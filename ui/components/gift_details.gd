@@ -54,6 +54,13 @@ static func open(id: String, fresh: bool = false, yours: bool = true, first: boo
 	meta.add_child(UI.label(Text.t("gift.from", {"table": table_name.to_lower()}), 14, UI.INK_SOFT, false, 700))
 	m.body.add_child(meta)
 	m.body.add_child(UI.para(g.get("description", ""), 16, UI.INK))
-	if not yours:
-		return
-	m.body.add_child(UI.label(Text.t("gift.you_have", {"n": count}), 15, UI.INK_SOFT, false, 800))
+	# How many you have (not for a friend's), and the animal it comes from in
+	# the bottom right.
+	var last := UI.hbox(10)
+	var have := UI.label(Text.t("gift.you_have", {"n": count}) if yours else "", 15, UI.INK_SOFT, false, 800)
+	have.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	last.add_child(have)
+	var from := Content.table_animal(str(g.get("table", "")))
+	if from != "":
+		last.add_child(UI.animal_icon(from, Vector2(52, 38)))
+	m.body.add_child(last)

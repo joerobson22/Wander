@@ -56,6 +56,9 @@ func _on_shown() -> void:
 func _tile(id: String) -> GiftTile:
 	var tile := GiftTile.new(id, App.state.gift_count(id))
 	tile.trades = true
+	# A small, faint glow in its rarity's colour.
+	tile.art.glow = 0.5
+	tile.art.glow_reach = 0.3
 	return tile
 
 

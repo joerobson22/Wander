@@ -659,13 +659,18 @@ func _head_out(i: int, project: ProjectData) -> void:
 
 ## Where the walk puts you and your pet on a `view` sized screen whose path
 ## is at `feet`: {walker, animal, unit}. Shared with walk.gd, so heading out
-## ends exactly where the walk begins. A very big animal (the whale) walks
-## further ahead on a longer lead, so its tail stays clear of you.
+## ends exactly where the walk begins. A big animal walks further ahead on
+## a longer lead, so its back end stays clear of you, but never so far that
+## its head leaves a narrow screen.
 static func walk_spots(view: Vector2, feet: float, animal_id: String = "") -> Dictionary:
 	var unit := minf(view.x, view.y) / 720.0
 	var x := view.x * (0.3 if view.x < view.y else 0.38)
-	var big := maxf(0.0, float(Content.animal(animal_id).get("size", 1.0)) - 1.6) if animal_id != "" else 0.0
-	return {"walker": Vector2(x, feet), "animal": Vector2(x + (170.0 + 150.0 * big) * unit, feet + 4.0 * unit), "unit": unit}
+	# Its back end a lead's length ahead of you (170 for a dog), its head
+	# kept on screen.
+	var reach := AnimalView.reach(animal_id) if animal_id != "" else Vector2(50, 75)
+	var at := minf(x + maxf(170.0, reach.x + 120.0) * unit, view.x - (reach.y + 18.0) * unit)
+	at = maxf(at, x + 170.0 * unit)
+	return {"walker": Vector2(x, feet), "animal": Vector2(at, feet + 4.0 * unit), "unit": unit}
 
 
 func _on_left() -> void:
@@ -1048,8 +1053,10 @@ func _pick_colour(k: int) -> void:
 
 func _set_colour(c: Color, k: int) -> void:
 	_draft.colours[k] = c
+	# Assign the array again: the pixel rig only re-tints in the setter, so a
+	# redraw alone leaves the preview showing the old colours.
 	var view: AnimalView = _animals.items[_animals.index].get_meta("view")
-	view.queue_redraw()
+	view.colours = _draft.colours
 	_refresh_swatches()
 
 

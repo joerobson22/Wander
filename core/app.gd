@@ -40,6 +40,12 @@ var signed_out := false
 var _facts := {}
 var _facts_key := ""
 var _changes := 0
+## The animals and places unlocked as of the last change, and for which
+## save, so a change that unlocks more can tell (see take_unlocks()).
+var _known_unlocks := {}
+var _known_for := 0
+## Unlocked since, waiting to be announced: [{type, id}].
+var _new_unlocks: Array = []
 ## The holiday last worked out, and for which minute and save (see holiday()).
 var _holidays: Array[String] = []
 var _holiday_key := ""
@@ -70,6 +76,7 @@ func _ready() -> void:
 		# Closed mid-walk: the walk carries on, and the shell opens it.
 		check_away(state.active.left_at(SaveSystem.saved_unix(), now()))
 		save()
+	_note_unlocks()
 	var heartbeat := Timer.new()
 	heartbeat.wait_time = HEARTBEAT
 	heartbeat.autostart = true
@@ -273,6 +280,7 @@ func _enter_slot(id: String, next: GameState, index: Dictionary) -> void:
 	state = next
 	friends = _friends_for(id)
 	save_reset = false
+	_note_unlocks()
 	# Only the slot in use can have a walk running, but just in case.
 	if state.active:
 		_end_left_walk()
@@ -689,7 +697,6 @@ func finish_walk() -> Dictionary:
 	var pet := state.pet(clock.pet_id)
 	var animal_id := pet.animal_id if pet else ""
 
-	var before := unlocked_keys()
 	var pity := int(state.profile.get("walks_since_epic", 0))
 	var gift := GiftRoller.roll(seconds, Content.table_of(animal_id), pity, Content.drop_table, Content.gifts, rng)
 	state.profile["walks_since_epic"] = GiftRoller.next_pity_count(pity, seconds, gift.get("rarity", ""), Content.drop_table)
@@ -699,12 +706,7 @@ func finish_walk() -> Dictionary:
 		state.inventory[s.gift_id] = int(state.inventory.get(s.gift_id, 0)) + 1
 	state.active = null
 	_changed()
-	var unlocked: Array = []
-	for key in unlocked_keys():
-		if not before.has(key):
-			var bits: PackedStringArray = key.split(":")
-			unlocked.append({"type": bits[0], "id": bits[1]})
-	return {"session": s, "gift": gift, "unlocked": unlocked}
+	return {"session": s, "gift": gift, "unlocked": take_unlocks()}
 
 
 func cancel_walk() -> void:
@@ -785,8 +787,35 @@ func _log_walk(clock: SessionClock, end_unix: int, gift_id: String) -> FocusSess
 
 func _changed() -> void:
 	_changes += 1
+	_note_unlocks()
 	save()
 	state_changed.emit()
+
+
+## Everything unlocked since this was last asked, [{type, id}] in the order
+## they came, and forgets them. Whatever unlocks it (a walk's time, a level,
+## a gift that finishes a table, a trade-in), each is handed out once, so
+## its popup shows once.
+func take_unlocks() -> Array:
+	var out := _new_unlocks
+	_new_unlocks = []
+	return out
+
+
+## Notes anything unlocked since the last change. A different save (just
+## loaded, switched to, started afresh) only sets where to count from, and
+## so does the debug "Unlock all" switch.
+func _note_unlocks() -> void:
+	var keys := unlocked_keys()
+	if _known_for == state.get_instance_id() and not debug_unlock_all():
+		for key in keys:
+			if not _known_unlocks.has(key):
+				var bits: PackedStringArray = key.split(":")
+				_new_unlocks.append({"type": bits[0], "id": bits[1]})
+	else:
+		_new_unlocks = []
+	_known_unlocks = keys
+	_known_for = state.get_instance_id()
 
 
 func _first_launch_state() -> GameState:

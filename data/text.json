@@ -274,9 +274,7 @@
 		"no_gift_why": "Focus for {minutes} minutes or more and your pet finds you one.",
 		"found": "{pet} found you {a_rarity} gift",
 		"xp": "+{xp} xp",
-		"level_up": "Level {level}!",
-		"level_up_unlocks": "Level {level}! {unlocked} unlocked",
-		"unlocked": "{unlocked} unlocked!"
+		"level_up": "Level {level}!"
 	},
 	"gifts": {
 		"title": "Gifts",
@@ -412,6 +410,12 @@
 		"from_start": "From the start",
 		"new_place": "{when}  ·  new place",
 		"new_animal": "{when}  ·  new animal"
+	},
+	"unlocked": {
+		"title": "Unlocked!",
+		"nice": "Nice!",
+		"new_animal": "New animal",
+		"new_place": "New place"
 	},
 	"unlock": {
 		"start": "Yours from the start",
