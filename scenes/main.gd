@@ -356,9 +356,27 @@ func _on_sky_tick() -> void:
 		_backdrop.refresh()
 	_dress_screens()
 	_give_holiday_present.call_deferred()
+	_announce_unlocks.call_deferred()
 
 
-## Hangs the holiday's decorations over the screens, or takes them down.
+## Anything unlocked away from a walk (a trade-in that finishes a table, a
+## walk left running in another account) pops up once you're on the
+## screens and nothing else is open. A walk's own unlocks show on its end
+## screen, which takes them first.
+func _announce_unlocks() -> void:
+	if _locked or not _flows.is_empty():
+		return
+	if Modal.is_open():
+		# Straight after whatever's open now (the gift a trade brought).
+		var open := Modal.top()
+		if not open.closed.is_connected(_on_blocking_modal_closed):
+			open.closed.connect(_on_blocking_modal_closed)
+		return
+	UnlockCard.open(App.take_unlocks())
+
+
+func _on_blocking_modal_closed(_result: Variant) -> void:
+	_announce_unlocks.call_deferred()
 func _dress_screens() -> void:
 	var id := App.holiday()
 	if id == _decor_for:

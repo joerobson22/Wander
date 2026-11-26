@@ -31,6 +31,11 @@ var glow := 0.0:
 	set(v):
 		glow = v
 		queue_redraw()
+## How far past the picture the glow reaches, as a share of its radius.
+var glow_reach := 0.81:
+	set(v):
+		glow_reach = v
+		queue_redraw()
 ## Dimmed for gifts you've found but have none of right now.
 var faded := false
 
@@ -58,7 +63,7 @@ func _draw() -> void:
 		col = col.lerp(UI.NEUTRAL, 0.7)
 	if glow > 0.0:
 		for i in 10:
-			var t := 1.0 + i * 0.09
+			var t := 1.0 + i * glow_reach / 9.0
 			draw_circle(c, r * t, Color(col, 0.05 * glow * (1.0 - i / 10.0)), true, -1.0, true)
 	var art := texture_for(gift_id)
 	if art:

@@ -17,6 +17,8 @@ const WIDTH_WORN := 360.0
 ## The gap between the card and the gift.
 const GAP := 6.0
 const BAR_HEIGHT := 8
+## The animal it comes from, in the bottom right corner.
+const ICON := Vector2(40, 30)
 
 ## The layer over everything that the cards draw on.
 const LAYER := 100
@@ -108,8 +110,16 @@ func _init(id: String) -> void:
 
 	var cost := Content.trade_cost(rarity)
 	var next := Content.next_rarity(rarity)
+	# The animal it comes from, small in the bottom right corner.
+	var from := Content.table_animal(str(g.get("table", "")))
 	if cost <= 0 or next == "":
-		col.add_child(UI.para(Text.t("gift.no_trade"), 13, UI.INK_FAINT))
+		var last := UI.hbox(10)
+		var none := UI.para(Text.t("gift.no_trade"), 13, UI.INK_FAINT)
+		none.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		last.add_child(none)
+		if from != "":
+			last.add_child(UI.animal_icon(from, ICON))
+		col.add_child(last)
 		return
 	var full := count >= cost
 	var gap := Control.new()
@@ -130,6 +140,8 @@ func _init(id: String) -> void:
 	var tally := UI.label(Text.t("gift.tally", {"have": count, "need": cost}), 13, Content.rarity_text_colour(next) if full else UI.INK_SOFT, false, 800)
 	tally.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	foot.add_child(tally)
+	if from != "":
+		foot.add_child(UI.animal_icon(from, ICON))
 	col.add_child(foot)
 
 

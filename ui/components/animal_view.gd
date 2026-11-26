@@ -170,6 +170,64 @@ func set_rig(scene: PackedScene) -> void:
 	queue_redraw()
 
 
+## How far an animal's art reaches behind its feet (x) and ahead of them
+## (y), in units at scale 1. For laying out walks (ChooseFocus.walk_spots).
+static func reach(id: String) -> Vector2:
+	var r := extent(id)
+	return Vector2(-r.position.x, r.end.x)
+
+
+## The box an animal's art fills at scale 1, its feet at the origin: from
+## its rig, or a guess from its size if it has none.
+static func extent(id: String) -> Rect2:
+	if _extents.has(id):
+		return _extents[id]
+	var size := float(Content.animal(id).get("size", 1.0))
+	var out := Rect2(Vector2(-49.0, -80.0) * size, Vector2(123.0, 80.0) * size)
+	var path := rig_path(id)
+	var scene := load(path) as PackedScene if path != "" else null
+	if scene:
+		var state := scene.get_state()
+		for n in state.get_node_count():
+			if state.get_node_name(n) != "Sprite":
+				continue
+			var props := {}
+			for k in state.get_node_property_count(n):
+				props[state.get_node_property_name(n, k)] = state.get_node_property_value(n, k)
+			var tex := props.get("texture") as Texture2D
+			if tex:
+				var k: float = (props.get("scale", Vector2.ONE) as Vector2).x * size
+				var frames := int(props.get("hframes", 1))
+				var w := tex.get_width() / frames
+				# Only the drawn part of the frames (they leave room to hop).
+				var used := Rect2i()
+				var img := tex.get_image()
+				for f in frames:
+					var r := img.get_region(Rect2i(f * w, 0, w, tex.get_height())).get_used_rect()
+					if r.has_area():
+						used = r if not used.has_area() else used.merge(r)
+				if not used.has_area():
+					used = Rect2i(0, 0, w, tex.get_height())
+				out = Rect2((props.get("offset", Vector2.ZERO) + Vector2(used.position)) * k, Vector2(used.size) * k)
+	_extents[id] = out
+	return out
+
+
+static var _extents := {}
+
+
+## Scales and places `view` so its whole animal sits in the middle of a
+## `box` (top left at the origin), `fill` of the way across its tighter side.
+## A circle's box fits the animal's corners inside the circle instead.
+static func fit(view: AnimalView, box: Vector2, fill: float = 0.86, circle: bool = false) -> void:
+	var r := extent(view.animal_id)
+	var s := minf(box.x * fill / r.size.x, box.y * fill / r.size.y)
+	if circle:
+		s = minf(box.x, box.y) * 0.5 * fill / (r.size.length() * 0.5)
+	view.scale = Vector2(s, s)
+	view.position = box * 0.5 - r.get_center() * s
+
+
 func _load_rig() -> void:
 	var path := rig_path(animal_id)
 	set_rig(load(path) as PackedScene if path != "" else null)

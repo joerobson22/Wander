@@ -49,6 +49,6 @@ func test_sort_gifts() -> void:
 	var ids := ["cat_rare", "dog_common", "dog_epic", "cat_common"]
 	eq(Collection.sort_gifts(ids, "rarity", false, SORTABLE, TABLES), ["dog_epic", "cat_rare", "dog_common", "cat_common"], "rarest first, then A-Z")
 	eq(Collection.sort_gifts(ids, "name", false, SORTABLE, TABLES), ["dog_common", "dog_epic", "cat_common", "cat_rare"], "A-Z")
-	eq(Collection.sort_gifts(ids, "animal", false, SORTABLE, TABLES), ["dog_common", "dog_epic", "cat_common", "cat_rare"], "pet type, commonest first")
+	eq(Collection.sort_gifts(ids, "animal", false, SORTABLE, TABLES), ["dog_epic", "dog_common", "cat_rare", "cat_common"], "pet type, rarest first")
 	eq(Collection.sort_gifts(ids, "name", true, SORTABLE, TABLES), ["cat_rare", "cat_common", "dog_epic", "dog_common"], "reversed")
 	eq(ids, ["cat_rare", "dog_common", "dog_epic", "cat_common"], "leaves the list it's given alone")

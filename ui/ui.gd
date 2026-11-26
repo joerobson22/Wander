@@ -939,13 +939,25 @@ static func animal_portrait(animal_id: String, colours: Array[Color], box_size: 
 	view.animal_id = animal_id
 	view.colours = colours
 	holder.add_child(view)
-	var place := func():
-		# Big animals (bear, elephant) are drawn larger, so fit by their size too.
-		var s := minf(holder.size.x / 150.0, holder.size.y / 95.0) / float(Content.animal(animal_id).get("size", 1.0))
-		view.scale = Vector2(s, s)
-		view.position = Vector2(holder.size.x * 0.45, holder.size.y * 0.88)
+	# The whole animal in the middle, however tall (giraffe) or long (whale).
+	var place := func(): AnimalView.fit(view, holder.size)
 	holder.resized.connect(place)
 	return frame
+
+
+## A small picture of an animal, the whole of it fitted in a `box_size`
+## box with nothing behind it: the animal a gift comes from, say.
+static func animal_icon(animal_id: String, box_size: Vector2) -> Control:
+	var holder := Control.new()
+	holder.custom_minimum_size = box_size
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.accessibility_name = str(Content.animal(animal_id).get("name", ""))
+	var view := AnimalView.new()
+	view.animal_id = animal_id
+	view.colours = Content.animal_default_colours(animal_id)
+	holder.add_child(view)
+	AnimalView.fit(view, box_size, 1.0)
+	return holder
 
 
 ## A place's icon in white on a tile of its ground colour (a little darker,

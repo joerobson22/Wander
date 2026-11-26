@@ -39,7 +39,7 @@ static func sorts() -> Array:
 
 
 ## `ids` sorted `by` one of sorts(): rarity puts the rarest first (then A–Z);
-## A–Z is by name; pet type follows the gift tables' order, commonest first
+## A–Z is by name; pet type follows the gift tables' order, rarest first
 ## within each. `reversed` flips the whole order.
 static func sort_gifts(ids: Array, by: String, reversed: bool, gifts: Array, tables: Array) -> Array:
 	var info := {}
@@ -56,7 +56,7 @@ static func sort_gifts(ids: Array, by: String, reversed: bool, gifts: Array, tab
 			"name":
 				return [name]
 			"animal":
-				return [cast.get(g.get("table", ""), 99), rarity, name]
+				return [cast.get(g.get("table", ""), 99), -rarity, name]
 			_:
 				return [-rarity, name]
 	var out := ids.duplicate()

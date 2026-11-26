@@ -374,9 +374,9 @@ func ambience() -> String:
 ## moves the rest. Positions are worked out in full precision here, so hours
 ## of walking never make the scenery jitter.
 func _place_chunks() -> void:
-	# Everything moves a whole pixel at a time, and the swaying plants and
-	# water step at 8 frames a second, as pixel art does.
-	var p := PixelDraw.size_for(size.y)
+	# The layers glide (a whole art pixel at a time looked jolty on the
+	# slow, far layers); the swaying plants and water still step at 8
+	# frames a second, as pixel art does.
 	var step := floori(_time * ANIMATION_FPS)
 	var redraw := step != _anim_step
 	_anim_step = step
@@ -401,7 +401,7 @@ func _place_chunks() -> void:
 				chunk.index = i
 				layer["node"].add_child(chunk)
 				chunks[i] = chunk
-			chunk.position.x = i * CHUNK - floorf(offset / p) * p
+			chunk.position.x = i * CHUNK - offset
 			if layer["animated"] and redraw:
 				chunk.queue_redraw()
 
