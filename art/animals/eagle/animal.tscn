@@ -28,7 +28,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(10.59, -60), Vector2(10.59, -70.59), Vector2(10.59, -77.65), Vector2(10.59, -67.06)]
+"values": [Vector2(10.59, -63.53), Vector2(10.59, -63.53), Vector2(10.59, -63.53), Vector2(10.59, -63.53)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -40,7 +40,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.2, 0.4, 0.6),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(42.35, -49.41), Vector2(42.35, -60), Vector2(42.35, -67.06), Vector2(42.35, -56.47)]
+"values": [Vector2(45.88, -52.94), Vector2(45.88, -52.94), Vector2(45.88, -52.94), Vector2(45.88, -52.94)]
 }
 
 [sub_resource type="Animation" id="Animation_idle"]
@@ -69,7 +69,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 3.5, 3.65),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [Vector2(10.59, -60), Vector2(10.59, -60), Vector2(10.59, -60)]
+"values": [Vector2(10.59, -63.53), Vector2(10.59, -63.53), Vector2(10.59, -63.53)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -81,7 +81,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 3.5, 3.65),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
-"values": [Vector2(42.35, -49.41), Vector2(42.35, -49.41), Vector2(42.35, -49.41)]
+"values": [Vector2(45.88, -52.94), Vector2(45.88, -52.94), Vector2(45.88, -52.94)]
 }
 
 [sub_resource type="Animation" id="Animation_sad"]
@@ -110,7 +110,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [Vector2(10.59, -56.47)]
+"values": [Vector2(10.59, -60)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -122,7 +122,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [Vector2(42.35, -38.82)]
+"values": [Vector2(45.88, -42.35)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_main"]
@@ -139,15 +139,15 @@ texture_filter = 1
 scale = Vector2(3.52941, 3.52941)
 texture = ExtResource("1_frames")
 centered = false
-offset = Vector2(-12, -29)
+offset = Vector2(-14, -31)
 hframes = 7
 frame = 4
 
 [node name="Neck" type="Marker2D" parent="."]
-position = Vector2(10.59, -60)
+position = Vector2(10.59, -63.53)
 
 [node name="Mouth" type="Marker2D" parent="."]
-position = Vector2(42.35, -49.41)
+position = Vector2(45.88, -52.94)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries/ = SubResource("AnimationLibrary_main")

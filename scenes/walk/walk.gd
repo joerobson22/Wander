@@ -544,6 +544,9 @@ func _end() -> void:
 ## The pet stops, dives into a bush, rustles about and comes back out with
 ## the gift. How it gets there comes from its "dive" in data/animals.json.
 func _dive(gift_id: String) -> void:
+	if _animal.flies():
+		_fly_fetch(gift_id)
+		return
 	var s := _unit()
 	var dive: Dictionary = Content.animal(_pet.animal_id).get("dive", {})
 	var hops := int(dive.get("hops", 1))
@@ -600,6 +603,84 @@ func _dive(gift_id: String) -> void:
 	Audio.play("gift_found", 1.0, -6.0, "chime")
 	await get_tree().create_timer(Motion.time(0.7)).timeout
 	_go_finish()
+
+
+## A flyer fetches on the wing: it flies up and off the screen, comes back
+## with the gift in its mouth, does a loop-the-loop and lands on the path in
+## front of you.
+func _fly_fetch(gift_id: String) -> void:
+	var s := _unit()
+	var t := Motion.tween(self, "dive")
+	t.set_parallel(true)
+	t.tween_method(_set_pace, 1.0, 0.0, Motion.time(1.0))
+	t.tween_property(self, "_lead_alpha", 0.0, Motion.time(0.5))
+	await t.finished
+	if _done:
+		return
+	var start := _animal.position
+	_animal.walking = true
+	_animal.running = true
+	var away := Vector2(size.x + 160.0 * s, start.y - size.y * 0.4)
+	t = Motion.tween(self, "dive")
+	t.tween_method(_glide.bind(start, away, -0.35), 0.0, 1.0, Motion.time(1.1)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await t.finished
+	if _done:
+		return
+	await get_tree().create_timer(Motion.time(0.7)).timeout
+	if _done:
+		return
+
+	_animal.held_gift = gift_id
+	_animal.scale.x = -absf(_animal.scale.x)
+	Audio.play(str(Content.animal(_pet.animal_id).get("sound", "")), 1.0, -4.0)
+	var out := start + Vector2(30.0 * s, 0)
+	var radius := minf(size.y * 0.16, 120.0 * s)
+	# The loop starts (and ends) at its lowest point, a little above you.
+	var low := Vector2(lerpf(out.x, size.x, 0.45), out.y - radius * 0.9)
+	t = Motion.tween(self, "dive")
+	t.tween_method(_glide.bind(away + Vector2(0, -size.y * 0.05), low, 0.0), 0.0, 1.0, Motion.time(1.0)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await t.finished
+	if _done:
+		return
+	t = Motion.tween(self, "dive")
+	t.tween_method(_loop.bind(low, radius), 0.0, TAU, Motion.time(1.4)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t.finished
+	if _done:
+		return
+	# Down to the path in front of you, settling as it lands.
+	_animal.running = false
+	t = Motion.tween(self, "dive")
+	t.tween_method(_glide.bind(low, out, 0.0), 0.0, 1.0, Motion.time(0.9)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await t.finished
+	if _done:
+		return
+	_animal.walking = false
+	_animal.rotation = 0.0
+	await get_tree().create_timer(Motion.time(0.4)).timeout
+	Motion.pop(_animal, 0.12)
+	Audio.play("gift_found", 1.0, -6.0, "chime")
+	await get_tree().create_timer(Motion.time(0.7)).timeout
+	_go_finish()
+
+
+## One frame of flying straight from `from` to `to` (feet positions),
+## tilting by up to `tilt` radians as it goes.
+func _glide(t: float, from: Vector2, to: Vector2, tilt: float) -> void:
+	_animal.position = from.lerp(to, t)
+	_animal.rotation = tilt * sin(t * PI)
+
+
+## One frame of the loop-the-loop, `a` radians round: its body follows a
+## circle of `radius` whose lowest point is `low`, turning to face the way
+## it's going. (It faces left, so going round anticlockwise on screen is
+## forward, up, over and back down.)
+func _loop(a: float, low: Vector2, radius: float) -> void:
+	var centre := low + Vector2(0, -radius)
+	var body := centre + Vector2(-sin(a), cos(a)) * radius
+	var up := Vector2(0, -_animal.lift() * absf(_animal.scale.y))
+	_animal.rotation = a
+	# It turns about its feet, so put them where the body ends up on the circle.
+	_animal.position = body - up.rotated(a) + up
 
 
 func _set_pace(v: float) -> void:

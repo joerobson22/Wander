@@ -104,6 +104,13 @@ var sad := 0.0:
 		_animate()
 		queue_redraw()
 
+## How much of a flyer's take-off it uses (1 = all of it): a small stage,
+## like the adopt carousel's, keeps it lower.
+var lift_scale := 1.0
+## How high a flyer's body is off the ground now, in this node's units.
+var _lift := 0.0
+var _air_bob := 0.0
+
 var _phase: float = 0.0
 var _sigh: float = 0.0
 ## Time spent afloat: swimmers bob gently even standing still.
@@ -285,7 +292,36 @@ func _marker(marker: String, fallback: Vector2) -> Vector2:
 	return global_transform.affine_inverse() * node.global_position
 
 
+## Whether it flies (animals.json "flies"): it takes off while it walks.
+func flies() -> bool:
+	return bool(Content.animal(animal_id).get("flies", false))
+
+
+## How high it flies while walking, in this node's units (bigger flyers
+## fly higher).
+func hover_height() -> float:
+	return (40.0 + 20.0 * float(Content.animal(animal_id).get("size", 1.0))) * lift_scale
+
+
+## How far its body is off the ground right now, in this node's units.
+func lift() -> float:
+	return _lift
+
+
+## A flyer rises as it sets off and settles back down when it stops, with a
+## gentle bob in the air; its whole body (wings, legs, head) moves as one.
+func _fly(delta: float) -> void:
+	var goal := hover_height() if walking else 0.0
+	_lift = move_toward(_lift, goal, delta * maxf(90.0, hover_height() * 2.2))
+	_air_bob += delta
+	if _rig:
+		var high := _lift / maxf(1.0, hover_height())
+		_rig.position.y = -_lift - sin(_air_bob * 3.2) * 3.0 * high
+
+
 func _process(delta: float) -> void:
+	if flies():
+		_fly(delta)
 	if _rig:
 		_animate_rig(delta)
 		return

@@ -1,0 +1,95 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/walk/place_scenery.gd" id="1_place"]
+[ext_resource type="Script" path="res://scenes/walk/scenery_layer.gd" id="2_layer"]
+
+[node name="PrehistoricValley" type="Node2D"]
+script = ExtResource("1_place")
+
+[node name="Volcanoes" type="Node2D" parent="."]
+position = Vector2(0, 360.0)
+script = ExtResource("2_layer")
+kind = "volcanoes"
+parallax = 0.04
+y = 0.5
+height = 0.3
+colour = Color(0.5412, 0.4784, 0.5255, 1)
+pattern = 91
+spacing = 330
+base = Color(0.6392, 0.6784, 0.5569, 1)
+
+[node name="Hills" type="Node2D" parent="."]
+position = Vector2(0, 421.2)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.1
+y = 0.585
+height = 0.07
+colour = Color(0.5765, 0.6588, 0.4549, 1)
+pattern = 92
+wavelength = 500
+
+[node name="Dinosaurs" type="Node2D" parent="."]
+position = Vector2(0, 432.0)
+script = ExtResource("2_layer")
+kind = "dinosaurs"
+parallax = 0.14
+y = 0.6
+height = 0.075
+colour = Color(0.42, 0.51, 0.38, 1)
+pattern = 93
+spacing = 240
+
+[node name="TallTrees" type="Node2D" parent="."]
+position = Vector2(0, 482.4)
+script = ExtResource("2_layer")
+kind = "tall_trees"
+parallax = 0.3
+y = 0.67
+height = 0.34
+colour = Color(0.3098, 0.4784, 0.2667, 1)
+pattern = 94
+spacing = 96
+
+[node name="Hills2" type="Node2D" parent="."]
+position = Vector2(0, 496.8)
+script = ExtResource("2_layer")
+kind = "hills"
+parallax = 0.5
+y = 0.69
+height = 0.04
+colour = Color(0.4588, 0.6275, 0.3216, 1)
+pattern = 95
+
+[node name="Ferns" type="Node2D" parent="."]
+position = Vector2(0, 522.0)
+script = ExtResource("2_layer")
+kind = "ferns"
+parallax = 0.9
+y = 0.725
+height = 0.07
+colour = Color(0.2471, 0.4784, 0.2275, 1)
+pattern = 96
+spacing = 54
+
+[node name="Ground" type="Node2D" parent="."]
+position = Vector2(0, 518.4)
+script = ExtResource("2_layer")
+kind = "ground"
+parallax = 1.0
+y = 0.72
+height = 0.28
+colour = Color(0.5255, 0.6275, 0.3137, 1)
+pattern = 97
+path_colour = Color(0.7608, 0.651, 0.451, 1)
+
+[node name="Fronds" type="Node2D" parent="."]
+position = Vector2(0, 698.4)
+script = ExtResource("2_layer")
+kind = "fronds"
+parallax = 1.4
+y = 0.97
+height = 0.09
+colour = Color(0.1843, 0.3725, 0.1725, 1)
+pattern = 98
+spacing = 70

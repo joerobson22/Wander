@@ -31,7 +31,7 @@ var holiday_look: HolidayLook
 
 ## The kinds that are trees: a holiday can kill them, snow on them or hang
 ## lights in them.
-const TREES := ["trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms"]
+const TREES := ["trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms", "tall_trees"]
 const SNOW := Color(0.95, 0.97, 1.0)
 const DEAD_WOOD := Color("#4a3f3a")
 
@@ -62,6 +62,13 @@ func _holiday() -> HolidayLook:
 	return scenery._holiday if scenery else holiday_look
 
 
+## Snow lies on the ground and the trees: a holiday's, or it's snowing.
+func _snowy() -> bool:
+	if scenery:
+		return scenery.snow_lying()
+	return holiday_look != null and holiday_look.snow
+
+
 static func _noise(t: float, sd: float) -> float:
 	return 0.55 * sin(t * TAU + sd) + 0.3 * sin(t * TAU * 2.3 + sd * 1.7) + 0.15 * sin(t * TAU * 5.1 + sd * 2.9)
 
@@ -88,17 +95,22 @@ func _draw() -> void:
 	var h := size.y * float(layer["height"])
 	var sd := float(layer.get("seed", 0))
 	var spacing := float(layer.get("spacing", 70))
-	var look := _holiday()
-	var snowy := look != null and look.snow
+	var snowy := _snowy()
 	var snow := bool(layer.get("snow", false)) or snowy
 	# World x where this chunk starts, in the layer's own scrolling space.
 	var x0 := index * CHUNK
 	var kind := str(layer["kind"])
 	if snowy and kind in ["hills", "fields", "ground", "mesas"]:
 		colour = colour.lerp(SNOW, 0.45)
+	# Land under the layer, so no sky shows between it and what's in front.
+	if layer.has("base"):
+		var land := Color.from_string(layer["base"], colour)
+		if snowy:
+			land = land.lerp(SNOW, 0.45)
+		_hills(x0, y, size.y * 0.015, 260.0, sd + 4.0, land, size)
 	if TREES.has(kind):
 		var share: Array = {"trees": [0.25, 0.6, 0.6], "pines": [0.2, 0.55, 0.6], "broadleaf": [0.3, 0.7, 0.4], "canopy": [0.0, 0.75, 0.35],
-			"palms": [0.35, 0.7, 0.4], "acacias": [0.3, 0.7, 0.4], "blossoms": [0.15, 0.7, 0.4]}[kind]
+			"palms": [0.35, 0.7, 0.4], "acacias": [0.3, 0.7, 0.4], "blossoms": [0.15, 0.7, 0.4], "tall_trees": [0.3, 0.75, 0.35]}[kind]
 		_slots(x0, spacing, sd, share[0], func(x, r, i): _any_tree(kind, x, y, h * (share[1] + share[2] * r), colour, r, i, sd, snow))
 		return
 	match kind:
@@ -144,6 +156,12 @@ func _draw() -> void:
 			_slots(x0, spacing, sd, float(layer.get("skip", 0.25)), func(x, r, i): _rocks(x, y, h * (0.5 + 0.6 * r), colour.darkened(0.1 * _hash(i + 3, sd)), r, i, sd))
 		"coral":
 			_slots(x0, spacing, sd, float(layer.get("skip", 0.2)), func(x, r, i): _coral(x, y, h * (0.55 + 0.55 * r), colour, r, i, sd))
+		"volcanoes":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.35)), func(x, r, i): _volcano(x, y, h * (0.65 + 0.45 * r), spacing * (0.7 + 0.4 * _hash(i + 9, sd)), colour.darkened(0.08 * _hash(i + 2, sd)), i, sd))
+		"ferns":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.3)), func(x, r, i): _fern(x, y, h * (0.6 + 0.5 * r), colour.darkened(0.12 * _hash(i + 4, sd)), r))
+		"dinosaurs":
+			_slots(x0, spacing, sd, float(layer.get("skip", 0.45)), func(x, r, i): _dinosaurs(x, y, h, colour, r, i, sd))
 		"seaweed":
 			_slots(x0, spacing, sd, float(layer.get("skip", 0.25)), func(x, r, i): _seaweed(x, y, h * (0.6 + 0.6 * r), colour.darkened(0.12 * _hash(i + 5, sd)), r))
 
@@ -218,13 +236,20 @@ func _ground(x0: float, y: float, h: float, sd: float, colour: Color, size: Vect
 			_px.ellipse(c, Vector2(1.0, 0.35) * (10.0 + 22.0 * r), colour.darkened(0.12))
 			_px.ellipse(c + Vector2(0, 1), Vector2(1.0, 0.35) * (8.0 + 18.0 * r), colour.darkened(0.2))
 	var look := _holiday()
-	if look and look.snow:
+	if _snowy():
 		path_colour = path_colour.lerp(SNOW, 0.35)
 		_px.rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, h * 0.2), path_colour)
 		var edge := PackedVector2Array()
 		for k in pts.size() - 2:
 			edge.append(pts[k] + Vector2(0, 3.0))
 		_px.polyline(edge, SNOW, clampf(h * 0.05, 4.0, 10.0))
+		# Patches of snow lying on the path itself, and along both its edges.
+		for i in range(floori(x0 / 46.0) - 1, floori((x0 + CHUNK) / 46.0) + 1):
+			var r := _hash(i, sd + 21.0)
+			var c := Vector2(i * 46.0 - x0 + 30.0 * r, py + h * (0.12 * _hash(i, sd + 22.0) - 0.06))
+			_px.ellipse(c, Vector2(10.0 + 22.0 * r, 2.5 + 3.0 * _hash(i, sd + 23.0)), SNOW)
+		_px.rect(Rect2(-1.0, py - h * 0.1, CHUNK + 2.0, maxf(2.0, h * 0.015)), SNOW)
+		_px.rect(Rect2(-1.0, py + h * 0.1 - maxf(2.0, h * 0.015), CHUNK + 2.0, maxf(2.0, h * 0.015)), SNOW)
 	# Pebbles on the path so movement reads even with flat placeholder art.
 	var spacing := 54.0
 	for i in range(floori(x0 / spacing), floori((x0 + CHUNK) / spacing) + 1):
@@ -293,10 +318,10 @@ func _any_tree(kind: String, x: float, y: float, th: float, colour: Color, r: fl
 			_acacia(x, y, th, colour, r)
 		"blossoms":
 			_blossom(x, y, th, colour.darkened(0.1 * _hash(i + 5, sd)), i, sd)
-	if look == null:
-		return
+		"tall_trees":
+			_tall_tree(x, y, th, colour.darkened(0.12 * _hash(i + 5, sd)), r)
 	var crown := _crown(kind, x, y, th, r, i, sd)
-	if look.snow and kind not in ["pines", "palms"]:
+	if _snowy() and kind not in ["pines", "palms"]:
 		if kind == "trees":
 			var half := th * 0.38 * 0.5
 			_px.poly(PackedVector2Array([Vector2(x - half * 0.4, y - th * 0.68), Vector2(x, y - th), Vector2(x + half * 0.4, y - th * 0.68)]), SNOW)
@@ -314,6 +339,8 @@ func _any_tree(kind: String, x: float, y: float, th: float, colour: Color, r: fl
 				var a := PI * (1.2 + 0.6 * k / 10.0)
 				cap.append(c + Vector2(cos(a) * radius.x, sin(a) * radius.y + thick * sin(PI * k / 10.0)))
 			_px.poly(cap, SNOW)
+	if look == null:
+		return
 	if look.lit_trees > 0.0 and _hash(i, sd + 50.0) < look.lit_trees:
 		var bulb := clampf(th * 0.022, 1.6, 4.0)
 		var pointed := kind in ["trees", "pines"]
@@ -341,6 +368,8 @@ func _crown(kind: String, x: float, y: float, th: float, r: float, i: int, sd: f
 		"acacias":
 			var top := Vector2(x + (r - 0.5) * th * 0.2, y - th * 0.78)
 			return Rect2(top.x - th * 0.42, top.y - th * 0.2, th * 0.84, th * 0.24)
+		"tall_trees":
+			return Rect2(x - th * 0.28, y - th * 1.02, th * 0.56, th * 0.4)
 		"blossoms":
 			var fork := Vector2(x + (_hash(i, sd + 8.0) - 0.5) * th * 0.18, y - th * 0.5)
 			return Rect2(fork.x - th * 0.33, fork.y - th * 0.48, th * 0.66, th * 0.4)
@@ -731,3 +760,109 @@ func _stalk(x: float, bottom: float, h: float, colour: Color, r: float) -> void:
 func _drift(x: float, bottom: float, h: float, colour: Color) -> void:
 	_px.ellipse(Vector2(x, bottom), Vector2(40.0, h), colour)
 	_px.ellipse(Vector2(x + 34.0, bottom + 8.0 * h / 40.0), Vector2(30.0, 30.0 * h / 40.0), colour)
+
+
+## A tall prehistoric tree: a long bare trunk with flat tiers of leaves up
+## at the top, like a monkey puzzle.
+func _tall_tree(x: float, y: float, th: float, colour: Color, r: float) -> void:
+	var wood := Color("#5e4632").lerp(colour, 0.2)
+	var lean := (r - 0.5) * th * 0.06
+	var top := Vector2(x + lean, y - th * 0.92)
+	_px.line(Vector2(x, y + 2.0), top, wood, maxf(2.0, th * 0.035))
+	for k in 3:
+		var at := Vector2(x, y).lerp(top, 0.72 + 0.12 * k)
+		var wide := th * (0.28 - 0.06 * k)
+		_px.ellipse(at, Vector2(wide, th * 0.06), colour.darkened(0.12 * (2 - k)))
+		_px.ellipse(at + Vector2(-wide * 0.2, -th * 0.025), Vector2(wide * 0.6, th * 0.03), colour.lightened(0.08))
+	_px.ellipse(top + Vector2(0, -th * 0.04), Vector2(th * 0.08, th * 0.06), colour)
+
+
+## A volcano far off: a broad cone with a notch of a crater, a glow of lava
+## at its lip and down one side, and smoke rising from it.
+func _volcano(x: float, y: float, th: float, w: float, colour: Color, i: int, sd: float) -> void:
+	var lip := w * 0.07
+	var peak := y - th
+	_px.poly(PackedVector2Array([Vector2(x - w * 0.62, y + 2.0), Vector2(x - lip, peak), Vector2(x + lip, peak), Vector2(x + w * 0.62, y + 2.0)]), colour)
+	_px.poly(PackedVector2Array([Vector2(x + lip * 0.2, peak), Vector2(x + lip, peak), Vector2(x + w * 0.62, y + 2.0), Vector2(x + w * 0.1, y + 2.0)]), colour.darkened(0.12))
+	var lava := Color("#e8642c")
+	_px.rect(Rect2(x - lip * 0.8, peak - 1.0, lip * 1.6, maxf(2.0, th * 0.025)), lava)
+	if _hash(i, sd + 30.0) > 0.4:
+		var run := PackedVector2Array([Vector2(x - lip * 0.3, peak)])
+		for k in range(1, 5):
+			run.append(Vector2(x - lip * 0.3 - w * 0.06 * k + w * 0.03 * sin(k * 2.1 + i), peak + th * 0.13 * k))
+		_px.polyline(run, lava.darkened(0.1), maxf(2.0, w * 0.02))
+	var smoke := Color(colour.lightened(0.35), 0.55)
+	for k in 4:
+		var c := Vector2(x + w * 0.05 * k + w * 0.03 * _hash(i * 4 + k, sd), peak - th * (0.08 + 0.14 * k))
+		_px.ellipse(c, Vector2(w * (0.06 + 0.035 * k), th * (0.05 + 0.025 * k)), Color(smoke, smoke.a * (1.0 - 0.18 * k)))
+
+
+## A little fern: fronds arching out either side of its middle.
+func _fern(x: float, base: float, h: float, colour: Color, r: float) -> void:
+	for k in 5:
+		var angle := -PI * 0.5 + (k - 2) * 0.42 + (r - 0.5) * 0.2
+		var bend := 0.18 * (1.0 if k >= 2 else -1.0)
+		_leaf(Vector2(x, base + 1.0), angle, h * (1.0 - 0.15 * absf(k - 2)), h * 0.32, bend, colour.darkened(0.06 * absf(k - 2)))
+
+
+## A little group of dinosaurs far away, as hazy shapes: long-necks, plated
+## backs or horned heads, and now and then pterodactyls gliding above.
+func _dinosaurs(x: float, y: float, h: float, colour: Color, r: float, i: int, sd: float) -> void:
+	var kind := int(_hash(i, sd + 60.0) * 3.0) % 3
+	var count := 1 + int(_hash(i, sd + 61.0) * 3.0) % 3
+	for k in count:
+		var s := h * (0.75 + 0.3 * _hash(i * 3 + k, sd + 62.0))
+		var at := Vector2(x + (k - (count - 1) * 0.5) * s * (1.5 if kind == 0 else 1.15), y + h * 0.06 * k)
+		var flip := 1.0 if _hash(i * 3 + k, sd + 63.0) > 0.3 else -1.0
+		var c := colour.darkened(0.06 * k)
+		match kind:
+			0:
+				_diplodocus_far(at, s, flip, c)
+			1:
+				_stegosaurus_far(at, s, flip, c)
+			_:
+				_triceratops_far(at, s, flip, c)
+	if r > 0.55:
+		for k in 2 + int(_hash(i, sd + 64.0) * 2.0):
+			var at := Vector2(x + h * (k * 0.9 - 0.6), y - h * (2.2 + 0.5 * _hash(i * 5 + k, sd + 65.0)))
+			_pterodactyl_far(at, h * 0.45, colour.darkened(0.05))
+
+
+func _legs(at: Vector2, s: float, xs: Array, colour: Color) -> void:
+	for lx in xs:
+		_px.rect(Rect2(at.x + lx * s - s * 0.045, at.y - s * 0.22, s * 0.09, s * 0.22 + 1.0), colour)
+
+
+func _diplodocus_far(at: Vector2, s: float, flip: float, colour: Color) -> void:
+	var f := Vector2(flip, 1.0)
+	_legs(at, s, [-0.25 * flip, -0.12 * flip, 0.12 * flip, 0.25 * flip], colour.darkened(0.1))
+	_px.ellipse(at + Vector2(0, -s * 0.32), Vector2(s * 0.36, s * 0.16), colour)
+	_px.poly(PackedVector2Array([at + Vector2(-0.3, -0.38) * s * f, at + Vector2(-0.95, -0.2) * s * f, at + Vector2(-0.3, -0.24) * s * f]), colour)
+	_px.line(at + Vector2(0.25, -0.38) * s * f, at + Vector2(0.62, -1.0) * s * f, colour, maxf(2.0, s * 0.08))
+	_px.ellipse(at + Vector2(0.68, -1.02) * s * f, Vector2(s * 0.08, s * 0.045), colour)
+
+
+func _stegosaurus_far(at: Vector2, s: float, flip: float, colour: Color) -> void:
+	var f := Vector2(flip, 1.0)
+	_legs(at, s, [-0.18 * flip, 0.18 * flip], colour.darkened(0.1))
+	for k in 4:
+		var px := at + Vector2((-0.2 + 0.13 * k) * s * flip, -s * 0.48)
+		_px.poly(PackedVector2Array([px + Vector2(-s * 0.06, s * 0.06), px + Vector2(0, -s * 0.12), px + Vector2(s * 0.06, s * 0.06)]), colour.darkened(0.12))
+	_px.ellipse(at + Vector2(0, -s * 0.32), Vector2(s * 0.3, s * 0.16), colour)
+	_px.line(at + Vector2(-0.25, -0.32) * s * f, at + Vector2(-0.6, -0.24) * s * f, colour, maxf(2.0, s * 0.06))
+	_px.ellipse(at + Vector2(0.36, -0.24) * s * f, Vector2(s * 0.08, s * 0.05), colour)
+
+
+func _triceratops_far(at: Vector2, s: float, flip: float, colour: Color) -> void:
+	var f := Vector2(flip, 1.0)
+	_legs(at, s, [-0.18 * flip, 0.16 * flip], colour.darkened(0.1))
+	_px.poly(PackedVector2Array([at + Vector2(-0.24, -0.32) * s * f, at + Vector2(-0.48, -0.24) * s * f, at + Vector2(-0.24, -0.22) * s * f]), colour)
+	_px.ellipse(at + Vector2(0, -s * 0.3), Vector2(s * 0.28, s * 0.15), colour)
+	_px.ellipse(at + Vector2(0.3, -0.38) * s * f, Vector2(s * 0.08, s * 0.13), colour.darkened(0.12))
+	_px.ellipse(at + Vector2(0.4, -0.28) * s * f, Vector2(s * 0.1, s * 0.07), colour)
+	_px.line(at + Vector2(0.42, -0.34) * s * f, at + Vector2(0.56, -0.44) * s * f, colour.lightened(0.3), maxf(1.0, s * 0.03))
+
+
+func _pterodactyl_far(at: Vector2, s: float, colour: Color) -> void:
+	_px.poly(PackedVector2Array([at + Vector2(-s, -s * 0.25), at + Vector2(-s * 0.1, 0), at + Vector2(s * 0.1, 0), at + Vector2(s, -s * 0.3), at + Vector2(0, s * 0.18)]), colour)
+	_px.line(at + Vector2(s * 0.05, -s * 0.02), at + Vector2(s * 0.45, s * 0.05), colour, maxf(1.0, s * 0.08))

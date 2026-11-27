@@ -1,5 +1,5 @@
 {
-	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold) and an optional 'pattern' over it ('stripes', 'spots' or 'patches'). Optional extras for the placeholder drawing: 'emblem' (a small picture on a top: leaf, tree, snowflake, lilypad, elephant, oasis, feather_gold, feather_colour or mountain), 'trim' (a second colour on a top's edges), 'detail' (a hat, glove or walking stick's own look: paw, plain_back, claw, spike, gem, vines, bear, bamboo or giraffe), 'accent' (the colour of that detail) and 'gems' false (no jewels on a crown). The wearable slots each have the same number of cosmetics (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
+	"_doc": "One common, one rare and one epic gift per table, and two legendaries. Animals point at a table in animals.json ('table'), so animals of a kind share one (every dog brings dog gifts). 'animal' on a table is the one shown for it (on its achievement, say). Only legendary gifts are wearable (cosmetics): 'slot' says where, 'style' how the placeholder drawing shows it and 'colour' its colour (else the rarity's gold) and an optional 'pattern' over it ('stripes', 'spots' or 'patches'). Optional extras for the placeholder drawing: 'emblem' (a small picture on a top: leaf, tree, snowflake, lilypad, elephant, oasis, feather_gold, feather_colour or mountain), 'trim' (a second colour on a top's edges), 'detail' (a hat, glove or walking stick's own look: paw, plain_back, claw, spike, gem, vines, bear, bamboo or giraffe), 'accent' (the colour of that detail) and 'gems' false (no jewels on a crown). The wearable slots each have about the same number of cosmetics (at most one apart) (hat, neckwear, top, gloves, walking stick, shoes). 'trade_in' on a rarity is how many of one gift swap for the next rarity up from the same table (legendaries can't be traded). Gifts described as placeholders are for Joe to rename. A table with 'holiday' belongs to a holiday (data/holidays.json): its pet's table, or 'any' for the 'Holiday' table of presents for opening the app on the day (all legendary, so it breaks the rarity rule on purpose). Holiday tables don't count towards finding every gift for the Moon. 'icon' shows on a table's achievement when it has no 'animal'.",
 	"rarities": [
 		{
 			"id": "common",
@@ -179,6 +179,31 @@
 			"id": "whale",
 			"name": "Whale",
 			"animal": "whale"
+		},
+		{
+			"id": "pterodactyl",
+			"name": "Pterodactyl",
+			"animal": "pterodactyl"
+		},
+		{
+			"id": "triceratops",
+			"name": "Triceratops",
+			"animal": "triceratops"
+		},
+		{
+			"id": "stegosaurus",
+			"name": "Stegosaurus",
+			"animal": "stegosaurus"
+		},
+		{
+			"id": "diplodocus",
+			"name": "Diplodocus",
+			"animal": "diplodocus"
+		},
+		{
+			"id": "t_rex",
+			"name": "T. rex",
+			"animal": "t_rex"
 		},
 		{
 			"id": "skeleton_dog",
@@ -1469,6 +1494,211 @@
 			"slot": "shoes",
 			"style": "boots",
 			"colour": "#6d7b86"
+		},
+		{
+			"id": "pterodactyl_common",
+			"table": "pterodactyl",
+			"rarity": "common",
+			"name": "Sea Snack",
+			"description": "A little fish, caught on the wing."
+		},
+		{
+			"id": "pterodactyl_rare",
+			"table": "pterodactyl",
+			"rarity": "rare",
+			"name": "Clifftop Pebble",
+			"description": "Smooth from a thousand years of wind."
+		},
+		{
+			"id": "pterodactyl_epic",
+			"table": "pterodactyl",
+			"rarity": "epic",
+			"name": "Fossil Wing",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "pterodactyl_legendary",
+			"table": "pterodactyl",
+			"rarity": "legendary",
+			"name": "Crest Cap",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "hat",
+			"style": "witch",
+			"colour": "#e2a33a"
+		},
+		{
+			"id": "pterodactyl_legendary2",
+			"table": "pterodactyl",
+			"rarity": "legendary",
+			"name": "Wing Cape",
+			"description": "Leathery, and very good in a breeze.",
+			"slot": "top",
+			"style": "cape",
+			"colour": "#9a5a3a"
+		},
+		{
+			"id": "triceratops_common",
+			"table": "triceratops",
+			"rarity": "common",
+			"name": "Fern Frond",
+			"description": "Breakfast, lunch and dinner."
+		},
+		{
+			"id": "triceratops_rare",
+			"table": "triceratops",
+			"rarity": "rare",
+			"name": "Horn Tip",
+			"description": "Found by a very proud triceratops."
+		},
+		{
+			"id": "triceratops_epic",
+			"table": "triceratops",
+			"rarity": "epic",
+			"name": "Frill Fragment",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "triceratops_legendary",
+			"table": "triceratops",
+			"rarity": "legendary",
+			"name": "Three-Horn Helm",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "hat",
+			"style": "antlers",
+			"colour": "#efe6d0"
+		},
+		{
+			"id": "triceratops_legendary2",
+			"table": "triceratops",
+			"rarity": "legendary",
+			"name": "Frill Mittens",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "gloves",
+			"style": "mittens",
+			"colour": "#c9783a"
+		},
+		{
+			"id": "stegosaurus_common",
+			"table": "stegosaurus",
+			"rarity": "common",
+			"name": "Cycad Cone",
+			"description": "Crunchy. Probably."
+		},
+		{
+			"id": "stegosaurus_rare",
+			"table": "stegosaurus",
+			"rarity": "rare",
+			"name": "Back Plate",
+			"description": "It fell off. It grows back."
+		},
+		{
+			"id": "stegosaurus_epic",
+			"table": "stegosaurus",
+			"rarity": "epic",
+			"name": "Tail Spike",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "stegosaurus_legendary",
+			"table": "stegosaurus",
+			"rarity": "legendary",
+			"name": "Plated Hoodie",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "top",
+			"style": "hoodie",
+			"colour": "#6f9474"
+		},
+		{
+			"id": "stegosaurus_legendary2",
+			"table": "stegosaurus",
+			"rarity": "legendary",
+			"name": "Spiked Collar",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "neckwear",
+			"style": "collar",
+			"colour": "#d06a3a"
+		},
+		{
+			"id": "diplodocus_common",
+			"table": "diplodocus",
+			"rarity": "common",
+			"name": "Treetop Leaves",
+			"description": "From higher up than you can reach."
+		},
+		{
+			"id": "diplodocus_rare",
+			"table": "diplodocus",
+			"rarity": "rare",
+			"name": "Gizzard Stone",
+			"description": "Swallowed to help with digestion. Rinsed since."
+		},
+		{
+			"id": "diplodocus_epic",
+			"table": "diplodocus",
+			"rarity": "epic",
+			"name": "Giant Footprint",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "diplodocus_legendary",
+			"table": "diplodocus",
+			"rarity": "legendary",
+			"name": "Long Neck Scarf",
+			"description": "Very, very long.",
+			"slot": "neckwear",
+			"style": "scarf",
+			"colour": "#8fa2b0"
+		},
+		{
+			"id": "diplodocus_legendary2",
+			"table": "diplodocus",
+			"rarity": "legendary",
+			"name": "Long-Neck Staff",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "walking_stick",
+			"style": "staff",
+			"colour": "#8fa2b0"
+		},
+		{
+			"id": "t_rex_common",
+			"table": "t_rex",
+			"rarity": "common",
+			"name": "Fossil Bone",
+			"description": "Old. Very old."
+		},
+		{
+			"id": "t_rex_rare",
+			"table": "t_rex",
+			"rarity": "rare",
+			"name": "Amber Drop",
+			"description": "There is something inside."
+		},
+		{
+			"id": "t_rex_epic",
+			"table": "t_rex",
+			"rarity": "epic",
+			"name": "Dinosaur Egg",
+			"description": "A placeholder for Joe to rename."
+		},
+		{
+			"id": "t_rex_legendary",
+			"table": "t_rex",
+			"rarity": "legendary",
+			"name": "Tiny Claws",
+			"description": "Short sleeves recommended.",
+			"slot": "gloves",
+			"style": "paws",
+			"colour": "#6b7f42"
+		},
+		{
+			"id": "t_rex_legendary2",
+			"table": "t_rex",
+			"rarity": "legendary",
+			"name": "Stomping Boots",
+			"description": "A placeholder for Joe to rename.",
+			"slot": "shoes",
+			"style": "boots",
+			"colour": "#4a5a32"
 		},
 		{
 			"id": "skeleton_dog_common",

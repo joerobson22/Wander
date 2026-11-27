@@ -16,6 +16,7 @@ height = 0.3
 colour = Color(0.6667, 0.7059, 0.7686, 1)
 pattern = 81
 spacing = 64
+base = Color(0.6, 0.6431, 0.7098, 1)
 
 [node name="Buildings2" type="Node2D" parent="."]
 position = Vector2(0, 460.8)
@@ -27,6 +28,7 @@ height = 0.26
 colour = Color(0.498, 0.5451, 0.6275, 1)
 pattern = 82
 spacing = 84
+base = Color(0.4863, 0.6157, 0.4235, 1)
 
 [node name="Broadleaf" type="Node2D" parent="."]
 position = Vector2(0, 511.2)

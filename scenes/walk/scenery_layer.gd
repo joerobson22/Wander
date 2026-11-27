@@ -14,12 +14,12 @@ extends Node2D
 ## view, or type a `y` (0 is the top of the screen, 1 the bottom).
 
 ## Every kind the walk can draw for you.
-const KINDS := "hills,mountains,trees,pines,broadleaf,canopy,palms,acacias,blossoms,mesas,cacti,water,ground,fields,barns,fences,buildings,lamps,reeds,fronds,drifts,undergrowth,vines,stalks,planet,coral,seaweed,rocks"
+const KINDS := "hills,mountains,trees,pines,broadleaf,canopy,palms,acacias,blossoms,mesas,cacti,water,ground,fields,barns,fences,buildings,lamps,reeds,fronds,drifts,undergrowth,vines,stalks,planet,coral,seaweed,rocks,volcanoes,tall_trees,ferns,dinosaurs"
 ## The screen the editor draws the layer on, and the walk's art is made for.
 const SCREEN := Vector2(1280, 720)
 
 ## What the walk draws for this layer (unless it has art of its own).
-@export_enum("hills", "mountains", "trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms", "mesas", "cacti", "water", "ground", "fields", "barns", "fences", "buildings", "lamps", "reeds", "fronds", "drifts", "undergrowth", "vines", "stalks", "planet", "coral", "seaweed", "rocks")
+@export_enum("hills", "mountains", "trees", "pines", "broadleaf", "canopy", "palms", "acacias", "blossoms", "mesas", "cacti", "water", "ground", "fields", "barns", "fences", "buildings", "lamps", "reeds", "fronds", "drifts", "undergrowth", "vines", "stalks", "planet", "coral", "seaweed", "rocks", "volcanoes", "tall_trees", "ferns", "dinosaurs")
 var kind: String = "hills":
 	set(v):
 		kind = v
@@ -91,6 +91,13 @@ var kind: String = "hills":
 	set(v):
 		craters = v
 		_changed()
+## Land under it, in this colour: it fills from the layer's line down to the
+## bottom of the screen, so no sky shows between it and the layers in front
+## (the tundra's snowfields under its mountains). See-through for none.
+@export var base := Color(0, 0, 0, 0):
+	set(v):
+		base = v
+		_changed()
 ## The path's colour, on the ground layer. Fully see-through uses sand.
 @export var path_colour := Color(0, 0, 0, 0):
 	set(v):
@@ -144,6 +151,8 @@ func to_layer() -> Dictionary:
 	for flag in ["front", "snow", "foam", "craters"]:
 		if get(flag):
 			out[flag] = true
+	if base.a > 0.0:
+		out["base"] = "#" + base.to_html(false)
 	if path_colour.a > 0.0:
 		out["path"] = "#" + path_colour.to_html(false)
 	if art:

@@ -68,6 +68,8 @@ var _light: Dictionary = {}
 var _light_check := 0.0
 ## The weather as this place shows it, and how that looks (Weather.look).
 var _weather_kind := "sunny"
+## Whether the layers were last drawn with snow lying (snow_lying()).
+var _snow_lying := false
 var _look: Dictionary = {}
 ## A storm's lightning: how bright the flash is now, which flash is drawing
 ## its bolt (-1 for none), and the last one thunder was played for.
@@ -215,6 +217,12 @@ func _process(delta: float) -> void:
 		front.modulate = front_tint * shade
 
 
+## Whether snow lies on the ground and the trees: a holiday's (Christmas),
+## or it's snowing here (snow or a blizzard).
+func snow_lying() -> bool:
+	return (_holiday != null and _holiday.snow) or _weather_kind in ["snowy", "blizzard"]
+
+
 ## The hour of the day shown: the clock's, unless a holiday pins it
 ## (midnight all Halloween).
 func hour() -> float:
@@ -238,6 +246,13 @@ func _update_light() -> void:
 	else:
 		_weather_kind = Weather.for_place(weather if weather != "" else Outdoors.weather(), biome)
 	_look = Weather.look(_weather_kind, Content.weathers)
+	# Snow starting or stopping lays it on (or clears it off) the ground,
+	# the path and the trees: everything's drawn again.
+	var lying := snow_lying()
+	if lying != _snow_lying:
+		_snow_lying = lying
+		if is_inside_tree():
+			_rebuild()
 	var sun := Outdoors.sun_hours()
 	_light = DayCycle.at(DayCycle.solar_hour(hour(), sun.x, sun.y, Content.day_cycle), Content.day_cycle)
 	# Cloud cover greys the sky, dims the light and hides the sun and moon.
@@ -692,10 +707,15 @@ class _Fx extends Node2D:
 		# are blown sideways, harder in the gusts.
 		var flakes := int(maxi(90 if fx.has("snow") else 0, int(look.get("snow", 0))) * area)
 		var flake := Color(1, 1, 1, 0.85) * Color(light.lightened(0.3), 1.0)
+		# The wind blows one way at a steady speed (a gust only ever adds a
+		# little, so the snow never stops or turns back); each flake sways
+		# a touch as it falls.
+		var drift := (14.0 + 46.0 * wind) * unit
 		for i in flakes:
-			var speed := (30.0 + 50.0 * Scenery._hash(i, 6.0)) * (1.0 + wind * 0.5)
+			var speed := (22.0 + 30.0 * Scenery._hash(i, 6.0)) * (1.0 + wind * 0.35) * unit
 			var fall := fposmod(Scenery._hash(i, 7.0) * size.y + t * speed, size.y + 20.0) - 10.0
-			var blown := fposmod(Scenery._hash(i, 8.0) * size.x - t * (20.0 + 120.0 * wind * gust) - fall * 0.6 * wind, size.x + 20.0) - 10.0
+			var sway := sin(t * (0.7 + 0.6 * Scenery._hash(i, 10.0)) + i) * 6.0 * unit
+			var blown := fposmod(Scenery._hash(i, 8.0) * size.x - t * drift * (0.8 + 0.4 * Scenery._hash(i, 11.0)) + sway, size.x + 20.0) - 10.0
 			_px.circle(Vector2(blown, fall), 1.2 + 2.0 * Scenery._hash(i, 9.0), flake)
 		if wind >= 0.5:
 			for i in int(6 + 8 * wind):
