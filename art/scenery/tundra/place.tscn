@@ -17,6 +17,7 @@ colour = Color(0.6627, 0.7216, 0.8, 1)
 pattern = 31
 spacing = 210
 snow = true
+base = Color(0.7922, 0.8392, 0.8863, 1)
 
 [node name="Mountains2" type="Node2D" parent="."]
 position = Vector2(0, 403.2)
@@ -29,6 +30,7 @@ colour = Color(0.5412, 0.6157, 0.7098, 1)
 pattern = 32
 spacing = 160
 snow = true
+base = Color(0.851, 0.8902, 0.9294, 1)
 
 [node name="Pines" type="Node2D" parent="."]
 position = Vector2(0, 475.2)

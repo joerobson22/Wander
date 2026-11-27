@@ -351,7 +351,14 @@ func _fit_place_grid() -> void:
 	var count := _places.size()
 	var insets := UI.safe_insets(self)
 	var room: float = size.x - 32.0 - PLACE_PAD * 2.0 - float(insets["left"]) - float(insets["right"])
-	var fit := maxi(1, floori((room + PLACE_GAP) / float(PLACE_BUTTON + PLACE_GAP)))
+	# Two even rows on a phone: the buttons shrink a little (not below 36)
+	# rather than spill onto a third row.
+	var half := ceili(count / 2.0)
+	var side := clampf(floorf((room + PLACE_GAP) / half - PLACE_GAP), 36.0, float(PLACE_BUTTON))
+	for button in _places.values():
+		(button as Control).custom_minimum_size = Vector2(side, side)
+		(button as Control).get_node("Lock").position = Vector2(side - 19, side - 19)
+	var fit := maxi(1, floori((room + PLACE_GAP) / (side + PLACE_GAP)))
 	var rows := ceili(count / float(fit))
 	_place_grid.columns = maxi(1, ceili(count / float(maxi(rows, 1))))
 
@@ -989,6 +996,8 @@ func _build_adopt() -> void:
 		var a: Dictionary = Content.animals[i]
 		var open := App.is_unlocked("animal", a["id"])
 		items.append(_pet(a["id"], Content.animal_default_colours(a["id"]), 150.0, not open))
+		if _is_secret(a["id"]):
+			items[-1].accessibility_name = Text.t("choose_focus.secret_animal_name")
 		if open and first_open < 0:
 			first_open = i
 	_animals.changed.connect(_on_animal_changed)
@@ -1015,7 +1024,9 @@ func _on_animal_changed(i: int) -> void:
 			view.colours = _draft.colours
 		elif not locked:
 			view.colours = Content.animal_default_colours(Content.animals[j]["id"])
-	_animal_title.text = a["name"]
+	# A secret animal (one that comes with a holiday) keeps its name and
+	# its looks hidden until you've unlocked it.
+	_animal_title.text = Text.t("choose_focus.secret_animal") if _is_secret(a["id"]) else a["name"]
 	if open:
 		_animal_hint.text = Text.t("choose_focus.scroll_animals")
 		_animal_hint.add_theme_color_override("font_color", UI.INK_FAINT)
@@ -1138,12 +1149,20 @@ func _set_icon(b: Button, icon: String, tip: String) -> void:
 	b.accessibility_name = tip
 
 
+## Whether an animal is still a secret: one you get for focusing over a
+## holiday, not yet unlocked. It shows as a black silhouette.
+static func _is_secret(id: String) -> bool:
+	return Content.unlock_rule("animal", id).has("holiday") and not App.is_unlocked("animal", id)
+
+
 ## An animal standing on a soft shadow, for the carousels. `locked` greys
-## it out under a padlock.
+## it out under a padlock; a secret one is a black silhouette.
 func _pet(animal_id: String, colours: Array[Color], height: float, locked: bool = false) -> Control:
 	var stage := _Stage.new()
 	stage.custom_minimum_size = Vector2(height * 1.25, height)
 	var view := AnimalView.new()
+	# Flyers take off lower here, so they stay on their stage.
+	view.lift_scale = 0.45
 	view.animal_id = animal_id
 	view.colours = colours
 	stage.add_child(view)
@@ -1158,6 +1177,8 @@ func _pet(animal_id: String, colours: Array[Color], height: float, locked: bool 
 			greys.append(UI.NEUTRAL.lerp(UI.INK_FAINT, k * 0.3))
 		view.colours = greys
 		view.modulate.a = 0.75
+		if _is_secret(animal_id):
+			view.modulate = Color(0.0, 0.0, 0.0, 0.88)
 		# A padlock on a disc over the middle of the animal.
 		var badge := UI.panel(UI.SURFACE_SOFT, 999, 9)
 		badge.add_child(UI.icon_rect("lock", 22, UI.INK_SOFT))

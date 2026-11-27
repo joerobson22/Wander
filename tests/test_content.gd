@@ -10,7 +10,9 @@ func test_the_cast() -> void:
 		check(ids.has(id), "%s is unlockable" % id)
 	for id in ["fish", "crab", "whale"]:
 		check(ids.has(id), "%s lives in the ocean" % id)
-	eq(ids.size(), 35)
+	for id in ["pterodactyl", "triceratops", "stegosaurus", "diplodocus", "t_rex"]:
+		check(ids.has(id), "%s lives in the prehistoric valley" % id)
+	eq(ids.size(), 40)
 	for a in animals:
 		eq(a["parts"].size(), a["default_colours"].size(), "%s colours per part" % a["id"])
 	var shapes: Array = animals.map(func(a): return a["shape"])
@@ -37,7 +39,7 @@ func test_unlock_rules_are_real() -> void:
 			check(places.has(rule["place"]), "%s's rule names a real place" % t[0])
 		if rule.has("table"):
 			check(tables.has(rule["table"]), "%s's rule names a real table" % t[0])
-	eq(places, ["lake", "farm", "forest", "beach", "city", "desert", "jungle", "tundra", "blossom", "safari", "ocean", "moon"], "the places in picker order")
+	eq(places, ["lake", "farm", "forest", "beach", "city", "desert", "jungle", "tundra", "blossom", "safari", "ocean", "prehistoric", "moon"], "the places in picker order")
 	eq(load_json("res://data/biomes.json")["biomes"][-1]["unlock"], {"all_tables": true}, "the Moon is the final reward")
 
 
@@ -181,3 +183,35 @@ func test_editable_resources_load() -> void:
 	check(lib.find("dog_bark") != null and lib.find("dog_bark").stream != null, "listed sounds keep their recordings")
 	check(load("res://ui/motion.tres") is MotionStyle, "the motion settings load")
 	check(load("res://art/walk/bush.tscn") is PackedScene, "the bush loads")
+
+
+## Once the landscape starts, no sky shows below it: from the line the
+## furthest layer stands on down to the bottom, something solid covers every
+## row (hills, fields, the ground, water's band, or a layer's own land).
+func test_no_sky_below_the_landscape() -> void:
+	var open_kinds := ["planet", "vines", "reeds", "fronds", "drifts", "undergrowth", "stalks"]
+	for b in load_json("res://data/biomes.json")["biomes"]:
+		var path := "res://art/scenery/%s/place.tscn" % b["id"]
+		if not ResourceLoader.exists(path):
+			continue
+		var place = (load(path) as PackedScene).instantiate()
+		var top := 1.0
+		var spans: Array = []
+		for layer in place.layers():
+			var kind: String = layer["kind"]
+			if open_kinds.has(kind) or layer.get("front", false):
+				continue
+			top = minf(top, float(layer["y"]))
+			if kind in ["hills", "fields", "ground"] or layer.has("base"):
+				spans.append([float(layer["y"]), 1.0])
+			elif kind == "water":
+				spans.append([float(layer["y"]), float(layer["y"]) + float(layer["height"])])
+		place.free()
+		spans.sort_custom(func(a, c): return a[0] < c[0])
+		# Walk down from the top, each span carrying on from the last; the
+		# ground's bank wobbles a few pixels, so allow a hair.
+		var reach := top
+		for s in spans:
+			if s[0] <= reach + 0.01:
+				reach = maxf(reach, s[1])
+		check(reach >= 1.0, "%s: sky shows below %.3f (landscape starts at %.3f)" % [b["id"], reach, top])

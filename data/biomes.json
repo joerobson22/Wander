@@ -145,6 +145,20 @@
 			"helmet": "diver"
 		},
 		{
+			"id": "prehistoric",
+			"where": "in the prehistoric valley",
+			"name": "Prehistoric Valley",
+			"icon": "place_prehistoric",
+			"unlock": {
+				"level": 30
+			},
+			"ambience": "day",
+			"weather": {
+				"snowy": "rainy"
+			},
+			"fx": ["fireflies", "stars"]
+		},
+		{
 			"id": "moon",
 			"where": "on the Moon",
 			"name": "Moon",

@@ -12,7 +12,12 @@ const MOVES = {
   hop: [0, -3, -5, -2, 0, 0, 1],
   crawl: [0, 0, 0, 0, 0, 0, 0],
   swim: [0, -1, -2, -1, 0, -1, 1],
+  // Flyers flap along in the air (the game lifts them off the ground while
+  // they walk); they stand on the ground in the other frames.
+  fly: [0, 0, 0, 0, 0, 0, 1],
 }
+// A flapping wing's tip, per walk frame: up, level, down, level.
+const flap = (f, up, level, down) => [up, level, down, level][f]
 // Markers for the Godot rig (neck = lead, mouth = held gift), in canvas pixels
 // at the standing pose; printed for tools/make_pixel_art.py.
 const MARKS = {}
@@ -58,7 +63,8 @@ function animal(id, size, move, draw) {
 // size, not stretched; one-pixel details stay crisp, round(k) thick).
 // animals.json "size" grows by the same factor, so the lead, the camera and
 // the pictures in the app make room for them.
-const BIG = { giraffe: 2, elephant: 2, mammoth: 2, rhino: 1.7, bear: 1.8, lion: 1.7, tiger: 1.7 }
+const BIG = { giraffe: 2, elephant: 2, mammoth: 2, rhino: 1.7, bear: 1.8, lion: 1.7, tiger: 1.7,
+  triceratops: 2, stegosaurus: 2, diplodocus: 2, t_rex: 2.2, pterodactyl: 2 }
 
 /** A canvas that draws everything `k` times bigger onto `c`. Corners
  *  (rect, poly) scale as they are; centres (circles, line ends) scale from
@@ -208,7 +214,7 @@ function cat(id, size, o) {
       // Cat eyes take the third colour: B with a black slit.
       if (closed(f)) { c.hline(x - 2, y, 2, "e"); c.hline(x + 1, y, 2, "e") }
       else { c.rect(x - 2, y - 1, 2, 2, "B"); c.px(x - 1, y - 1, "e"); c.rect(x + 1, y - 1, 2, 2, "B"); c.px(x + 2, y - 1, "e") }
-      c.px(x + hr + 1, y + 2, "e")
+      if (o.noseTip !== false) c.px(x + hr + 1, y + 2, "e")
     },
   }))
   MARKS[id].neck = [o.head[0] - o.head[2] - 1, o.head[1] + 2]
@@ -230,7 +236,7 @@ cat("leopard", [42, 24, 17, 0, 0], {
 cat("lion", [48, 32, 20, 0, 0], {
   body: [20, 18, 13, 6], hips: [9, 28], legW: 3, head: [36, 12, 5], tailW: 2,
   mane: (c, x, y, sad) => { c.ellipse(x - 1, y + 1, 8, 8, "R"); c.ellipse(x - 2, y + 2, 7, 7, "r") },
-  muzzle: "B", face: (c, x, y) => c.px(x + 3, y + 1, "e"),
+  muzzle: "B", noseTip: false,
   tailTip: (c, x, y) => c.ellipse(x, y, 2, 2, "R"),
 })
 
@@ -392,27 +398,42 @@ animal("rabbit", [24, 24, 10, [15, 12], [22, 17]], "hop", (c, f, b, sad, g) => {
 
 // ---------------------------------------------------------------- small and low
 
-animal("bird", [18, 20, 8, [10, 9], [17, 11]], "hop", (c, f, b, sad, g) => {
-  const y = b, x = 8
-  c.line(x - 1, 16, x - 2, g, "B"); c.line(x + 1, 16, x + 2, g, "B")
-  c.poly([x - 6, 11 + y, x - 9, 14 + y + (sad ? 2 : 0), x - 4, 13 + y], "R")
-  c.ellipse(x, 11 + y, 5, 5, "G")
-  c.ellipse(x + 1, 13 + y, 3, 3, "B")
-  c.ellipse(x - 2, 11 + y, 4, 2 + (f === 1 || f === 2 ? 1 : 0), "R")
-  const hx = x + 3, hy = 7 + y + sad
+// Birds: in the walk frames they fly, wings flapping from the shoulder and
+// legs tucked up; standing, they're on their feet with the wing folded.
+animal("bird", [20, 22, 9, [11, 10], [18, 12]], "fly", (c, f, b, sad, g) => {
+  const y = b, x = 9, air = f <= 3
+  if (air) {
+    const tip = flap(f, [x - 7, 3], [x - 10, 9], [x - 6, 19])
+    c.poly([x - 1, 10, x + 2, 11, tip[0] + 2, tip[1] + 1], "r")
+    c.line(x - 1, 16, x - 3, 17, "B"); c.line(x + 1, 16, x - 1, 17, "B")
+  } else {
+    c.line(x - 1, 15 + y, x - 2, g, "B"); c.line(x + 1, 15 + y, x + 2, g, "B")
+  }
+  c.poly([x - 6, 12 + y, x - 9, 15 + y + (sad ? 2 : 0), x - 4, 14 + y], "R")
+  c.ellipse(x, 12 + y, 5, 5, "G")
+  c.ellipse(x + 1, 14 + y, 3, 3, "B")
+  if (air) { const tip = flap(f, [x - 6, 2], [x - 9, 10], [x - 5, 20]); c.poly([x - 2, 10, x + 2, 11, x + 1, 13, tip[0], tip[1]], "R") }
+  else c.ellipse(x - 2, 12 + y, 4, 2, "R")
+  const hx = x + 3, hy = 8 + y + sad
   c.circ(hx, hy, 3, "G")
   c.poly([hx + 3, hy, hx + 6, hy + 1, hx + 3, hy + 2], "B")
   eye(c, hx + 1, hy - 1, f)
 })
 
-animal("parakeet", [14, 22, 6, [8, 9], [13, 11]], "hop", (c, f, b, sad, g) => {
-  const y = b, x = 6
-  c.line(x - 1, 18, x - 1, g, "s"); c.line(x + 1, 18, x + 1, g, "s")
-  c.line(x - 3, 15 + y, x - 6, 21 + y, "R", 2)
-  c.ellipse(x, 12 + y, 4, 6, "G")
-  c.ellipse(x - 2, 13 + y, 2, 4 + (f === 2 ? 1 : 0), "R")
-  for (let i = 0; i < 3; i++) c.hline(x - 3, 11 + i * 2 + y, 2, "r")
-  const hx = x + 2, hy = 7 + y + sad
+animal("parakeet", [18, 24, 9, [11, 10], [16, 12]], "fly", (c, f, b, sad, g) => {
+  const y = b, x = 9, air = f <= 3
+  if (air) {
+    const tip = flap(f, [x - 6, 3], [x - 9, 11], [x - 5, 21])
+    c.poly([x - 1, 10, x + 1, 11, tip[0] + 2, tip[1] + 1], "r")
+    c.line(x - 1, 18, x - 2, 19, "s"); c.line(x + 1, 18, x, 19, "s")
+  } else {
+    c.line(x - 1, 17 + y, x - 1, g, "s"); c.line(x + 1, 17 + y, x + 1, g, "s")
+  }
+  c.line(x - 3, 16 + y, x - 6, 22 + y, "R", 2)
+  c.ellipse(x, 13 + y, 4, 6, "G")
+  if (air) { const tip = flap(f, [x - 5, 2], [x - 8, 12], [x - 4, 22]); c.poly([x - 2, 10, x + 1, 10, x, 13, tip[0], tip[1]], "R") }
+  else { c.ellipse(x - 2, 14 + y, 2, 4, "R"); for (let i = 0; i < 3; i++) c.hline(x - 3, 12 + i * 2 + y, 2, "r") }
+  const hx = x + 2, hy = 8 + y + sad
   c.circ(hx, hy, 3, "G")
   c.poly([hx + 2, hy, hx + 5, hy + 1, hx + 3, hy + 4], "B")
   c.px(hx + 4, hy + 2, "N")
@@ -420,15 +441,26 @@ animal("parakeet", [14, 22, 6, [8, 9], [13, 11]], "hop", (c, f, b, sad, g) => {
   eye(c, hx + 1, hy - 1, f)
 })
 
-animal("eagle", [26, 28, 11, [14, 11], [23, 14]], "hop", (c, f, b, sad, g) => {
-  const y = b, x = 11
-  c.rect(x - 2, 22, 2, 5, "B"); c.rect(x + 1, 22, 2, 5, "B"); c.hline(x - 3, g, 7, "B")
-  c.poly([x - 7, 16 + y, x - 12, 23 + y, x - 5, 21 + y], "G")
-  c.ellipse(x, 16 + y, 6, 7, "G")
-  const flap = f === 1 || f === 2
-  c.poly([x - 6, 11 + y, x + 3, 12 + y, x - 2, 22 + y, x - 10, 21 + y - (flap ? 4 : 0)], "R")
-  for (let i = 0; i < 3; i++) c.line(x - 7 + i * 2, 20 + y, x - 5 + i * 2, 15 + y, "r")
-  const hx = x + 3, hy = 9 + y + sad
+animal("eagle", [30, 30, 13, [16, 12], [26, 15]], "fly", (c, f, b, sad, g) => {
+  const y = b, x = 13, air = f <= 3
+  if (air) {
+    const tip = flap(f, [x - 10, 2], [x - 13, 13], [x - 8, 28])
+    c.poly([x - 2, 12, x + 3, 13, tip[0] + 3, tip[1] + 1], "r")
+    c.rect(x - 4, 22, 5, 2, "B")
+  } else {
+    c.rect(x - 2, 23 + y, 2, g - 23 - y, "B"); c.rect(x + 1, 23 + y, 2, g - 23 - y, "B"); c.hline(x - 3, g, 7, "B")
+  }
+  c.poly([x - 7, 17 + y, x - 12, 24 + y, x - 5, 22 + y], "G")
+  c.ellipse(x, 17 + y, 6, 7, "G")
+  if (air) {
+    const tip = flap(f, [x - 9, 1], [x - 13, 14], [x - 7, 29])
+    c.poly([x - 4, 12, x + 3, 12, x + 1, 16, tip[0], tip[1]], "R")
+    c.line(x - 1, 13, tip[0] + 1, tip[1], "r")
+  } else {
+    c.poly([x - 6, 12 + y, x + 3, 13 + y, x - 2, 23 + y, x - 10, 22 + y], "R")
+    for (let i = 0; i < 3; i++) c.line(x - 7 + i * 2, 21 + y, x - 5 + i * 2, 16 + y, "r")
+  }
+  const hx = x + 3, hy = 10 + y + sad
   c.ellipse(hx, hy, 4, 4, "B")
   c.rect(hx - 4, hy + 2, 6, 4, "B")
   c.poly([hx + 3, hy - 1, hx + 8, hy + 1, hx + 6, hy + 4, hx + 3, hy + 2], "s")
@@ -498,6 +530,11 @@ animal("spider", [26, 14, 12, [12, 6], [20, 9]], "crawl", (c, f, b, sad, g) => {
   c.ellipse(8, g - 7, 6, 5, "G")
   c.px(7, g - 9, "B"); c.px(8, g - 8, "B"); c.px(9, g - 9, "B"); c.px(8, g - 6, "B")
   c.ellipse(16, g - 6, 4, 3, "G")
+  // The near four legs, over the body, stepping out of time with the far ones.
+  for (let i = 0; i < 4; i++) {
+    const x = 7 + i * 4, dx = legDX(f, i % 2 ? 0 : 2), kx = x + (i < 2 ? -3 : 3), ky = g - 8 + (sad ? 2 : 0)
+    c.line(x + 1, g - 5, kx, ky, "r"); c.line(kx, ky, kx + dx + (i < 2 ? -2 : 2), g, "r")
+  }
   if (closed(f)) { c.hline(17, g - 7, 2, "e"); c.hline(19, g - 7, 1, "e") }
   else { c.px(17, g - 7, "w"); c.px(19, g - 7, "w"); c.px(18, g - 8, "w"); c.px(18, g - 6, "e") }
 })
@@ -601,6 +638,109 @@ animal("whale", [150, 90, 72, [96, 12], [138, 33]], "swim", (c, f, b, sad, g) =>
   c.hline(q(46), q(7 + y), q(24), "g")
   c.px(q(64), q(7 + y), "s"); c.px(q(63), q(5 + y) - Math.abs(tail), "s"); c.px(q(66), q(5 + y) - Math.abs(tail), "s")
   eye(c, q(78), q(18 + y) + (sad ? 1 : 0), f, 3)
+})
+
+
+// ---------------------------------------------------------------- dinosaurs
+// From the prehistoric valley, all towering over you.
+
+animal("triceratops", [64, 38, 28, [32, 14], [62, 26]], "walk", (c, f, b, sad, g) => quad(c, f, b, sad, g, {
+  body: [26, 20, 20, 10], hips: [10, 36], legW: 6, near: "R", far: "r",
+  tail: (c, f, b) => c.poly([9, 15 + b, 0, 23 + b + swing(f), 1, 25 + b + swing(f), 11, 25 + b], "G"),
+  belly: (c, f, b) => { c.ellipse(28, 27 + b, 14, 2, "g"); for (const x of [16, 24, 32]) c.ellipse(x, 15 + b, 2, 1, "g") },
+  head: (c, f, b, sad) => {
+    const x = 47 - sad, y = 17 + b + sad * 2
+    c.ellipse(x - 2, y - 3, 7, 10, "B"); c.ellipse(x - 2, y - 3, 5, 8, "b")
+    for (const [dx, dy] of [[-6, -10], [-1, -13], [3, -9], [-8, -4]]) c.px(x - 2 + dx + 3, y + dy + 1, "N")
+    c.poly([x - 2, y - 4, x + 8, y - 1, x + 14, y + 5, x + 12, y + 9, x + 2, y + 10, x - 3, y + 6], "G")
+    c.poly([x + 12, y + 4, x + 16, y + 7, x + 12, y + 9], "s")
+    c.line(x + 3, y - 3, x + 10, y - 11, "w", 2); c.line(x + 6, y - 2, x + 13, y - 8, "s")
+    c.poly([x + 10, y + 1, x + 12, y - 4, x + 13, y + 2], "w")
+    c.hline(x + 7, y + 8, 5, "H")
+    eye(c, x + 4, y, f, 2)
+  },
+}))
+
+animal("stegosaurus", [66, 42, 30, [44, 22], [62, 30]], "walk", (c, f, b, sad, g) => quad(c, f, b, sad, g, {
+  body: [30, 26, 20, 10], hips: [13, 40], legW: 6, near: "R", far: "r",
+  tail: (c, f, b) => {
+    c.line(12, 25 + b, 1, 30 + b + swing(f), "G", 4)
+    for (const [x, y] of [[2, 28], [6, 27]]) { c.line(x, y + b + swing(f), x - 2, y - 6 + b + swing(f), "w"); c.line(x, y + b + swing(f), x - 1, y + 5 + b + swing(f), "w") }
+    // Plates along the back, standing up out of it.
+    for (let i = 0; i < 6; i++) {
+      const px = 15 + i * 6, h = [6, 9, 11, 11, 9, 6][i], base = 19 - Math.round(Math.sin(((i + 0.5) / 6) * Math.PI) * 3) + b
+      c.poly([px - 3, base + 2, px, base - h, px + 3, base + 2], "B"); c.poly([px, base - h, px + 3, base + 2, px + 1, base + 2], "b")
+    }
+  },
+  belly: (c, f, b) => { c.ellipse(30, 33 + b, 13, 2, "g"); for (const [x, y] of [[20, 24], [28, 22], [36, 25], [24, 29]]) c.rect(x, y + b, 2, 1, "g") },
+  head: (c, f, b, sad) => {
+    const x = 54 - sad, y = 27 + b + sad * 3
+    c.line(45, 25 + b, x, y, "G", 5)
+    c.ellipse(x + 3, y, 5, 3, "G"); c.rect(x + 6, y, 3, 2, "G")
+    c.hline(x + 4, y + 2, 4, "H")
+    eye(c, x + 3, y - 2, f)
+  },
+}))
+
+animal("diplodocus", [76, 56, 34, [46, 30], [70, 14]], "walk", (c, f, b, sad, g) => quad(c, f, b, sad, g, {
+  body: [32, 38, 17, 9], hips: [20, 40], legW: 6, near: "R", far: "r",
+  tail: (c, f, b) => c.poly([17, 33 + b, 0, 43 + b + swing(f), 1, 45 + b + swing(f), 19, 42 + b], "G"),
+  under: (c, f, b, sad) => {
+    const hx = 64 - sad * 4, hy = 12 + b + sad * 12
+    c.poly([40, 32 + b, 47, 36 + b, hx + 1, hy + 4, hx - 3, hy + 1], "G")
+    c.line(47, 35 + b, hx + 1, hy + 4, "g")
+  },
+  belly: (c, f, b) => { for (const [x, y] of [[22, 32], [28, 30], [34, 30], [40, 32], [26, 35], [36, 35]]) c.rect(x, y + b, 3, 2, "B"); c.ellipse(32, 45 + b, 12, 2, "g") },
+  head: (c, f, b, sad) => {
+    const x = 64 - sad * 4, y = 12 + b + sad * 12
+    c.ellipse(x + 1, y, 5, 3, "G"); c.rect(x + 3, y, 5, 3, "G")
+    c.hline(x + 3, y + 2, 5, "H"); c.px(x + 7, y, "e")
+    eye(c, x + 1, y - 1, f)
+  },
+}))
+
+animal("t_rex", [56, 54, 24, [36, 20], [54, 20]], "walk", (c, f, b, sad, g) => {
+  const y = b
+  leg(c, 24, 36 + y, g, 6, f, 2, "r"); c.rect(24 + legDX(f, 2), g, 9, 1, "Q")
+  c.poly([16, 24 + y, 0, 19 + y + swing(f), 1, 23 + y + swing(f), 18, 34 + y], "G")
+  c.ellipse(26, 30 + y, 14, 10, "G")
+  c.ellipse(30, 35 + y, 8, 4, "B")
+  for (const [x, yy] of [[18, 24], [24, 22], [30, 24], [22, 28]]) c.rect(x, yy + y, 2, 1, "g")
+  c.ellipse(20, 36 + y, 6, 7, "G")
+  leg(c, 18, 40 + y, g, 6, f, 0, "R"); c.rect(18 + legDX(f, 0), g, 9, 1, "r")
+  c.rect(34, 18 + y + sad, 8, 14, "G")
+  c.line(38, 29 + y, 42, 32 + y + sad, "R", 2); c.px(43, 32 + y + sad, "R")
+  const x = 40 - sad, hy = 13 + y + sad * 3
+  c.poly([x - 3, hy - 4, x + 12, hy - 4, x + 16, hy + 1, x + 16, hy + 8, x + 4, hy + 10, x - 3, hy + 6], "G")
+  c.hline(x + 3, hy + 6, 13, "H")
+  for (let tx = x + 5; tx <= x + 15; tx += 2) c.px(tx, hy + 5, "w")
+  c.px(x + 14, hy - 1, "e")
+  eye(c, x + 5, hy - 2, f, 2)
+})
+
+animal("pterodactyl", [44, 30, 20, [26, 16], [40, 15]], "fly", (c, f, b, sad, g) => {
+  const y = b, air = f <= 3
+  if (air) {
+    const tip = flap(f, [12, 1], [1, 13], [9, 28])
+    c.poly([19, 17, 25, 17, tip[0] + 4, tip[1] + 1], "r")
+    c.line(19, 22, 17, 24, "g"); c.line(22, 22, 21, 24, "g")
+  } else {
+    c.line(18, 22 + y, 17, g, "g"); c.line(22, 22 + y, 23, g, "g")
+  }
+  c.line(14, 19 + y, 9, 22 + y, "G", 2)
+  c.ellipse(20, 19 + y, 7, 4, "G")
+  if (air) {
+    const tip = flap(f, [10, 0], [0, 14], [8, 29])
+    c.poly([17, 16, 25, 16, 23, 20, tip[0], tip[1]], "R"); c.line(25, 16, tip[0], tip[1], "Q")
+  } else {
+    c.poly([16, 16 + y, 25, 16 + y, 27, 21 + y, 26, g, 24, g, 22, 22 + y], "R"); c.line(25, 16 + y, 26, g, "Q")
+  }
+  const hx = 29, hy = 12 + y + sad * 2
+  c.line(25, 18 + y, hx, hy + 2, "G", 3)
+  c.poly([hx - 2, hy - 1, hx + 2, hy - 2, hx + 13, hy + 2, hx + 2, hy + 4], "G")
+  c.poly([hx - 1, hy - 1, hx - 7, hy - 5, hx + 2, hy - 2], "B")
+  c.hline(hx + 3, hy + 2, 8, "H")
+  eye(c, hx + 1, hy - 1, f)
 })
 
 // ---------------------------------------------------------------- holiday pets

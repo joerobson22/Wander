@@ -237,7 +237,9 @@
 		"colour_roles": ["Primary", "Secondary", "Tertiary"],
 		"colour_name": "{role} colour",
 		"scroll_animals": "Scroll for more animals",
-		"animal_locked": "{rule}"
+		"animal_locked": "{rule}",
+		"secret_animal": "???",
+		"secret_animal_name": "A secret animal"
 	},
 	"pet": {
 		"your_kind": "your {kind}",

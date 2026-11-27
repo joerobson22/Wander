@@ -348,6 +348,37 @@ gift("whale_epic", poly([2, 13, 3, 6, 8, 2, 13, 6, 14, 13], "c"), ...[4, 6, 8, 1
 boot("whale_legendary", "b", "B", "u", [...[4, 7].map((y) => hline(3, y, 5, "c")), px(11, 10, "c"), px(13, 11, "c")])
 boot("whale_legendary2", "B", "u", "d", [...[[4, 5], [6, 8], [11, 10], [5, 11]].map(([x, y]) => [circ(x, y, 1, "W"), px(x, y, "s")]).flat()])
 
+// ---------------------------------------------------------------- pterodactyl
+gift("pterodactyl_common", poly([3, 8, 9, 4, 13, 8, 9, 12], "s"), poly([13, 8, 16, 5, 16, 11], "s"), clip((x, y) => y > 8, poly([3, 8, 9, 4, 13, 8, 9, 12], "S")), px(5, 7, "e"), line(8, 6, 8, 10, "S"), px(6, 6, "w"))
+pebble("pterodactyl_rare", "t", "T", [px(10, 10, "W")])
+gift("pterodactyl_epic", rect(1, 2, 14, 13, "W"), rect(2, 3, 12, 11, "t"), line(3, 11, 8, 6, "w"), line(8, 6, 13, 4, "w"), line(8, 6, 12, 11, "w"), line(8, 6, 7, 12, "w"), px(4, 4, "T"))
+gift("pterodactyl_legendary", ellipse(8, 13, 7, 2, "y"), poly([3, 13, 6, 5, 10, 4, 13, 13], "y"), poly([10, 4, 16, 1, 13, 7], "Y"), clip((x, y) => x > 9, poly([3, 13, 6, 5, 10, 4, 13, 13], "Y")), px(6, 8, "w"))
+cape("pterodactyl_legendary2", "n", "N", "t", [line(3, 14, 8, 4, "N"), line(13, 14, 8, 4, "N")])
+// ---------------------------------------------------------------- triceratops
+leafShape("triceratops_common", "g", "G", "l", { extra: [line(5, 10, 3, 8, "l"), line(8, 7, 6, 5, "l"), line(7, 9, 9, 11, "l")] })
+gift("triceratops_rare", poly([3, 15, 6, 6, 12, 1, 9, 9, 8, 15], "W"), poly([9, 9, 12, 1, 8, 15], "s"), hline(3, 14, 6, "T"), px(7, 7, "w"))
+gift("triceratops_epic", ellipse(8, 10, 7, 6, "o"), clip((x, y) => y > 11, ellipse(8, 10, 7, 6, "O")), ellipse(8, 12, 3, 2, "n"), ...[[3, 6], [6, 4], [10, 4], [13, 6]].map(([x, y]) => px(x, y, "O")), px(5, 7, "w"))
+gift("triceratops_legendary", ellipse(8, 11, 6, 4, "w"), clip((x, y) => y > 12, ellipse(8, 11, 6, 4, "W")), line(4, 8, 1, 1, "w", 2), line(12, 8, 15, 1, "w", 2), poly([7, 8, 8, 4, 9, 8], "W"), rect(2, 13, 12, 2, "o"))
+mitten("triceratops_legendary2", "o", "O", [...[4, 7, 10].map((x) => px(x, 4, "y"))])
+// ---------------------------------------------------------------- stegosaurus
+gift("stegosaurus_common", ellipse(8, 9, 5, 6, "n"), ...[4, 7, 10, 13].flatMap((y) => [hline(5, y, 6, "N"), px(7 + (y % 2), y + 1, "t")]), poly([6, 3, 8, 0, 10, 3], "g"))
+gift("stegosaurus_rare", poly([2, 14, 8, 1, 14, 14], "o"), poly([8, 1, 14, 14, 9, 14], "O"), line(8, 4, 8, 13, "O"), hline(2, 14, 13, "N"), px(6, 9, "y"))
+gift("stegosaurus_epic", poly([2, 15, 4, 12, 14, 1, 7, 14], "W"), poly([14, 1, 7, 14, 6, 13], "s"), rect(1, 13, 5, 3, "G"), px(10, 5, "w"))
+top("stegosaurus_legendary", "g", "G", [...[3, 6, 9].map((y) => poly([12, y + 1, 15, y + 2, 12, y + 3], "o"))])
+gift("stegosaurus_legendary2", ellipse(8, 9, 6, 5, "N", true), ellipse(8, 9, 5, 4, "N", true), ...[[2, 6], [5, 3], [11, 3], [14, 6], [8, 2]].map(([x, y]) => poly([x - 1, y + 1, x, y - 2, x + 1, y + 1], "o")), rect(7, 13, 2, 2, "s"))
+// ---------------------------------------------------------------- diplodocus
+gift("diplodocus_common", line(8, 15, 8, 5, "N"), ...[[4, 4], [11, 3], [5, 9], [11, 9], [8, 2]].map(([x, y]) => [ellipse(x, y, 3, 2, "g"), px(x - 1, y - 1, "l")]).flat())
+pebble("diplodocus_rare", "s", "S", [px(9, 11, "d"), px(11, 9, "d")])
+gift("diplodocus_epic", ellipse(8, 11, 7, 4, "t"), ellipse(8, 11, 5, 3, "T"), ...[[2, 5], [6, 3], [10, 3], [14, 5]].map(([x, y]) => circ(x, y, 1, "T")))
+scarf("diplodocus_legendary", "s", "S", "b")
+stick("diplodocus_legendary2", "s", "S", [line(11, 3, 13, 0, "s", 2), circ(13, 1, 2, "s"), px(14, 0, "e")])
+// ---------------------------------------------------------------- t. rex
+bone("t_rex_common", "W", "t")
+gift("t_rex_rare", poly([5, 2, 11, 2, 14, 8, 11, 15, 5, 15, 2, 8], "y"), clip((x, y) => x + y > 17, poly([5, 2, 11, 2, 14, 8, 11, 15, 5, 15, 2, 8], "Y")), ellipse(8, 9, 2, 1, "x"), line(6, 8, 5, 6, "x"), line(10, 8, 11, 6, "x"), px(5, 4, "w"), px(6, 4, "w"))
+egg("t_rex_epic", "l", "g", [...[[6, 7], [10, 9], [7, 12], [11, 5]].map(([x, y]) => px(x, y, "G"))])
+mitten("t_rex_legendary", "g", "G", [...[4, 7, 10].map((x) => poly([x, 2, x + 1, 0, x + 2, 2], "w"))])
+boot("t_rex_legendary2", "G", "h", "d", [...[[10, 10], [13, 11]].map(([x, y]) => poly([x, y, x + 1, y - 2, x + 2, y], "w"))])
+
 // ---------------------------------------------------------------- skeleton dog (Halloween)
 gift("skeleton_dog_common", line(3, 13, 13, 4, "w", 2), circ(2, 13, 2, "w"), circ(14, 3, 2, "w"), line(4, 14, 13, 6, "W"))
 gift("skeleton_dog_rare", rect(5, 1, 6, 2, "d"), rect(7, 0, 2, 1, "d"), rect(4, 3, 8, 11, "d"), rect(5, 4, 6, 9, "y"), rect(6, 5, 4, 7, "w"), circ(8, 9, 1, "o"), rect(3, 14, 10, 2, "d"))
