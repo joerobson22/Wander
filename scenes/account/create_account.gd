@@ -1,11 +1,13 @@
 class_name CreateAccount
 extends Control
 ## The create account screen: on a first launch and after Log out it covers
-## the whole app. It asks for your name, where you study and your date of
-## birth, and Create waits for all three and for the box agreeing to the
-## Privacy Policy and Terms of Service (each opens in a popup). Under 18,
-## Create first asks a parent or guardian to approve, in a popup that only
-## Approve closes. Then the account starts and the focus screen shows.
+## the whole app. It asks for your name and, if you like, your birthday
+## (only used to celebrate it). Create waits for a name and for the box
+## agreeing to the Privacy Policy and Terms of Service (each opens in a
+## popup); a birthday half filled in or impossible has to be fixed or
+## cleared first. Then the account starts and the focus screen shows.
+## On a phone the keyboard goes away by itself once a box is done: Return
+## after the name, or the fourth digit of the year (see also Keyboard).
 ## "I have an account" under it lists the accounts on this device to log
 ## back into (AccountSwitcher); it only shows when there's one.
 
@@ -16,7 +18,6 @@ const GUTTER := 16.0
 const SHORT := 680.0
 
 var _name: LineEdit
-var _school: LineEdit
 ## Day, month and year of birth.
 var _dob: Array[LineEdit] = []
 var _dob_wrong: Label
@@ -66,9 +67,6 @@ func _init(kept: Dictionary = {}, own_backdrop: bool = true) -> void:
 	_name = _field(form, Text.t("create.name"), Text.t("profile.username_placeholder"), 24, kept.get("name", ""))
 	TextGuard.attach(_name, false)
 	form.add_child(_gap(2))
-	_school = _field(form, Text.t("create.school"), Text.t("profile.school_placeholder"), 60, kept.get("school", ""))
-	TextGuard.attach(_school)
-	form.add_child(_gap(2))
 	form.add_child(_birth_row(kept.get("dob", ["", "", ""])))
 	form.add_child(_gap(2))
 	form.add_child(_agree_row(kept.get("agreed", false)))
@@ -96,9 +94,8 @@ func _init(kept: Dictionary = {}, own_backdrop: bool = true) -> void:
 	col.add_child(_have)
 
 	_name.text_changed.connect(func(_t): _refresh())
-	_school.text_changed.connect(func(_t): _refresh())
-	_name.text_submitted.connect(func(_t): _school.grab_focus())
-	_school.text_submitted.connect(func(_t): _dob[0].grab_focus())
+	# Return after your name puts the keyboard away: the birthday is optional.
+	_name.text_submitted.connect(func(_t): Keyboard.dismiss(self))
 	_refresh()
 
 
@@ -110,7 +107,7 @@ func _ready() -> void:
 
 ## What's typed so far, to carry over when the screen is rebuilt.
 func typed() -> Dictionary:
-	return {"name": _name.text, "school": _school.text, "dob": _dob.map(func(e): return e.text), "agreed": _agree.button_pressed}
+	return {"name": _name.text, "dob": _dob.map(func(e): return e.text), "agreed": _agree.button_pressed}
 
 
 static func _gap(height: float) -> Control:
@@ -137,12 +134,16 @@ static func _edit(placeholder: String, max_length: int, text: String, spoken: St
 	return edit
 
 
-## Date of birth: day, month and year boxes that take only digits, moving
-## on to the next box once one is full. A date that can't be right says so
-## under them.
+## Birthday (optional): day, month and year boxes that take only digits,
+## moving on to the next box once one is full; a full year puts the
+## keyboard away. A date that can't be right says so under them.
 func _birth_row(start: Array) -> Control:
 	var box := UI.vbox(6)
-	box.add_child(UI.caption(Text.t("create.dob").to_upper()))
+	var head := UI.hbox(8)
+	head.add_child(UI.caption(Text.t("create.dob")))
+	head.add_child(UI.spacer())
+	head.add_child(UI.label(Text.t("create.dob_optional"), 12, UI.INK_FAINT, false, 700))
+	box.add_child(head)
 	var row := UI.hbox(8)
 	var parts := [["dob_day", 2, 66.0], ["dob_month", 2, 66.0], ["dob_year", 4, 96.0]]
 	for i in parts.size():
@@ -152,6 +153,8 @@ func _birth_row(start: Array) -> Control:
 		edit.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_NUMBER
 		edit.text_changed.connect(_on_dob_typed.bind(i))
 		edit.text_submitted.connect(func(_t): _next_after(i))
+		# Leaving a box (by tapping away) may show the date's wrong.
+		edit.focus_exited.connect(_refresh)
 		_dob.append(edit)
 		row.add_child(edit)
 	box.add_child(row)
@@ -162,6 +165,8 @@ func _birth_row(start: Array) -> Control:
 	_dob_wrong = UI.para(Text.t("create.dob_invalid"), 13, UI.DANGER, 700)
 	_dob_wrong.visible = false
 	box.add_child(_dob_wrong)
+	var note := UI.para(Text.t("create.dob_note"), 13, UI.INK_SOFT, 700)
+	box.add_child(note)
 	return box
 
 
@@ -182,15 +187,26 @@ func _on_dob_typed(text: String, i: int) -> void:
 	_refresh()
 
 
+## On to the next box, or, after the year, the keyboard goes away (a
+## number pad has no return key of its own).
 func _next_after(i: int) -> void:
 	if i + 1 < _dob.size():
 		_dob[i + 1].grab_focus()
-	elif _agree:
-		_agree.grab_focus()
+	else:
+		Keyboard.dismiss(self)
 
 
 func _birth() -> String:
 	return Legal.dob(_dob[0].text, _dob[1].text, _dob[2].text, Time.get_date_dict_from_system())
+
+
+func _birth_empty() -> bool:
+	return _dob.all(func(e): return e.text.strip_edges() == "")
+
+
+## A birthday that's fine to save: none, or a real one.
+func _birth_ok() -> bool:
+	return _birth_empty() or _birth() != ""
 
 
 ## The box to tick, then "I agree to the Privacy Policy and Terms of
@@ -242,14 +258,17 @@ func _agree_row(start: bool) -> Control:
 
 
 func _ready_to_create() -> bool:
-	return _name.text.strip_edges() != "" and _school.text.strip_edges() != "" and _birth() != "" and _agree.button_pressed
+	return _name.text.strip_edges() != "" and _birth_ok() and _agree.button_pressed
 
 
 func _refresh() -> void:
 	_create.disabled = not _ready_to_create()
 	_agree.icon = Icons.texture("check", 18, Color.WHITE, 3.2) if _agree.button_pressed else null
-	# Only once every box is full, so it doesn't nag while you type.
-	_dob_wrong.visible = _dob.all(func(e): return e.text.length() == e.max_length) and _birth() == ""
+	# Only once every box is full, or you've moved on from a half-typed
+	# date, so it doesn't nag while you type.
+	var typing := _dob.any(func(e): return e.has_focus())
+	var full := _dob.all(func(e): return e.text.length() == e.max_length)
+	_dob_wrong.visible = not _birth_ok() and (full or not typing)
 
 
 ## Shows "I have an account" only when there's one to log into.
@@ -260,40 +279,9 @@ func refresh_accounts() -> void:
 func _submit() -> void:
 	if not _ready_to_create():
 		return
-	var birth := _birth()
-	if Legal.age(birth, Time.get_date_dict_from_system()) < Legal.ADULT:
-		_ask_parent().closed.connect(func(_r): _finish(birth))
-	else:
-		_finish(birth)
-
-
-func _finish(birth: String) -> void:
-	App.create_account(_name.text, _school.text, birth)
+	Keyboard.dismiss(self)
+	App.create_account(_name.text, "" if _birth_empty() else _birth())
 	App.go("focus")
-
-
-## The under 18 popup: what a parent or guardian is agreeing to, and
-## Approve, the only way out of it.
-func _ask_parent() -> Modal:
-	var m := Modal.open(420, false)
-	m.body.add_child(m.heading(Text.t("create.parent_title")))
-	m.body.add_child(UI.para(Text.t("create.parent_body"), 16))
-	var points := UI.vbox(8)
-	for line in Text.list("create.parent_points"):
-		var row := UI.hbox(10)
-		var tick := UI.icon_rect("check", 18, UI.ACCENT)
-		tick.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		row.add_child(tick)
-		row.add_child(UI.para(Text.fill(line, {"name": _name.text.strip_edges()}), 15, UI.INK))
-		points.add_child(row)
-	m.body.add_child(points)
-	var policy := UI.text_link(Text.t("legal.privacy"), Legal.open.bind(Legal.PRIVACY))
-	m.body.add_child(policy)
-	var approve := UI.button(Text.t("create.parent_approve"), m.close.bind(true), "accent")
-	m.body.add_child(approve)
-	# Enter approves; the ring only shows once Tab is pressed.
-	approve.grab_focus.call_deferred(true)
-	return m
 
 
 func _open_accounts() -> void:

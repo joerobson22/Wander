@@ -951,7 +951,7 @@ func _run() -> void:
 	check(not modal_class.is_open(), "which closes it")
 	if modal_class.is_open():
 		_close_modal()
-	await _stats_and_friends(main)
+	await _stats_fits(main)
 	await _stats_periods(main)
 	main._panes[Vector2i(1, 0)]._select(main._panes[Vector2i(1, 0)]._start - 7)
 	await _wait(10)
@@ -1267,7 +1267,7 @@ func _run() -> void:
 
 	# Tapping a pet sets off: everything but the pet fades and it walks to
 	# the path; the walk opens in the same place, you walk in to join it,
-	# the lead and the project's name appear, and only a second later do you
+	# the project's name appears (no lead), and only a second later do you
 	# set off and the clock start. Then the time drops in and the
 	# encouragement types itself out.
 	var setting_off: PetData = chooser._current_pet()
@@ -1286,15 +1286,15 @@ func _run() -> void:
 	check(arriving._animal.animal_id == setting_off.animal_id and arriving._scenery.biome["id"] == setting_place, "with that pet, in the place picked")
 	await _wait(30)
 	await _shot("set_off_walking_in")
-	var home_x: float = _class("res://scenes/choose_focus/choose_focus.gd").walk_spots(arriving.size, arriving._scenery.path_y())["walker"].x
+	var home_x: float = _class("res://scenes/choose_focus/choose_focus.gd").walk_spots(arriving.size, arriving._scenery.path_y(), setting_off.animal_id)["walker"].x
 	check(arriving._walking_in and arriving._walker.position.x < home_x - 1.0, "you walk in from the left (%.0f, on the way to %.0f)" % [arriving._walker.position.x, home_x])
 	for i in 40:
-		if arriving._lead_alpha > 0.9 or app.state.active != null:
+		if arriving._title.modulate.a > 0.9 or app.state.active != null:
 			break
 		await _wait(6)
-	await _wait(12)
-	check(arriving._lead_alpha > 0.5 and arriving._title.modulate.a > 0.3 and app.state.active == null and arriving._timer.modulate.a < 0.05, "the lead and the project's name, but no time yet")
-	await _shot("set_off_lead")
+	check(arriving._title.modulate.a > 0.3 and app.state.active == null and arriving._timer.modulate.a < 0.05, "the project's name, but no time yet")
+	check(not arriving.has_method("_draw_lead"), "and no lead")
+	await _shot("set_off_title")
 	# The words type out quickly, so watch for them part typed.
 	var typing := false
 	var started := Time.get_ticks_msec()
@@ -1713,7 +1713,6 @@ func _holidays(main: Node) -> void:
 		look["cosmetics"].merge(outfit, true)
 		var me: Node2D = _class("res://ui/components/character_view.gd").new()
 		me.look = look
-		me.holding_lead = false
 		me.position = Vector2(at, main.size.y * 0.9)
 		cast.add_child(me)
 		at += main.size.x / 5.4
@@ -1758,7 +1757,7 @@ func _art_check(main: Node) -> void:
 	view.held_gift = "dog_common"
 	view.submerged = 10.0
 	await _wait(5)
-	check(view.mouth() != placeholder_mouth and view.neck() != Vector2.ZERO, "the lead and the gift use the rig's markers")
+	check(view.mouth() != placeholder_mouth and view.neck() != Vector2.ZERO, "the gift uses the rig's markers")
 	view.free()
 	# The character: a rig dressed with each worn item's pieces.
 	var char_class := _class("res://ui/components/character_view.gd")
@@ -1776,7 +1775,7 @@ func _art_check(main: Node) -> void:
 	character.walking = true
 	await _wait(20)
 	check(character._player.current_animation == "walk", "walking plays the walk animation")
-	check(character.hand != Vector2(22, -78) and character.hand.length() > 10.0, "the lead clips on at the Hand marker (%s)" % character.hand)
+	check(character.hand != Vector2(22, -78) and character.hand.length() > 10.0, "the hand follows the Hand marker (%s)" % character.hand)
 	character.sad = 1.0
 	await _wait(5)
 	check(character._dressing.size() == 4, "sad keeps the same pieces when there is no sad art")
@@ -1887,7 +1886,6 @@ func _fill_sample_data() -> void:
 	var content := _content()
 	app.state = GameState.new()
 	app.state.profile["username"] = "Joe"
-	app.state.profile["institution"] = "University of Leeds"
 	app.state.profile["created_unix"] = app.now() - 40 * 86400
 	app.state.profile["cosmetics"]["hat"] = "bird_epic"
 	app.state.profile["cosmetics"]["face"] = "face_glasses"
@@ -1939,7 +1937,6 @@ func _fill_sample_data() -> void:
 	app.state.inventory["bird_epic"] = 1
 	app.state.place_on_shelf("dog_common", 0)
 	app.state.place_on_shelf("bird_epic", 2)
-	app.friends = _class("res://core/friends.gd").sample()
 	app.state_changed.emit()
 
 
@@ -2002,9 +1999,8 @@ func _stats_periods(main: Node) -> void:
 	await _wait(30)
 
 
-## Stats fits the screen, with the friends leaderboard under the chart;
-## "See full" lists everyone, and tapping a friend opens their profile.
-func _stats_and_friends(main: Node) -> void:
+## Stats fits the screen: the streak, the chart, and the strip of names.
+func _stats_fits(main: Node) -> void:
 	var app := _app()
 	var modal_class := _class("res://ui/modal.gd")
 	var stats_pane: Control = main._panes[Vector2i(1, 0)]
@@ -2034,95 +2030,20 @@ func _stats_and_friends(main: Node) -> void:
 	var strip_rect: Rect2 = stats_pane._legend.get_parent().get_parent().get_global_rect()
 	check(chips.all(func(b): return b.get_global_rect().end.y + _class("res://ui/ui.gd").DEPTH <= strip_rect.end.y + 0.5),
 		"the chips' chunky edges aren't cut off at the bottom")
-	var board: Control = _find(stats_pane, func(n): return _is(n, "leaderboard.gd"))
-	check(board != null and board.rows.size() == app.friends.size() + 1, "the leaderboard has you and every friend")
-	if board == null:
-		return
+	# The friends leaderboard is parked until online accounts arrive: the
+	# chart has the screen to itself.
+	check(_find(stats_pane, func(n): return n is Label and n.text.contains("riend")) == null, "no friends on stats")
 	if main.size.y >= 590:
-		check(_clear_of_shell(board.get_global_rect()) and board.get_global_rect().end.y <= main.size.y,
-			"the leaderboard fits, clear of the map and the arrows")
-		check(stats_pane._chart.size.y >= 100.0, "the chart keeps room to read")
-		var board_rect: Rect2 = board.get_global_rect()
-		var seen_me := func(n): return n is Control and n.has_meta("press") and n.accessibility_name == "Your profile" and n.is_visible_in_tree() and board_rect.encloses(n.get_global_rect())
-		check(_all(board, seen_me).size() == 1, "your row always shows on the leaderboard card")
-	check(_find(board, func(n): return n is TextureRect and n.texture == _class("res://ui/icons.gd").texture("trophy", 22, _class("res://ui/ui.gd").ACCENT)) != null, "a trophy by the heading")
-	var full: Button = _find(board, func(n): return n is Button and n.text == "See full")
-	check(full != null, "a See full button")
-	if full:
-		await _tap_control(full, main)
-	check(modal_class.is_open() and _find(modal_class.top(), func(n): return n is Label and n.text == "Friend leaderboard") != null, "See full opens the whole leaderboard")
-	if modal_class.is_open():
-		check(_all(modal_class.top().body, func(n): return n.has_meta("press")).size() == app.friends.size() + 1, "everyone is in it")
-		await _shot("leaderboard_full")
-		_close_modal()
-		await _wait(20)
-
-	# Tapping a friend's name opens their profile, over everything.
-	var friend_row: Control = _find(board, func(n): return n.has_meta("press") and n.accessibility_name == "Mei's profile")
-	check(friend_row != null, "friends' names can be tapped")
-	if friend_row:
-		await _tap_control(friend_row, main)
-	var popup: Node = modal_class.top() if modal_class.is_open() else null
-	check(popup != null and _find(popup, func(n): return n is Label and n.text == "Mei") != null, "it opens their profile")
-	if popup:
-		check(_find(popup, func(n): return n is Label and n.text.contains("University")) == null, "never where they study")
-		var medal := func(n): return n is VBoxContainer and n.get("info") is Dictionary
-		var shown := _all(popup, medal)
-		var mei: Dictionary = app.friends.filter(func(f): return f["name"] == "Mei")[0]
-		var ach := _class("res://core/achievements.gd")
-		var mei_rows: Array = ach.progress(ach.list(_content().achievements, _content().tables, _content().gifts), int(mei["focused_seconds"]), mei["gifts"], _content().gifts)
-		check(shown.size() == mei_rows.filter(func(r): return r["earned"]).size() and shown.all(func(n): return n.info["earned"]), "and only the achievements they've earned")
-		check(_find(popup, func(n): return n is Label and n.text == "See all") == null, "with no See all")
-		await _shot("friend_profile")
-		var tile: Control = _find(popup, func(n): return _is(n, "gift_tile.gd"))
-		check(tile != null and tile.tappable, "their shelf gifts can be tapped")
-		if tile:
-			await _tap_control(tile, main)
-			var details: Node = modal_class.top()
-			check(details != popup and _find(details, func(n): return n is Label and n.text.begins_with("You have")) == null
-				and _find(details, func(n): return n is Button and n.text.begins_with("Trade")) == null, "their gift shows without a count or trade-in")
-			await _shot("friend_gift")
-			_close_modal()
-			await _wait(20)
-		_close_modal()
-		await _wait(20)
-
-	# Someone who's earned every achievement: more than fit, so they scroll
-	# sideways inside their card.
-	var champion: Dictionary = app.friends[0].duplicate()
-	champion["name"] = "Champion"
-	champion["focused_seconds"] = 100000 * 3600
-	champion["gifts"] = _content().gifts.map(func(g): return g["id"])
-	_class("res://ui/components/friend_profile.gd").open(champion)
-	await _wait(25)
-	var strip: ScrollContainer = _find(modal_class.top().body, func(n): return n is ScrollContainer)
-	check(strip != null and strip.get_h_scroll_bar().visible, "lots of achievements scroll sideways")
-	if strip:
-		var first: Control = _find(strip, func(n): return n is VBoxContainer and n.get("info") is Dictionary)
-		check(first != null and strip.get_global_rect().encloses(first.get_global_rect()), "the first medal shows whole")
-		await _shot("friend_profile_many")
-		strip.scroll_horizontal = 10000
-		await _wait(10)
-		check(strip.scroll_horizontal > 0, "and scroll to the rest")
-		await _shot("friend_profile_many_scrolled")
-	_close_modal()
-	await _wait(20)
-
-	# Tapping yourself goes to your profile.
-	var me_row: Control = _find(board, func(n): return n.has_meta("press") and n.accessibility_name == "Your profile")
-	if me_row:
-		await _tap_control(me_row, main)
-		await _wait(20)
-	check(main._at == main.PANES["profile"][0] and not modal_class.is_open(), "tapping yourself goes to your profile")
-	app.go("stats")
-	await _wait(50)
+		var card: Control = stats_pane._chart.get_parent().get_parent()
+		check(_clear_of_shell(card.get_global_rect()) and card.get_global_rect().end.y <= main.size.y,
+			"the chart fits, clear of the map and the arrows")
+		check(stats_pane._chart.size.y >= 220.0, "the chart takes the room the leaderboard had (%d)" % stats_pane._chart.size.y)
 
 
 ## Settings ends in a red Log out, which puts up the create account screen
 ## over everything: nothing can leave it. "I have an account" lists the
-## accounts on this device. Create, once both boxes are filled in, makes a
-## new account with no friends and goes to the focus screen; its
-## leaderboard is empty. Then log out, delete the new one from the list,
+## accounts on this device. Create, once there's a name (a birthday is
+## optional), makes a new account and goes to the focus screen. Then log out, delete the new one from the list,
 ## and log back into the first, as it was left.
 func _accounts(main: Node) -> void:
 	var app := _app()
@@ -2152,8 +2073,10 @@ func _accounts(main: Node) -> void:
 	var create: Button = _find(screen, func(n): return n is Button and n.text == "Create")
 	var have: Button = _find(screen, func(n): return n is Button and n.text == "I have an account")
 	var boxes: Array = _all(screen, func(n): return n is LineEdit)
-	check(boxes.size() == 5, "it asks for a name, where you study and a date of birth")
-	check(create != null and create.disabled, "Create waits for them")
+	check(boxes.size() == 4, "it asks for a name and a birthday, nothing else")
+	check(_find(screen, func(n): return n is Label and n.text.to_lower().contains("study")) == null, "never where you study")
+	check(_find(screen, func(n): return n is Label and n.text == "Optional") != null, "the birthday says it's optional")
+	check(create != null and create.disabled, "Create waits for a name")
 	var agree: Button = _find(screen, func(n): return n is Button and n.toggle_mode)
 	check(agree != null and not agree.button_pressed, "with a box to agree to the policy and terms, not ticked")
 	var links: Array = _all(screen, func(n): return n is Button and n.text in ["Privacy Policy", "Terms of Service"])
@@ -2176,7 +2099,7 @@ func _accounts(main: Node) -> void:
 	# take focus, so a tap leaves no ring behind).
 	(boxes[0] as LineEdit).grab_focus()
 	await _key(KEY_TAB)
-	check(main.get_viewport().gui_get_focus_owner() == boxes[1], "Tab goes from the name to where you study")
+	check(main.get_viewport().gui_get_focus_owner() == boxes[1], "Tab goes from the name to the birthday")
 	for i in 6:
 		await _key(KEY_TAB)
 		check(main.get_viewport().gui_get_focus_owner() is LineEdit, "Tab keeps to the boxes: buttons never take focus (%s)" % main.get_viewport().gui_get_focus_owner())
@@ -2200,40 +2123,67 @@ func _accounts(main: Node) -> void:
 		modal_class.close_all()
 		await _wait(20)
 
-	if boxes.size() == 5:
-		var type := func(i: int, t: String):
+	if boxes.size() == 4:
+		var keyboard: Node = main._keyboard
+		var focus := func(): return main.get_viewport().gui_get_focus_owner()
+		var typing := func(i: int, t: String):
+			# As if typed: focus, then each change.
+			(boxes[i] as LineEdit).grab_focus()
 			(boxes[i] as LineEdit).text = t
+			(boxes[i] as LineEdit).caret_column = t.length()
 			(boxes[i] as LineEdit).text_changed.emit(t)
-		type.call(0, "Sam")
+		# On a phone, typing shows Done over the keyboard.
+		keyboard.force = true
+		typing.call(0, "Sam")
 		await _wait(5)
+		check(keyboard._bar.visible and keyboard._done.text == "Done", "typing shows a Done bar over the keyboard")
 		check(create.disabled, "a name alone isn't enough")
-		type.call(1, "University of York")
-		type.call(2, "31")
-		type.call(3, "02")
-		type.call(4, "2012")
+		await _shot("create_account_keyboard")
+		keyboard._done.pressed.emit()
 		await _wait(5)
-		check(create.disabled and _find(screen, func(n): return n is Label and n.text == "That date doesn't look right." and n.is_visible_in_tree()) != null, "a date that can't be right says so")
-		type.call(2, "14")
-		type.call(3, "03")
+		check(focus.call() == null and not keyboard._bar.visible, "Done puts the keyboard away")
+		# Return after the name puts it away too.
+		typing.call(0, "Sam")
+		(boxes[0] as LineEdit).text_submitted.emit("Sam")
 		await _wait(5)
-		check(create.disabled, "nor without agreeing")
+		check(focus.call() == null, "so does Return after the name")
+		# Full boxes move on, and a full year puts the keyboard away.
+		typing.call(1, "31")
+		await _wait(2)
+		check(focus.call() == boxes[2], "a full day moves on to the month")
+		typing.call(2, "02")
+		await _wait(2)
+		check(focus.call() == boxes[3], "a full month moves on to the year")
+		typing.call(3, "2012")
+		await _wait(5)
+		check(focus.call() == null and not keyboard._bar.visible, "the fourth digit of the year puts the keyboard away")
+		check(create.disabled and _find(screen, func(n): return n is Label and n.text.begins_with("That date doesn't look right.") and n.is_visible_in_tree()) != null, "a date that can't be right says so")
+		typing.call(1, "14")
+		typing.call(2, "03")
+		main.get_viewport().gui_release_focus()
+		await _wait(5)
+		check(create.disabled and not _find(screen, func(n): return n is Label and n.text.begins_with("That date")).is_visible_in_tree(), "fixed, it stops saying so; still waiting to agree")
+		# A half-typed birthday has to be finished or cleared.
+		typing.call(1, "")
+		typing.call(2, "")
+		main.get_viewport().gui_release_focus()
 		agree.button_pressed = true
 		await _wait(5)
+		check(create.disabled, "half a birthday isn't enough")
+		typing.call(3, "")
+		main.get_viewport().gui_release_focus()
+		await _wait(5)
+		check(not create.disabled, "but no birthday at all is fine")
+		typing.call(1, "14")
+		typing.call(2, "03")
+		typing.call(3, "2012")
+		await _wait(5)
 		check(not create.disabled, "then it's ready")
+		keyboard.force = false
 		await _shot("create_account_ready")
 		await _tap_control(create, main)
-		await _wait(40)
-		var parent: Node = modal_class.top()
-		check(parent != null and _find(parent.body, func(n): return n is Label and n.text == "Ask a parent or guardian") != null and app.needs_account(), "under 18, a parent or guardian is asked first")
-		if parent:
-			check(_find(parent, func(n): return n is Button and n.accessibility_name == "Close") == null, "with no way to close it")
-			await _key(KEY_ESCAPE)
-			await _wait(20)
-			check(modal_class.top() == parent, "not even Esc")
-			await _shot("create_account_parent")
-			var approve: Button = _find(parent.body, func(n): return n is Button and n.text == "Approve")
-			await _tap_control(approve, main)
-			await _wait(60)
+		await _wait(60)
+		check(not modal_class.is_open(), "no one is asked to approve it")
 	var new_slot: String = app.slot
 	check(new_slot != home_slot and not app.needs_account(), "Create makes a new account")
 	# Arriving home: while the view tilts up only the debug switches show;
@@ -2280,44 +2230,19 @@ func _accounts(main: Node) -> void:
 	await _wait(30)
 	check(main._at == Vector2i.ZERO, "or projects")
 	await _shot("arriving_home")
-	check(app.state.profile["username"] == "Sam" and app.state.profile["institution"] == "University of York", "with that name and place")
-	check(app.state.profile["dob"] == "2012-03-14" and app.state.profile["agreed_unix"] > 0, "and date of birth, and when they agreed")
+	check(app.state.profile["username"] == "Sam" and not app.state.profile.has("institution"), "with that name")
+	check(app.state.profile["dob"] == "2012-03-14" and app.state.profile["agreed_unix"] > 0, "and birthday, and when they agreed")
 	check(main._at == Vector2i.ZERO and main._account == null, "and goes to the focus screen")
-	check(app.friends.is_empty(), "a new account has no friends")
 	check(app.state.projects.is_empty() and app.state.days.is_empty() and app.state.inventory.is_empty(), "and nothing else either")
 	check(app.state.settings.get("location") == "off", "it keeps your settings")
 	await _shot("account_new")
 
 	app.go("stats")
 	await _wait(50)
-	var board: Control = _find(main._panes[Vector2i(1, 0)], func(n): return _is(n, "leaderboard.gd"))
-	check(board != null and board.rows.is_empty(), "with no friends the leaderboard is empty")
-	if board:
-		check(_find(board, func(n): return n is Label and n.text == "No friends yet!" and n.is_visible_in_tree()) != null, "and says so")
-		check(_find(board, func(n): return n.has_meta("press")) == null and _find(board, func(n): return n is Button and n.accessibility_name != "Add a friend") == null, "not even your own row")
-		var add: Button = _find(board, func(n): return n is Button and n.accessibility_name == "Add a friend")
-		check(add != null, "but you can still look for a friend")
-		if add:
-			add.pressed.emit()
-			await _wait(25)
-			var search: LineEdit = _find(modal_class.top(), func(n): return n is LineEdit) if modal_class.is_open() else null
-			check(search != null, "which asks for a username")
-			if search:
-				# (Typing emits text_changed; inserting from code doesn't.)
-				search.insert_text_at_caret("sam!")
-				search.text_changed.emit(search.text)
-				await _wait(25)
-				check(search.text == "sam", "symbols can't go in (%s)" % search.text)
-				var warn = search.get_meta("text_guard")
-				check(warn.visible and warn.modulate.a > 0.5, "and a red line says so")
-				check(_find(modal_class.top(), func(n): return n is Label and n.text == "No one called sam yet.") != null, "the search shows the clean name")
-				await _shot("friend_search")
-			_close_modal()
-			await _wait(15)
-		var stats_pane: Control = main._panes[Vector2i(1, 0)]
-		check(stats_pane._earlier.disabled and stats_pane._later.disabled,
-			"with only this week there are no weeks to step between")
-	await _shot("leaderboard_empty")
+	var stats_pane: Control = main._panes[Vector2i(1, 0)]
+	check(stats_pane._earlier.disabled and stats_pane._later.disabled,
+		"with only this week there are no weeks to step between")
+	await _shot("stats_new_account")
 
 	# Log out, delete Sam, and log back in as Joe.
 	app.log_out()
@@ -2349,9 +2274,6 @@ func _accounts(main: Node) -> void:
 			await _wait(6)
 	check(app.slot == home_slot and app.state.profile["username"] == "Joe" and not app.needs_account() and not modal_class.is_open(), "tapping its card logs back in")
 	check(main._at == Vector2i.ZERO and main._account == null and not app.state.projects.is_empty(), "on the focus screen, as it was left")
-	# Debug builds only give the first slot sample friends; the rest of the
-	# run wants them whichever slot it's in.
-	app.friends = _class("res://core/friends.gd").sample()
 	app.state_changed.emit()
 
 

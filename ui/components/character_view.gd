@@ -56,8 +56,14 @@ var part := "":
 		part = v
 		queue_redraw()
 		_dress()
-## Reaching forward for the lead on a walk; arms down for portraits.
-var holding_lead := true
+## Sitting astride a big animal on a walk: knees bent over its side and
+## hands resting forward on its back. Stand them (position) SEAT units below
+## where they sit.
+var riding := false:
+	set(v):
+		riding = v
+		queue_redraw()
+const SEAT := 52.0
 ## Wears a holiday's hat (the party hat on your birthday) over the look's
 ## own: always for you (no look of its own), and for a look of yours being
 ## changed (the customise preview).
@@ -73,8 +79,8 @@ var helmet := "":
 		queue_redraw()
 		if _rig:
 			_helmet_over_rig()
-## Hand position in local space, so the walk screen can draw the lead.
-var hand := Vector2(22, -78)
+## The front hand, in local space (it holds the walking stick).
+var hand := Vector2(3, -60)
 ## 0 normally, up to 1 when they're dejected: shoulders down, head hung,
 ## a frown, and a sigh now and then.
 var sad := 0.0:
@@ -279,7 +285,7 @@ func _process(delta: float) -> void:
 
 
 ## The slump when they're sad (a hung head, sinking shoulders), on top of
-## the animation, and the hand where the lead clips on.
+## the animation, and where the front hand is.
 func _process_rig(delta: float) -> void:
 	if sad > 0.0:
 		_sigh += delta
@@ -495,9 +501,9 @@ func _draw_body(skin: Color, top: Dictionary, sleeve: Color, shoulder: Vector2, 
 	var trouser_colour := Content.cosmetic_colour(trousers, Color("#4b5a6e"))
 	var tee := _style(top) == "tee"
 
-	# Back arm.
+	# Back arm (reaching forward to hold on, when riding).
 	var arm_swing := sin(_ph() + PI) * 0.35 if walking else 0.0
-	var back_hand := shoulder + Vector2(0, 40).rotated(arm_swing)
+	var back_hand := shoulder + (Vector2(14, 30) if riding else Vector2(0, 40).rotated(arm_swing))
 	_draw_arm(shoulder, back_hand, sleeve.darkened(0.15), skin.darkened(0.1), tee)
 	_draw_cuff(shoulder, back_hand, top)
 	_draw_hand(back_hand, skin.darkened(0.1), gloves, 0.1)
@@ -508,10 +514,17 @@ func _draw_body(skin: Color, top: Dictionary, sleeve: Color, shoulder: Vector2, 
 		var hip := Vector2(0, -56 - bob)
 		var foot := hip + Vector2(0, 54).rotated(swing)
 		var knee := hip.lerp(foot, 0.5)
+		if riding:
+			# Astride: the thigh forward along its back, the shin down its side.
+			knee = hip + Vector2(20 - 5 * i, 2)
+			foot = knee + Vector2(-5 - 2 * i, 28)
 		var shade := 0.12 if i == 0 else 0.0
 		if _style(trousers) == "shorts":
 			_c.draw_line(hip, knee, trouser_colour.darkened(shade), 12, true)
 			_c.draw_line(knee, foot, skin.darkened(shade), 8, true)
+		elif riding:
+			_c.draw_line(hip, knee, trouser_colour.darkened(shade), 11, true)
+			_c.draw_line(knee, foot, trouser_colour.darkened(shade), 11, true)
 		else:
 			_c.draw_line(hip, foot, trouser_colour.darkened(shade), 11, true)
 		_draw_shoe(foot, shade)
@@ -522,11 +535,13 @@ func _draw_body(skin: Color, top: Dictionary, sleeve: Color, shoulder: Vector2, 
 	if top.has("emblem"):
 		_draw_emblem(str(top["emblem"]), Vector2(9, -84 - bob), 0.9, sleeve)
 
-	# Front arm, holding the lead (or hanging down when there isn't one).
-	hand = Vector2(22, -78 - bob) if holding_lead else shoulder + Vector2(3, 40).rotated(sin(_ph()) * 0.35 if walking else 0.0)
+	# Front arm: swinging as they walk, or resting forward when riding.
+	hand = shoulder + (Vector2(20, 32) if riding else Vector2(3, 40).rotated(sin(_ph()) * 0.35 if walking else 0.0))
 	_draw_arm(shoulder, hand, sleeve, skin, tee)
 	_draw_cuff(shoulder, hand, top)
-	_draw_stick(hand)
+	# (No walking stick up there: it'd have nothing to touch.)
+	if not riding:
+		_draw_stick(hand)
 	_draw_hand(hand, skin, gloves, 0.0)
 
 

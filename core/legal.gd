@@ -1,14 +1,11 @@
 class_name Legal
 extends RefCounted
 ## The legal side of accounts: the privacy policy and terms (legal/*.md,
-## filled in from legal/business.json), dates of birth and the age that
-## needs a parent's approval, your data (what's kept, a copy to download,
+## filled in from legal/business.json), birthdays (optional), your data (what's kept, a copy to download,
 ## deleting it) and the open source licences the app has to show.
 ## legal/README.md says how to edit them.
 
 const DIR := "res://legal/"
-## Under this age, a parent or guardian approves a new account.
-const ADULT := 18
 ## The documents, by file name.
 const PRIVACY := "privacy_policy"
 const TERMS := "terms_of_service"

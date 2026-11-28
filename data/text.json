@@ -173,7 +173,7 @@
 		"Every minute here is a minute that counts.",
 		"Messy work is still work. Tidy it later.",
 		"You've started. That was the hardest part.",
-		"Keep the lead loose and the mind clear.",
+		"Easy steps, clear mind.",
 		"Big things are just small things, stacked up.",
 		"Breathe out. Carry on.",
 		"Consistency beats intensity.",
@@ -207,6 +207,7 @@
 		"not_now": "Not now"
 	},
 	"focus": {
+		"holiday_toggle": "{holiday} look, on or off",
 		"hint": "Tap to focus",
 		"hint_first_pet": "Tap to adopt your first pet"
 	},
@@ -366,26 +367,17 @@
 		"username_empty": "Add your name",
 		"username_prompt": "Your name",
 		"username_placeholder": "What should we call you?",
-		"school": "School, college or university",
-		"school_empty": "Add where you study",
-		"school_prompt": "Where do you study?",
-		"school_placeholder": "e.g. University of Leeds",
 		"joined": "Joined",
 		"joined_today": "Today",
 		"total_focus": "Total focus time",
 		"total_focus_tap": "Total focus time {time}. Tap to show it another way",
 		"edit_field": "Edit {field}"
 	},
-	"friend": {
-		"joined_unknown": "Recently",
-		"no_achievements": "No achievements yet"
-	},
 	"shelf": {
 		"heading": "Gift shelf",
 		"arrange": "Arrange your shelf",
 		"title": "Your shelf",
-		"how_mouse": "Drag gifts onto the shelf, along it and off it.",
-		"how_touch": "Hold a gift to pick it up, then drag it onto the shelf, along it or off it."
+		"how": "Drag gifts onto the shelf, along it and off it."
 	},
 	"achievements": {
 		"title": "Achievements",
@@ -522,22 +514,6 @@
 			"other": "Best streak: {n} days"
 		}
 	},
-	"leaderboard": {
-		"title": "Friends leaderboard",
-		"title_short": "Friends",
-		"see_full": "See full",
-		"full_title": "Friend leaderboard",
-		"your_profile": "Your profile",
-		"their_profile": "{name}'s profile",
-		"empty": "No friends yet!"
-	},
-	"friends": {
-		"you": "You",
-		"add": "Add a friend",
-		"search_placeholder": "Their username",
-		"search_note": "Search for a friend by their username. Finding friends arrives with online accounts, coming soon.",
-		"no_results": "No one called {name} yet."
-	},
 	"dates": {
 		"hours_minutes": "{h}h {m}m",
 		"minutes": "{m}m",
@@ -621,28 +597,21 @@
 		"title": "Create account",
 		"note": "Walk animals through beautiful places while you work.",
 		"name": "Your name",
-		"school": "Where you study",
 		"create": "Create",
 		"have_account": "I have an account",
-		"dob": "Date of birth",
+		"dob": "Birthday",
+		"dob_optional": "Optional",
+		"dob_note": "Only used to celebrate your birthday with you.",
 		"dob_day": "DD",
 		"dob_month": "MM",
 		"dob_year": "YYYY",
 		"dob_day_name": "Day of birth",
 		"dob_month_name": "Month of birth",
 		"dob_year_name": "Year of birth",
-		"dob_invalid": "That date doesn't look right.",
+		"dob_invalid": "That date doesn't look right. Fix it, or leave all three empty.",
 		"agree": "I agree to the",
 		"agree_and": "and",
-		"agree_name": "I agree to the Privacy Policy and Terms of Service",
-		"parent_title": "Ask a parent or guardian",
-		"parent_body": "You're under 18, so a parent or guardian needs to approve your account. Please show them this screen.",
-		"parent_points": [
-			"Everything stays on this device.",
-			"Friends will never see where {name} studies or their date of birth.",
-			"You can see, download or delete the data at any time in Settings, Data."
-		],
-		"parent_approve": "Approve"
+		"agree_name": "I agree to the Privacy Policy and Terms of Service"
 	},
 	"accounts": {
 		"title": "Your accounts",
@@ -658,6 +627,10 @@
 		"delete_title": "Delete {who}?",
 		"delete_body": "Its projects, walks, gifts and stats go for good. This can't be undone."
 	},
+	"keyboard": {
+		"done": "Done",
+		"done_name": "Put the keyboard away"
+	},
 	"pet_card": {
 		"adopted": "Adopted {date}",
 		"top_projects": "Top projects",
@@ -667,7 +640,7 @@
 		"title": "Your data",
 		"where": "This is everything the app keeps about you. It all stays on this device, and nothing is sent to us.",
 		"profile": "Your account",
-		"profile_detail": "Your name, where you study, your date of birth, when you joined and your character.",
+		"profile_detail": "Your name, your birthday if you gave it, when you joined and your character.",
 		"projects": "Projects and pets",
 		"projects_detail": {
 			"one": "{n} project and {pets}, with their names, grades and colours.",

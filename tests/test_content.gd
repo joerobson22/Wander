@@ -215,3 +215,14 @@ func test_no_sky_below_the_landscape() -> void:
 			if s[0] <= reach + 0.01:
 				reach = maxf(reach, s[1])
 		check(reach >= 1.0, "%s: sky shows below %.3f (landscape starts at %.3f)" % [b["id"], reach, top])
+
+
+func test_ridden_animals_have_a_seat_on_their_back() -> void:
+	for a in Content.animals:
+		var id := str(a["id"])
+		if not AnimalView.ridden(id):
+			continue
+		var box := AnimalView.extent(id)
+		var seat := AnimalView.saddle(id)
+		check(box.grow(1.0).has_point(seat), "%s's seat is on its art (%s in %s)" % [id, seat, box])
+		check(seat.y < box.position.y * 0.35, "%s's seat is up on its back, not by its feet (%s)" % [id, seat])

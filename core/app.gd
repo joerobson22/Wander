@@ -24,11 +24,6 @@ var save_reset := false
 ## Away from a walk (closed, or in the background) this long or more, the
 ## app asks whether you were focused meanwhile; shorter, it just counts.
 const AWAY_ASK := 60
-## Friends for the leaderboard and their profiles (the shape is in
-## Friends). Filled by the friends service once accounts exist (roadmap
-## phase 4); never saved locally. Debug builds give the first save slot
-## sample friends; a new slot starts with none.
-var friends: Array = []
 ## The save slot in use (see SaveSlots).
 var slot := SaveSlots.FIRST
 ## True after Log out, until you create an account or pick one: the create
@@ -64,7 +59,6 @@ func _ready() -> void:
 	var index := SaveSlots.read_index()
 	slot = index["current"]
 	signed_out = index["signed_out"]
-	friends = _friends_for(slot)
 	if SaveSystem.out_of_date(SaveSlots.file(slot)):
 		SaveSystem.set_aside(SaveSlots.file(slot))
 		save_reset = true
@@ -193,7 +187,7 @@ func has_accounts() -> bool:
 ## The create account screen's Create: fills in this slot if it has no name
 ## yet (a first launch keeps anything done so far), or else makes a new,
 ## empty slot with your settings from this one and moves into it.
-func create_account(username: String, institution: String, dob: String = "") -> void:
+func create_account(username: String, dob: String = "") -> void:
 	var index := SaveSlots.read_index()
 	if str(state.profile.get("username", "")).strip_edges() != "":
 		var id := SaveSlots.new_id(now(), rng, index["slots"])
@@ -206,7 +200,6 @@ func create_account(username: String, institution: String, dob: String = "") -> 
 	elif not (index["slots"] as Array).has(slot):
 		(index["slots"] as Array).append(slot)
 	state.profile["username"] = username.strip_edges()
-	state.profile["institution"] = institution.strip_edges()
 	state.profile["dob"] = dob
 	# When the privacy policy and terms were agreed to.
 	state.profile["agreed_unix"] = now()
@@ -265,7 +258,6 @@ func delete_slot(id: String) -> void:
 		fresh.settings = state.settings.duplicate(true)
 		slot = blank
 		state = fresh
-		friends = _friends_for(blank)
 		SaveSlots.write_index(index)
 		state_changed.emit()
 		return
@@ -278,17 +270,12 @@ func _enter_slot(id: String, next: GameState, index: Dictionary) -> void:
 	index["current"] = id
 	SaveSlots.write_index(index)
 	state = next
-	friends = _friends_for(id)
 	save_reset = false
 	_note_unlocks()
 	# Only the slot in use can have a walk running, but just in case.
 	if state.active:
 		_end_left_walk()
 	_changed()
-
-
-func _friends_for(id: String) -> Array:
-	return Friends.sample() if OS.is_debug_build() and id == SaveSlots.FIRST else []
 
 
 # --- Achievements ------------------------------------------------------------
@@ -567,8 +554,20 @@ func debug_add_minutes(minutes: int) -> void:
 ## ordinary day. Debug builds can try one out from the debug bar
 ## ("debug_holiday": an id, or "none" for an ordinary day whatever the date).
 func holiday() -> String:
+	return holiday_now() if holiday_theme_on() else ""
+
+
+## The holiday on today whether or not it's dressing the app (the switch
+## in the focus screen's top right turns its look off), or "".
+func holiday_now() -> String:
 	var all := holidays()
 	return all[0] if not all.is_empty() else ""
+
+
+## Whether a holiday dresses the app up (settings "holiday_theme"; on
+## unless switched off). Its present and its pet come either way.
+func holiday_theme_on() -> bool:
+	return bool(state.settings.get("holiday_theme", true))
 
 
 ## Every holiday on now, the one the app dresses for first (your birthday

@@ -6,7 +6,7 @@ Last updated {policy_updated}.
 
 ## What the app keeps
 
-- Your account: your name, where you study, your date of birth, when you joined and how your character looks.
+- Your account: your name, your birthday if you choose to give it, when you joined and how your character looks.
 - Your projects and pets: their names, grades and colours.
 - Your focus time: how long you focused each day, on which project, with which pet and in which place.
 - Your gifts, your gift shelf and your XP.
@@ -18,13 +18,13 @@ All of it stays on your device. It isn't sent to us or to anyone else, and the a
 
 The one exception is the optional "Local sunrise and weather" setting. While it's on, the app asks GeoJS (geojs.io) for your rough location from your internet address, then asks Open-Meteo (open-meteo.com) for the weather there. Both see your internet address when they're asked. The rough location is kept on your device so it doesn't have to ask every time. Turning the setting off forgets it.
 
-## Friends
+## Your birthday
 
-When friends arrive, your friends will see your name, your character, your gift shelf, your achievements and your focus time. They will never see where you study or your date of birth.
+Giving your birthday is optional. It's only used to celebrate it with you in the app, and like everything else it stays on your device.
 
-## Under 18
+## Children
 
-If you're under 18, a parent or guardian needs to approve your account when you make it.
+{app} doesn't collect personal information from anyone, of any age: nothing you put in it leaves your device. It has no chat, no friends and no adverts.
 
 ## How long it's kept
 

@@ -34,8 +34,7 @@ static func default_profile() -> Dictionary:
 		cosmetics[slot] = ""
 	return {
 		"username": "",
-		"institution": "",
-		# Date of birth, "YYYY-MM-DD" ("" for accounts made before it was asked).
+		# Date of birth, "YYYY-MM-DD", or "" when not given (it's optional).
 		"dob": "",
 		# When the privacy policy and terms were agreed to (0 = before they were asked).
 		"agreed_unix": 0,

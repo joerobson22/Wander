@@ -87,18 +87,15 @@ static func _hover_badge(badge: Control, on: bool) -> void:
 	t.tween_property(badge, "self_modulate", Color(1.22, 1.22, 1.22) if on else Color.WHITE, Motion.time(HoverGrow.TIME))
 
 
-## Your name, where you study, when you joined and how long you've focused
+## Your name, when you joined and how long you've focused
 ## in all (every project, finished or not): small, at the top.
 func _details() -> Control:
 	var p := App.state.profile
 	var username := str(p.get("username", ""))
-	var school := str(p.get("institution", ""))
 	var joined := int(p.get("created_unix", 0))
 	return ProfileCard.details([
 		ProfileCard.field(Text.t("profile.username"), username if username != "" else Text.t("profile.username_empty"), username == "",
 			_edit.bind("username", Text.t("profile.username_prompt"), Text.t("profile.username_placeholder"), 24)),
-		ProfileCard.field(Text.t("profile.school"), school if school != "" else Text.t("profile.school_empty"), school == "",
-			_edit.bind("institution", Text.t("profile.school_prompt"), Text.t("profile.school_placeholder"), 60)),
 		ProfileCard.field(Text.t("profile.joined"), Stats.format_date(joined, App.tz_bias()) if joined > 0 else Text.t("profile.joined_today")),
 		_total_focus(),
 	])
@@ -131,7 +128,7 @@ func _shelf() -> Control:
 
 
 func _edit(key: String, title: String, placeholder: String, max_length: int) -> void:
-	# A username is one word: friends find you by it.
+	# A username is one word.
 	Modal.prompt(title, str(App.state.profile.get(key, "")), placeholder, max_length, key != "username").closed.connect(func(text):
 		if text is String:
 			App.set_profile(key, text))
@@ -207,7 +204,7 @@ func _fill_settings(m: Modal) -> void:
 	UI.clear_of_bar(m.scroller(), room)
 
 
-## Whose account this is: their face, name and where they study, with Data
+## Whose account this is: their face and name, with Data
 ## (what's kept about you) and Log out on the right. The account stays on
 ## this device to log back into.
 func _account_row() -> Control:
@@ -220,9 +217,6 @@ func _account_row() -> Control:
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var username := str(App.state.profile.get("username", ""))
 	text.add_child(UI.trimmed(username if username != "" else Text.t("accounts.unnamed"), 16, UI.INK, false, 800))
-	var school := str(App.state.profile.get("institution", ""))
-	if school != "":
-		text.add_child(UI.trimmed(school, 13, UI.INK_SOFT, false, 600))
 	row.add_child(text)
 	var data := _small_button(Text.t("settings.data"), Legal.open_data, "quiet")
 	data.accessibility_name = Text.t("settings.data_name")

@@ -191,36 +191,88 @@ static func extent(id: String) -> Rect2:
 		return _extents[id]
 	var size := float(Content.animal(id).get("size", 1.0))
 	var out := Rect2(Vector2(-49.0, -80.0) * size, Vector2(123.0, 80.0) * size)
-	var path := rig_path(id)
-	var scene := load(path) as PackedScene if path != "" else null
-	if scene:
-		var state := scene.get_state()
-		for n in state.get_node_count():
-			if state.get_node_name(n) != "Sprite":
-				continue
-			var props := {}
-			for k in state.get_node_property_count(n):
-				props[state.get_node_property_name(n, k)] = state.get_node_property_value(n, k)
-			var tex := props.get("texture") as Texture2D
-			if tex:
-				var k: float = (props.get("scale", Vector2.ONE) as Vector2).x * size
-				var frames := int(props.get("hframes", 1))
-				var w := tex.get_width() / frames
-				# Only the drawn part of the frames (they leave room to hop).
-				var used := Rect2i()
-				var img := tex.get_image()
-				for f in frames:
-					var r := img.get_region(Rect2i(f * w, 0, w, tex.get_height())).get_used_rect()
-					if r.has_area():
-						used = r if not used.has_area() else used.merge(r)
-				if not used.has_area():
-					used = Rect2i(0, 0, w, tex.get_height())
-				out = Rect2((props.get("offset", Vector2.ZERO) + Vector2(used.position)) * k, Vector2(used.size) * k)
+	var art := _art(id)
+	if not art.is_empty():
+		var used: Rect2i = art["used"]
+		out = Rect2((art["offset"] + Vector2(used.position)) * art["k"], Vector2(used.size) * art["k"])
 	_extents[id] = out
 	return out
 
 
 static var _extents := {}
+
+
+## Its rig's sprite sheet, if it has one: {image, width (of a frame),
+## frames, k (art pixels to units), offset, used (the drawn part of the
+## frames, in a frame's pixels)}; {} without art.
+static func _art(id: String) -> Dictionary:
+	var path := rig_path(id)
+	var scene := load(path) as PackedScene if path != "" else null
+	if scene == null:
+		return {}
+	var state := scene.get_state()
+	for n in state.get_node_count():
+		if state.get_node_name(n) != "Sprite":
+			continue
+		var props := {}
+		for k in state.get_node_property_count(n):
+			props[state.get_node_property_name(n, k)] = state.get_node_property_value(n, k)
+		var tex := props.get("texture") as Texture2D
+		if tex == null:
+			continue
+		var frames := int(props.get("hframes", 1))
+		var w := tex.get_width() / frames
+		# Only the drawn part of the frames (they leave room to hop).
+		var used := Rect2i()
+		var img := tex.get_image()
+		for f in frames:
+			var r := img.get_region(Rect2i(f * w, 0, w, tex.get_height())).get_used_rect()
+			if r.has_area():
+				used = r if not used.has_area() else used.merge(r)
+		if not used.has_area():
+			used = Rect2i(0, 0, w, tex.get_height())
+		return {"image": img, "width": w, "frames": frames, "used": used,
+			"k": (props.get("scale", Vector2.ONE) as Vector2).x * float(Content.animal(id).get("size", 1.0)),
+			"offset": props.get("offset", Vector2.ZERO)}
+	return {}
+
+
+## Whether you ride it rather than walk beside it (animals.json "ride": the
+## very big ones).
+static func ridden(id: String) -> bool:
+	return bool(Content.animal(id).get("ride", false))
+
+
+## Where a rider sits on it, in units at scale 1 from its feet: the top of
+## its back a little behind the middle of its body. animals.json "saddle"
+## [x, y] (in the same units) sets it by hand; otherwise it's read off the
+## art: the highest drawn pixel in that column, in its first frame.
+static func saddle(id: String) -> Vector2:
+	if _saddles.has(id):
+		return _saddles[id]
+	var data := Content.animal(id)
+	var out := Vector2(0, extent(id).position.y * 0.8)
+	if data.get("saddle") is Array and (data["saddle"] as Array).size() == 2:
+		out = Vector2(float(data["saddle"][0]), float(data["saddle"][1]))
+	else:
+		var art := _art(id)
+		if not art.is_empty():
+			var used: Rect2i = art["used"]
+			var img: Image = art["image"]
+			var x := used.position.x + int(used.size.x * float(data.get("saddle_at", SADDLE_AT)))
+			var top := used.end.y
+			for y in range(used.position.y, used.end.y):
+				if img.get_pixel(x, y).a > 0.5:
+					top = y
+					break
+			out = (art["offset"] + Vector2(x, top)) * art["k"]
+	_saddles[id] = out
+	return out
+
+
+## How far along its body (from its back end) a rider sits.
+const SADDLE_AT := 0.4
+static var _saddles := {}
 
 
 ## Scales and places `view` so its whole animal sits in the middle of a
