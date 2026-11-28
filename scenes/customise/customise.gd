@@ -327,7 +327,6 @@ class Mini extends Control:
 		accessibility_name = str(item.get("name", ""))
 		# Its own look: the draft's colours, wearing just this option.
 		_view.look = _look()
-		_view.holding_lead = false
 		_view.part = slot
 		_view.visible = str(item.get("style", "none")) != "none"
 		add_child(_view)

@@ -665,19 +665,32 @@ func _head_out(i: int, project: ProjectData) -> void:
 
 
 ## Where the walk puts you and your pet on a `view` sized screen whose path
-## is at `feet`: {walker, animal, unit}. Shared with walk.gd, so heading out
-## ends exactly where the walk begins. A big animal walks further ahead on
-## a longer lead, so its back end stays clear of you, but never so far that
-## its head leaves a narrow screen.
+## is at `feet`: {walker, animal, unit, seat}. Shared with walk.gd, so
+## heading out ends exactly where the walk begins. A big animal walks
+## further ahead, so its back end stays clear of you, but never so far that
+## its head leaves a narrow screen. One you ride (AnimalView.ridden) walks
+## in the middle of the screen instead: "walker" is then the spot just
+## behind it where you walk up to and hop on from, and "seat" where your
+## feet go once you're sitting on its back (Vector2.ZERO for the rest).
 static func walk_spots(view: Vector2, feet: float, animal_id: String = "") -> Dictionary:
 	var unit := minf(view.x, view.y) / 720.0
 	var x := view.x * (0.3 if view.x < view.y else 0.38)
-	# Its back end a lead's length ahead of you (170 for a dog), its head
-	# kept on screen.
 	var reach := AnimalView.reach(animal_id) if animal_id != "" else Vector2(50, 75)
+	var animal_feet := feet + 4.0 * unit
+	if animal_id != "" and AnimalView.ridden(animal_id):
+		# Its whole body in the middle of the screen...
+		var box := AnimalView.extent(animal_id)
+		var middle := view.x * 0.5 - (box.position.x + box.size.x * 0.5) * unit
+		# ...and you just behind its back end (or as near as a narrow
+		# screen leaves room for).
+		var behind := maxf(middle - (reach.x + 34.0) * unit, 44.0 * unit)
+		var animal := Vector2(middle, animal_feet)
+		var seat := animal + (AnimalView.saddle(animal_id) + Vector2(0, CharacterView.SEAT)) * unit
+		return {"walker": Vector2(behind, feet), "animal": animal, "unit": unit, "seat": seat}
+	# Its back end well clear of you (170 for a dog), its head kept on screen.
 	var at := minf(x + maxf(170.0, reach.x + 120.0) * unit, view.x - (reach.y + 18.0) * unit)
 	at = maxf(at, x + 170.0 * unit)
-	return {"walker": Vector2(x, feet), "animal": Vector2(at, feet + 4.0 * unit), "unit": unit}
+	return {"walker": Vector2(x, feet), "animal": Vector2(at, animal_feet), "unit": unit, "seat": Vector2.ZERO}
 
 
 func _on_left() -> void:

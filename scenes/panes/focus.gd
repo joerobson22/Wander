@@ -3,8 +3,10 @@ extends Pane
 ## "Tap to focus" under it. Tap the orb (a soft bong) and it swells to
 ## fill the screen as the choose focus screen grows out of it. A home icon
 ## in the top left marks it, as each screen's icon does. Behind it all is
-## the hilltop view (HomeBackdrop, drawn by the app shell). Debug builds
-## also get small switches beside the home icon (DebugBar).
+## the hilltop view (HomeBackdrop, drawn by the app shell). While a holiday
+## is on, a switch in the top right turns its look on or off (its present
+## and pet come either way). Debug builds also get small switches beside the
+## home icon (DebugBar).
 ## Arriving home after making an account plays an intro (see intro()).
 
 ## The first arrival's done: the shell brings in the map and the arrows.
@@ -20,6 +22,10 @@ var _orb: FocusOrb
 var _greeting: Label
 var _hint: Label
 var _home: Control
+## The holiday's switch in the top right, and the holiday it's for ("" when
+## there's none on, and it's hidden).
+var _holiday_toggle: Control
+var _toggle_for := ""
 var _debug: DebugBar
 var _sky_debug: Control
 var _line := ""
@@ -51,6 +57,9 @@ func build() -> void:
 	add_child(_hint)
 	_home = UI.icon_tile(Minimap.ICONS["focus"])
 	add_child(_home)
+	_toggle_for = ""
+	_holiday_toggle = null
+	_sync_holiday_toggle()
 	if OS.is_debug_build():
 		_debug = DebugBar.new()
 		add_child(_debug)
@@ -112,6 +121,8 @@ func _set_stage(stage: int, rebuilt: bool = false) -> void:
 	_greeting.modulate.a = 0.0 if stage < 2 else 1.0
 	_hint.modulate.a = 0.0 if stage < 3 else 1.0
 	_home.modulate.a = 0.0 if stage < 4 else 1.0
+	if is_instance_valid(_holiday_toggle):
+		_holiday_toggle.modulate.a = _home.modulate.a
 	match stage:
 		0:
 			Motion.tween(_orb, "intro").kill()
@@ -160,6 +171,7 @@ func _pick_line() -> void:
 
 ## A fresh line when a holiday starts or ends (main calls this).
 func holiday_changed() -> void:
+	_sync_holiday_toggle()
 	if not is_instance_valid(_greeting) or App.holiday() == _line_holiday:
 		return
 	_pick_line()
@@ -194,6 +206,14 @@ func _place() -> void:
 		else:
 			# No room beside the switches (a phone): under them.
 			_sky_debug.position = Vector2(_debug.position.x, _debug.position.y + _debug.size.y * DebugBar.SCALE + 6.0)
+	if is_instance_valid(_holiday_toggle):
+		# Top right, level with the home icon (under the debug sky controls
+		# when they're there).
+		_holiday_toggle.size = _holiday_toggle.get_combined_minimum_size()
+		var top: float = _home.position.y + (_home.size.y - _holiday_toggle.size.y) * 0.5
+		if is_instance_valid(_sky_debug) and _sky_debug.position.y <= _home.position.y + 1.0:
+			top = _sky_debug.position.y + _sky_debug.size.y * DebugBar.SCALE + 8.0
+		_holiday_toggle.position = Vector2(size.x - _holiday_toggle.size.x - (32.0 if wide else 18.0) - insets["right"], top)
 	var w := minf(560.0, size.x - 48.0)
 	var bottom := _orb.position.y - GREETING_GAP
 	# Debug builds: clear of the sky controls in the top right, if the
@@ -228,6 +248,7 @@ func _on_state_changed() -> void:
 		_sky_debug = fresh
 	if is_instance_valid(_hint):
 		_update_hint()
+	_sync_holiday_toggle()
 
 
 
@@ -270,3 +291,57 @@ func _on_tapped() -> void:
 	Audio.play("orb_tap", 1.0, -4.0, "bong")
 	_orb.fill_screen()
 	App.go("choose_focus", {"from": _orb.get_global_rect().get_center()})
+
+
+## Shows the holiday's switch while one is on (rebuilt when it changes),
+## and hides it on an ordinary day.
+func _sync_holiday_toggle() -> void:
+	if not is_instance_valid(_home):
+		return
+	var id := App.holiday_now()
+	if id == _toggle_for and (id == "") == not is_instance_valid(_holiday_toggle):
+		return
+	_toggle_for = id
+	if is_instance_valid(_holiday_toggle):
+		_holiday_toggle.queue_free()
+		_holiday_toggle = null
+	if id == "":
+		return
+	_holiday_toggle = _make_holiday_toggle(id)
+	_holiday_toggle.modulate.a = _home.modulate.a
+	add_child(_holiday_toggle)
+	_place()
+
+
+## A soft pill: the holiday's name, then its switch. Tapping anywhere on it
+## flips it.
+func _make_holiday_toggle(id: String) -> Control:
+	var pill := PanelContainer.new()
+	var sb := UI.box(Color(UI.SURFACE, 0.86), Color.TRANSPARENT, 999)
+	sb.content_margin_left = 16
+	sb.content_margin_right = 6
+	sb.content_margin_top = 0
+	sb.content_margin_bottom = 0
+	pill.add_theme_stylebox_override("panel", sb)
+	var row := UI.hbox(10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(row)
+	var title := UI.label(str(Content.holiday(id).get("name", id)), 15, UI.INK, false, 800)
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(title)
+	var on := App.holiday_theme_on()
+	var flip := Switch.new(on)
+	flip.custom_minimum_size = Vector2(46, 40)
+	flip.accessibility_name = Text.t("focus.holiday_toggle", {"holiday": title.text})
+	flip.toggled.connect(func(now: bool):
+		# After the knob has slid, so the screens redress behind it.
+		get_tree().create_timer(Motion.time(Switch.SLIDE)).timeout.connect(func():
+			App.set_setting("holiday_theme", now)))
+	row.add_child(flip)
+	pill.mouse_filter = Control.MOUSE_FILTER_STOP
+	pill.mouse_default_cursor_shape = Cursor.HOVER
+	pill.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and not e.pressed \
+				and pill.get_global_rect().has_point(pill.get_global_transform() * e.position):
+			flip.button_pressed = not flip.button_pressed)
+	return pill

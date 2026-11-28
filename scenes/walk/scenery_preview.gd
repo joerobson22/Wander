@@ -38,6 +38,10 @@ func _ready() -> void:
 	_animal.walking = speed > 0.0
 	_animal.helmet = AnimalView.helmet_in(place, animal)
 	_scenery.add_child(_animal)
+	# Riding a big one: sitting on its back, still.
+	_walker.riding = AnimalView.ridden(animal)
+	if _walker.riding:
+		_walker.walking = false
 	resized.connect(_layout)
 	_layout.call_deferred()
 	Audio.ambience(_scenery.ambience())
@@ -47,11 +51,12 @@ func _layout() -> void:
 	var spots := ChooseFocus.walk_spots(size, _scenery.path_y(), _animal.animal_id)
 	var s: float = spots["unit"]
 	_walker.scale = Vector2(s, s)
-	_walker.position = spots["walker"]
+	_walker.position = spots["seat"] if _walker.riding else spots["walker"]
 	_animal.scale = Vector2(s, s)
 	_animal.position = spots["animal"]
-	_scenery.stand(_walker, _walker.position.y)
 	_scenery.stand(_animal, _animal.position.y)
+	# A rider stands (for depth) just in front of what it rides.
+	_scenery.stand(_walker, _animal.position.y + 0.5 if _walker.riding else _walker.position.y)
 
 
 func _process(delta: float) -> void:

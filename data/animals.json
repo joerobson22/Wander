@@ -1,5 +1,5 @@
 {
-	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists (every animal has its own); 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in). 'aquatic': true lives underwater, so it wears no diving helmet in the ocean (only an astronaut's on the Moon); 'flies': true flies along in the air as it walks (wings flapping) and fetches gifts on the wing: off the screen, back with a loop-the-loop, landing in front of you. 'only_in': a place id it can only walk in (fish and whales stay in the ocean): the place picker keeps to it and it swims rather than walks.",
+	"_doc": "The cast, in the order the adopt screen lists them. Adding an animal = add an entry here + its gift table in gifts.json. 'table' is which gift table it brings gifts from (all the dogs share 'dog', both cats share 'cat'). 'home' is the place it lives: the place picker starts there for a new pet. 'unlock' is what it takes to adopt one (leave it out, or {}, for from the start): {\"level\": 3} reach level 3; {\"hours\": 20} focus 20 hours in all; {\"hours\": 10, \"place\": \"jungle\"} focus 10 hours in the Jungle; {\"table\": \"cat\"} find every gift in the cat table; {\"all_tables\": true} find every gift there is; {\"holiday\": \"halloween\", \"minutes\": 30} focus for 30 minutes in all over one year's run of a holiday (data/holidays.json). 'shape' picks the placeholder drawing until real art exists (every animal has its own); 'sprite_dir' is the folder of its art (see assets/README.md): an animal.tscn there replaces the placeholder. Colours are defaults for each recolourable part, in order (shown as primary, secondary and tertiary when adopting). 'sound' is a file in assets/sounds/ (without .mp3); it stays quiet until that file exists. 'dive' is how it jumps into the bushes to fetch a gift: 'hops' arcs of 'height' pixels over 'seconds' (0 hops = it walks or slides in). 'aquatic': true lives underwater, so it wears no diving helmet in the ocean (only an astronaut's on the Moon); 'ride': true means it's big enough to ride: you walk up behind it and hop onto its back, and it walks in the middle of the screen; 'saddle': [x, y] sets where you sit by hand (units at its size, from its feet), otherwise it's read off the art. 'flies': true flies along in the air as it walks (wings flapping) and fetches gifts on the wing: off the screen, back with a loop-the-loop, landing in front of you. 'only_in': a place id it can only walk in (fish and whales stay in the ocean): the place picker keeps to it and it swims rather than walks.",
 	"animals": [
 		{
 			"id": "dog1",
@@ -187,6 +187,7 @@
 		},
 		{
 			"id": "bear",
+			"ride": true,
 			"name": "Bear",
 			"table": "bear",
 			"home": "forest",
@@ -208,6 +209,7 @@
 		},
 		{
 			"id": "mammoth",
+			"ride": true,
 			"name": "Mammoth",
 			"table": "mammoth",
 			"home": "tundra",
@@ -428,6 +430,7 @@
 		},
 		{
 			"id": "tiger",
+			"ride": true,
 			"name": "Tiger",
 			"table": "tiger",
 			"home": "jungle",
@@ -450,6 +453,7 @@
 		},
 		{
 			"id": "giraffe",
+			"ride": true,
 			"name": "Giraffe",
 			"table": "giraffe",
 			"home": "safari",
@@ -472,6 +476,7 @@
 		},
 		{
 			"id": "elephant",
+			"ride": true,
 			"name": "Elephant",
 			"table": "elephant",
 			"home": "safari",
@@ -494,6 +499,7 @@
 		},
 		{
 			"id": "rhino",
+			"ride": true,
 			"name": "Rhino",
 			"table": "rhino",
 			"home": "safari",
@@ -538,6 +544,7 @@
 		},
 		{
 			"id": "lion",
+			"ride": true,
 			"name": "Lion",
 			"table": "lion",
 			"home": "safari",
@@ -649,6 +656,7 @@
 		},
 		{
 			"id": "whale",
+			"ride": true,
 			"name": "Whale",
 			"table": "whale",
 			"home": "ocean",
@@ -673,6 +681,7 @@
 		},
 		{
 			"id": "pterodactyl",
+			"ride": true,
 			"name": "Pterodactyl",
 			"table": "pterodactyl",
 			"home": "prehistoric",
@@ -696,6 +705,7 @@
 		},
 		{
 			"id": "triceratops",
+			"ride": true,
 			"name": "Triceratops",
 			"table": "triceratops",
 			"home": "prehistoric",
@@ -718,6 +728,7 @@
 		},
 		{
 			"id": "stegosaurus",
+			"ride": true,
 			"name": "Stegosaurus",
 			"table": "stegosaurus",
 			"home": "prehistoric",
@@ -740,6 +751,7 @@
 		},
 		{
 			"id": "diplodocus",
+			"ride": true,
 			"name": "Diplodocus",
 			"table": "diplodocus",
 			"home": "prehistoric",
@@ -762,6 +774,7 @@
 		},
 		{
 			"id": "t_rex",
+			"ride": true,
 			"name": "T. rex",
 			"table": "t_rex",
 			"home": "prehistoric",

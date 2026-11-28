@@ -6,7 +6,7 @@ terms before release: these are plain-English drafts, not legal advice.
 
 | File | What it is | Shown |
 | --- | --- | --- |
-| `privacy_policy.md` | The Privacy Policy | Create account (the box above Create), Settings, the Data popup and the under 18 popup |
+| `privacy_policy.md` | The Privacy Policy | Create account (the box above Create), Settings and the Data popup |
 | `terms_of_service.md` | The Terms of Service | Create account and Settings |
 | `business.json` | Who runs the app and how to reach you | Filled into both documents |
 | `DATA.md` | What data the app keeps, for how long, and what you must do about requests | Not in the app: notes for you |
@@ -44,7 +44,7 @@ Fill in `business.json` before release:
 ## Which words are where
 
 The words around the documents (the box's "I agree to the Privacy Policy
-and Terms of Service", the under 18 popup, the Data popup) are in
+and Terms of Service", the Data popup) are in
 `data/text.json`, under `create`, `data` and `legal`.
 
 ## Before release

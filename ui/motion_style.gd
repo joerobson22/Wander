@@ -23,11 +23,13 @@ extends Resource
 @export_range(0.0, 3.0, 0.05, "suffix:s") var leave_fade := 0.34
 ## Your pet walking over to its place on the path.
 @export_range(0.0, 5.0, 0.05, "suffix:s") var pet_to_path := 0.9
-## You walking in from the left to join it.
+## You walking in from the left to join it (or to just behind it, for one
+## you ride).
 @export_range(0.0, 5.0, 0.05, "suffix:s") var walk_in := 1.6
-## The lead appearing.
-@export_range(0.0, 3.0, 0.05, "suffix:s") var lead_in := 0.35
-## The pause, once the lead's on, before you set off together.
+## Hopping up onto a big animal's back, once you've walked up behind it.
+@export_range(0.0, 3.0, 0.05, "suffix:s") var hop_on := 0.5
+## The pause, once you're by your pet (or on its back), before you set off
+## together.
 @export_range(0.0, 5.0, 0.05, "suffix:s") var set_off_wait := 1.0
 ## The scenery getting up to walking speed.
 @export_range(0.0, 5.0, 0.05, "suffix:s") var speed_up := 0.8

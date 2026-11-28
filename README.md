@@ -43,12 +43,13 @@ stats). With a mouse it grows while the pointer is over it and shrinks a
 moment after it leaves; on phones tap it to grow it, and tap it again (or
 anywhere else) to shrink it. Pick a tile to go there.
 
-The first launch (and Log out) shows the create account screen: your name,
-where you study and your date of birth, then a box to tick agreeing to the
-Privacy Policy and Terms of Service (each name opens it) before Create
-works. Under 18, Create first asks a parent or guardian to approve, in a
-popup only Approve closes. "I have an account" logs back into one already
-on the device.
+The first launch (and Log out) shows the create account screen: your name
+and, if you like, your birthday (only used to celebrate it), then a box to
+tick agreeing to the Privacy Policy and Terms of Service (each name opens
+it) before Create works. On a phone a Done bar sits over the keyboard, and
+the keyboard goes away by itself after Return on the name or the year's
+last digit (`ui/keyboard.gd`). "I have an account" logs back into one
+already on the device.
 
 On computers, Settings also picks the window's mode (windowed, maximised,
 fullscreen or exclusive fullscreen) and its size. The window can't get
@@ -71,8 +72,10 @@ smaller than 800 × 560 points, so layouts never squash.
   other), with the project and the pet's name under it. Swipe through your
   pets (each one's kind and time focused is under it) and tap one to set
   off: the screen fades away but your pet, which walks over to the path;
-  you walk in from the left to join it, the lead appears with the project's
-  name, and a second later you set off together and the clock starts. The
+  you walk in from the left to join it, the project's name appears, and a
+  second later you set off together and the clock starts. A very big animal
+  ("ride" in `data/animals.json`) walks in the middle of the screen: you walk
+  up behind it and hop onto its back, and hop off again when the walk ends. The
   red-rimmed bin at the bottom deletes a pet. The × in the top left goes
   back, and the screen shrinks back into the orb. The + in the top right adopts a new one (what it's for, the pet's
   name, its animal and three colours; a locked animal hides the colours):
@@ -126,14 +129,8 @@ smaller than 800 × 560 points, so layouts never squash.
   project, pet or place, with arrows either side of the period's name to step
   back and forward through earlier ones. Your streak is a flame with the days
   beside it (any missed day ends it); tap it for your best streak, under a
-  gold trophy. The friends leaderboard sits under the chart, the two sharing
-  the height; it scrolls inside its card, and the person-plus button in its
-  corner searches for a friend by username (no server yet, so it finds no
-  one). "See full" lists everyone in a
-  popup. Tap a friend's face or name for their profile: their character,
-  when they joined (never where they study), their week, their gift shelf (tap a
-  gift for a look) and their achievements. Tap yours for your profile. The
-  page never scrolls. Debug builds come with sample friends (`core/friends.gd`).
+  gold trophy. The chart has the screen to itself (friends are parked until
+  online accounts arrive). The page never scrolls.
 
 On a walk, the button in the corner is a pie chart of the gift your pet will
 bring back. For the first ten minutes a dark green slice sweeps round; then it
@@ -224,22 +221,20 @@ can't be done for you. Do steps 1 to 4 once.
 4. **Your phone.** Plug it in, tap **Trust**, then turn on **Settings →
    Privacy & Security → Developer Mode** and let it restart.
 5. **Export.** In **Project → Export**, pick **iOS**, then **Export
-   Project…**, and keep the path it offers, `build/ios/PawsAndProgress.ipa`
-   (`build/` isn't committed). The preset only makes the Xcode project
-   there, so Xcode does the signing in the next step.
-6. **Run.** Open `build/ios/PawsAndProgress.xcodeproj`, choose your iPhone
+   Project…**. The preset only makes the Xcode project
+   (`Wander.xcodeproj`), so Xcode does the signing in the next step.
+6. **Run.** Open the exported `Wander.xcodeproj`, choose your iPhone
    at the top of the window, and press **⌘R**. With a free account, the
    first launch is blocked until you go to **Settings → General → VPN &
    Device Management** and trust your Apple ID.
 
-The bundle ID is `com.joerobson22.pawsandprogress` (**Bundle Identifier**
+The bundle ID is `com.joerobson22.wander` (**Bundle Identifier**
 in the preset). Change it now if you want a different one; it can't change
 once the app is on the App Store. If Xcode says it's taken, add something
 to the end.
 
-Before the App Store, fill in the privacy details: the weather looks up a
-rough location from your IP address (`core/outdoors.gd`), which counts as
-"coarse location" data.
+For TestFlight and the App Store, follow
+[docs/APP_STORE_RELEASE.md](docs/APP_STORE_RELEASE.md) step by step.
 
 ## Tests
 
@@ -279,7 +274,6 @@ core/            game logic, no UI
   unlocks.gd       what unlocks each animal and place, and how far along you are
   stats.gd         weekly totals, records, streaks (from the focus time per day)
   achievements.gd  achievements and how far along each one is
-  friends.gd       the leaderboard order, and sample friends for debug builds
   legal.gd         privacy policy and terms (legal/), dates of birth, your data, licences
   collection.gd    the gifts screen's rings: discovered, gift tables, cosmetics
   display.gd       the computer window: mode, size, minimum, debug phone view
@@ -300,7 +294,7 @@ ui/
   modal.gd         popups, confirmations, prompts, colour picker
   components/      orb, minimap, edge arrow, carousel, gift tile, grid, shelf and
                    details popup, medal card, stat panel, gift button,
-                   leaderboard, friend profile, profile card pieces,
+                   profile card pieces,
                    project panel, character and animal drawings, ...
 tests/           headless unit tests and the smoke run
 ```

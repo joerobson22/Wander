@@ -10,7 +10,7 @@ These terms are between you and {name}, who makes {app}. By making an account yo
 
 ## Your account
 
-You choose your account's name. Keep it kind: no names that are offensive or pretend to be someone else. If you're under 18, a parent or guardian needs to approve your account.
+You choose your account's name. Keep it kind: no names that are offensive or pretend to be someone else.
 
 ## Purchases
 

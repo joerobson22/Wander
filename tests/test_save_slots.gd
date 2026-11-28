@@ -98,6 +98,7 @@ func test_old_half_made_accounts_lose_their_flag() -> void:
 	check(not s.profile.has("setup_pending"))
 
 
-func test_no_friends_means_an_empty_leaderboard() -> void:
-	eq(Friends.ranked([], 3600, false), [], "not even you")
-	eq(Friends.ranked(Friends.sample(), 3600, false).size(), Friends.sample().size() + 1, "you and every friend")
+func test_where_you_study_is_no_longer_kept() -> void:
+	var s := SaveSystem.from_dict({"version": SaveSystem.CURRENT_VERSION, "profile": {"username": "Sam", "institution": "University of York"}})
+	check(not s.profile.has("institution"), "an old save's place of study is dropped")
+	eq(s.profile["username"], "Sam", "the rest of it loads")

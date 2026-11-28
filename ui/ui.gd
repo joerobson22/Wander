@@ -991,7 +991,6 @@ static func character_portrait(look: Dictionary, box_size: Vector2, face_only: b
 	var view := CharacterView.new()
 	view.look = look
 	view.face_only = face_only
-	view.holding_lead = false
 	frame.add_child(view)
 	var place := func():
 		if face_only:

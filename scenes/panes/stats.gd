@@ -5,10 +5,9 @@ extends Pane
 ## tabs); tap a piece, or a name in the sideways strip under the chart, for
 ## its details. Arrows either side of the period's name and its total step
 ## back to earlier periods and forward again. Your streak is in the top
-## right: tap it for your best ever. The friends leaderboard, with a button
-## to add friends, is beside the chart on a computer (60% chart, 40%
-## leaderboard) and underneath it on a phone, sharing the room evenly. It
-## all fits the screen; only the strip and the leaderboard scroll.
+## right: tap it for your best ever. The chart takes the rest of the
+## screen; only the strip scrolls. (The friends leaderboard is parked until
+## online accounts arrive.)
 
 ## Names in the strip under the chart are cut to this many letters.
 const CHIP_LETTERS := 10
@@ -50,8 +49,8 @@ func build() -> void:
 	var current := Stats.period_start(today, _period())
 	if _start < 0 or _start > current or Stats.period_start(_start, _period()) != _start:
 		_start = current
-	var side_by_side := not App.phone_layout()
-	var col := frame(1040 if side_by_side else 760, 14)
+	var computer := not App.phone_layout()
+	var col := frame(900 if computer else 760, 14)
 
 	var head := title_row(Text.t("stats.title"))
 	head.add_child(_streak())
@@ -111,26 +110,7 @@ func build() -> void:
 	UI.clear_of_bar(strip, strip_room, 4, UI.DEPTH)
 	c.add_child(strip)
 
-	var mine := Stats.week_total(App.state.days, Stats.week_start(today))
-	var board := Leaderboard.new(Friends.ranked(App.friends, mine, App.state.active != null), true)
-	# At least a row and yours: a friend above you, then your pinned row.
-	board.custom_minimum_size.y = 128
-	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	if side_by_side:
-		# Computers: the chart on the left (60%), the leaderboard on the
-		# right (40%), both the full height.
-		var pair := UI.hbox(16)
-		pair.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		chart_card.size_flags_stretch_ratio = 3.0
-		board.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		board.size_flags_stretch_ratio = 2.0
-		pair.add_child(chart_card)
-		pair.add_child(board)
-		col.add_child(pair)
-	else:
-		# Phones: the chart over the leaderboard, sharing the room evenly.
-		col.add_child(chart_card)
-		col.add_child(board)
+	col.add_child(chart_card)
 	_select(_start, false)
 
 

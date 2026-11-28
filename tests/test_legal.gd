@@ -21,7 +21,6 @@ func test_age_turns_on_the_birthday() -> void:
 	eq(Legal.age("2008-11-02", TODAY), 17, "18 tomorrow")
 	eq(Legal.age("2026-11-01", TODAY), 0, "born today")
 	eq(Legal.age("", TODAY), -1, "no date")
-	check(Legal.age("2009-01-01", TODAY) < Legal.ADULT, "under 18 needs a parent")
 
 
 func test_documents_are_filled_in_from_business() -> void:

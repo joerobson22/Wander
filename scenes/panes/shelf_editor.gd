@@ -5,9 +5,13 @@ extends Control
 ## scrolling below (in the order picked from "Sort by"). It's all drag and
 ## drop: drag a gift onto an empty spot to put it there, onto a full one to
 ## swap it in, along the shelf to move it, or off the shelf to take it down.
-## Gifts already on the shelf are greyed out below. On a computer, gifts
-## pick up as soon as you drag them; on a phone or tablet dragging scrolls
-## the list, so press and hold one first. There's no tapping here: details
+## Gifts already on the shelf are greyed out below, and every gift glows in
+## its rarity's colour, as on the gifts screen. A gift follows your finger
+## (or the pointer) the moment you press it: dragging is all there is to do
+## here, so there's no hold first. (The list scrolls from the gaps between
+## gifts or with the wheel.) Nothing jumps: a gift swapped off a spot slides
+## to where it's going, and one taken down flies back to its place in the
+## collection, before the shelf is saved. There's no tapping here: details
 ## and trade-ins are on the gifts screen. Every change saves straight away,
 ## and being a popup, none of it can move the app between screens.
 
@@ -33,8 +37,7 @@ static func open() -> Modal:
 	m.header.add_child(m.heading_row(Text.t("shelf.title")))
 	editor._shelf_box = UI.vbox(0)
 	m.header.add_child(editor._shelf_box)
-	var how := Text.t("shelf.how_mouse" if _quick() else "shelf.how_touch")
-	m.header.add_child(UI.para(how, 13, UI.INK_SOFT))
+	m.header.add_child(UI.para(Text.t("shelf.how"), 13, UI.INK_SOFT))
 	var head := UI.hbox(8)
 	var cap := UI.caption(Text.t("gifts.your_collection"))
 	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -55,13 +58,6 @@ static func open() -> Modal:
 	return m
 
 
-## Whether collection gifts pick up as soon as they're dragged: on a
-## computer, where the list scrolls with the wheel. (The app turns mouse
-## presses into touches, so it can't go by whether there's a touch screen.)
-static func _quick() -> bool:
-	return OS.has_feature("pc")
-
-
 ## Rebuilds the shelf and the collection from the saved state.
 func refresh() -> void:
 	for c in _shelf_box.get_children():
@@ -69,7 +65,7 @@ func refresh() -> void:
 		c.queue_free()
 	var shelf := GiftShelf.new(GiftShelf.mine(), 104, func(tile: GiftTile, i: int):
 		tile.draggable = true
-		tile.quick_drag = true
+		tile.lift_on_press = true
 		tile.lifted.connect(_lift.bind(i)))
 	_slots = shelf.slots
 	_shelf_box.add_child(shelf)
@@ -80,11 +76,14 @@ func refresh() -> void:
 ## onto the shelf.
 func _collection_tile(id: String) -> GiftTile:
 	var tile := GiftTile.new(id)
+	# Its rarity's glow, as on the gifts screen.
+	tile.art.glow = 1.0
+	tile.art.glow_reach = 0.4
 	if App.state.shelf().has(id):
 		tile.set_on_shelf()
 	else:
 		tile.draggable = true
-		tile.quick_drag = _quick()
+		tile.lift_on_press = true
 		tile.lifted.connect(_lift.bind(-1))
 	return tile
 
@@ -97,7 +96,8 @@ func _lift(tile: GiftTile, from: int) -> void:
 	_drag_id = tile.gift_id
 	_drag_from = from
 	_drag_source = tile
-	tile.modulate.a = 0.3
+	# Off the shelf it leaves an empty spot; from the list, a faint copy.
+	tile.modulate.a = 0.0 if from >= 0 else 0.3
 	_ghost = GiftArt.new(_drag_id, 0.9)
 	_ghost.size = Vector2(84, 84)
 	_ghost.pivot_offset = _ghost.size * 0.5
@@ -158,33 +158,36 @@ func _drop() -> void:
 	var from := _drag_from
 	_drag_id = ""
 	var ghost := _ghost
+	_ghost = null
 	var t := Motion.tween(ghost, "ghost")
 	t.set_parallel(true)
-	if _hover >= 0:
-		# Onto a spot: an empty one takes it, a full one swaps it in (its gift
-		# goes back to the collection, or along to where this one came from).
-		var slot := _slots[_hover]
-		var at := get_global_transform_with_canvas().affine_inverse() * slot.get_global_rect().get_center() - ghost.size * 0.5
+	if _hover >= 0 and _hover != from:
+		# Onto a spot: an empty one takes it, a full one swaps it in. Its gift
+		# slides out of the way at the same time: along to where this one
+		# came from, or back down to its place in the collection.
 		var target := _hover
-		t.tween_property(ghost, "position", at, Motion.time(Motion.FAST))
+		_fly(ghost, _slots[target].get_global_rect(), t)
+		var bumped := _shelf_tile(target)
+		if bumped:
+			var to := _slots[from].get_global_rect() if from >= 0 else _collection_rect(bumped.gift_id)
+			_fly(_stand_in(bumped), to, t, from < 0)
 		t.chain().tween_callback(func():
 			ghost.queue_free()
 			App.place_on_shelf(id, target))
 		Audio.play("shelf_place", 1.1, -4.0, "pop")
 	elif from >= 0 and _off_shelf:
-		# Dragged off the shelf: take it down.
-		t.tween_property(ghost, "modulate:a", 0.0, Motion.time(Motion.FAST))
-		t.tween_property(ghost, "scale", Vector2.ONE * 0.5, Motion.time(Motion.FAST))
+		# Dragged off the shelf: it goes from the shelf and flies back down
+		# to its place in the collection.
+		_fly(ghost, _collection_rect(id), t, true)
 		t.chain().tween_callback(func():
 			ghost.queue_free()
 			App.remove_from_shelf(from))
 		Audio.play("shelf_remove", 0.7, -8.0, "pop")
 	else:
-		# Dropped nowhere: float back to where it came from.
+		# Dropped nowhere (or back on its own spot): it floats back to where
+		# it came from.
 		var source := _drag_source
-		var home := get_global_transform_with_canvas().affine_inverse() * source.get_global_rect().get_center() - ghost.size * 0.5
-		t.tween_property(ghost, "position", home, Motion.time(Motion.NORMAL))
-		t.tween_property(ghost, "modulate:a", 0.0, Motion.time(Motion.NORMAL))
+		_fly(ghost, source.get_global_rect() if is_instance_valid(source) else ghost.get_global_rect(), t)
 		t.chain().tween_callback(func():
 			if is_instance_valid(source):
 				source.modulate.a = 1.0
@@ -195,3 +198,64 @@ func _drop() -> void:
 	_off_shelf = false
 
 
+## Slides `art` (a picture over the editor) so it sits over `to` (a rect on
+## screen), sized to its picture there, as part of `t`; `fade` lets it go
+## see-through as it lands, for one going back into the list.
+func _fly(art: Control, to: Rect2, t: Tween, fade: bool = false) -> void:
+	var local := get_global_transform_with_canvas().affine_inverse()
+	var centre := local * to.get_center()
+	# The picture inside a tile is a little smaller than the tile.
+	var side := maxf(8.0, minf(to.size.x, to.size.y) - 8.0)
+	t.tween_property(art, "position", centre - art.size * 0.5, Motion.time(Motion.NORMAL)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property(art, "scale", Vector2.ONE * side / art.size.x, Motion.time(Motion.NORMAL)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	if fade:
+		t.tween_property(art, "modulate:a", 0.0, Motion.time(Motion.FAST)).set_delay(Motion.time(Motion.NORMAL - Motion.FAST))
+
+
+## The gift tile in spot `i` of the shelf, or null if it's empty.
+func _shelf_tile(i: int) -> GiftTile:
+	if i < 0 or i >= _slots.size():
+		return null
+	for c in _slots[i].get_children():
+		if c is GiftTile:
+			return c
+	return null
+
+
+## Where gift `id` sits in the collection list, on screen (where the list
+## shows, if it's scrolled out of sight).
+func _collection_rect(id: String) -> Rect2:
+	for c in _grid.get_children():
+		if c is GiftTile and c.gift_id == id:
+			var r: Rect2 = c.get_global_rect()
+			var view := _grid.get_parent() as Control
+			while view and not view is ScrollContainer:
+				view = view.get_parent() as Control
+			if view:
+				var shown := view.get_global_rect()
+				r.position.y = clampf(r.position.y, shown.position.y - r.size.y * 0.5, shown.end.y - r.size.y * 0.5)
+			return r
+	return _grid.get_global_rect()
+
+
+## A picture standing in for `tile` over the editor, so it can slide
+## somewhere; the tile itself hides.
+func _stand_in(tile: GiftTile) -> GiftArt:
+	var art := GiftArt.new(tile.gift_id, 0.9)
+	var r := tile.get_global_rect()
+	var side := minf(r.size.x, r.size.y) - 8.0
+	art.size = Vector2(84, 84)
+	art.pivot_offset = art.size * 0.5
+	art.scale = Vector2.ONE * side / 84.0
+	art.position = get_global_transform_with_canvas().affine_inverse() * r.get_center() - art.size * 0.5
+	add_child(art)
+	tile.modulate.a = 0.0
+	_free_on_save(art)
+	return art
+
+
+## Gone with the next rebuild (once the change is saved).
+func _free_on_save(art: Control) -> void:
+	App.state_changed.connect(func():
+		if is_instance_valid(art):
+			art.queue_free(), CONNECT_ONE_SHOT)

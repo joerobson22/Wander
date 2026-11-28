@@ -9,8 +9,11 @@ extends Control
 ## backgrounded, the laptop sleeps, or the app is killed and reopened.
 ## Heading out from the choose focus screen (params "intro"), the walk
 ## opens in the same place with your pet already standing on the path: you
-## walk in from the left to join it, the lead appears with what you're
-## working on, and a second later you set off together. Only then does the
+## walk in from the left to join it, what you're working on drops in, and a
+## second later you set off together. A big animal (AnimalView.ridden)
+## walks in the middle of the screen: you walk up behind it and hop onto
+## its back, and ride it for the walk, hopping back off when it ends. Only
+## then does the
 ## clock start: the time fades in, the encouragement types itself out word
 ## by word, and the buttons fade in. The encouragement changes every ten
 ## minutes of focus.
@@ -21,7 +24,7 @@ var params := {}
 
 ## Ground pixels per second at walk speed 1.0 (at 720px tall).
 const BASE_SPEED := 70.0
-## The timings of setting off (walking in, the lead, the pause, typing out
+## The timings of setting off (walking in, hopping on, the pause, typing out
 ## the encouragement and how often it changes) are in ui/motion.tres
 ## (MotionStyle), to change in the Godot editor.
 
@@ -58,7 +61,11 @@ var _ambience_check := 0.0
 var _render_check := 0.0
 ## Scenery speed; eases down to 0 when the pet goes to fetch a gift.
 var _pace := 1.0
-var _lead_alpha := 1.0
+## Whether you ride this pet, and whether you're sitting on it right now
+## (not on the ground, nor mid-hop).
+var _rides := false
+var _seated := false
+var _hopping := false
 var _finishing := false
 var _done := false
 var _result := {}
@@ -89,13 +96,19 @@ func _ready() -> void:
 	add_child(_scenery)
 
 	add_child(_actors)
-	_actors.draw.connect(_draw_lead)
 	_walker = CharacterView.new()
 	_actors.add_child(_walker)
 	_animal = AnimalView.new()
 	_animal.animal_id = _pet.animal_id
 	_animal.colours = _pet.colours
 	_actors.add_child(_animal)
+	_rides = AnimalView.ridden(_pet.animal_id)
+	if _rides:
+		# On its back, so in front of it.
+		_actors.move_child(_walker, -1)
+		# Back on a walk already going: still sitting where you were.
+		_seated = not _arriving
+		_walker.riding = _seated
 	# A diving helmet in the ocean, a space helmet on the Moon.
 	var where := str(_scenery.biome.get("id", ""))
 	_walker.helmet = AnimalView.helmet_in(where, "")
@@ -127,7 +140,6 @@ func _ready() -> void:
 ## nothing on show yet but the scene.
 func _intro() -> void:
 	_pace = 0.0
-	_lead_alpha = 0.0
 	_animal.walking = false
 	for c: CanvasItem in [_timer, _title, _quote]:
 		c.modulate.a = 0.0
@@ -143,9 +155,10 @@ func _intro() -> void:
 	_walker.position.x = -90.0 * _unit()
 
 
-## Setting off: you walk in from the left to your pet, the lead appears with
-## the project's name, and a second later you set off together and the
-## clock starts. (Main calls this when a walk built out of sight comes on.)
+## Setting off: you walk in from the left to your pet (hopping onto its back
+## if you ride it), the project's name drops in, and a second later you set
+## off together and the clock starts. (Main calls this when a walk built out
+## of sight comes on.)
 func begin() -> void:
 	if not _arriving or _began:
 		return
@@ -154,7 +167,7 @@ func begin() -> void:
 	# From just off the left edge to your place by your pet, worked out each
 	# frame so a resize mid-way still ends in the right spot.
 	var step := func(p: float):
-		var home: Vector2 = ChooseFocus.walk_spots(size, _scenery.path_y())["walker"]
+		var home: Vector2 = ChooseFocus.walk_spots(size, _scenery.path_y(), _pet.animal_id)["walker"]
 		_walker.position.x = lerpf(-90.0 * _unit(), home.x, p)
 	step.call(0.0)
 	var t := Motion.tween(_walker, "walk_in")
@@ -163,7 +176,10 @@ func begin() -> void:
 	await t.finished
 	_walking_in = false
 	_walker.walking = false
-	Motion.method(self, "lead", func(v: float): _lead_alpha = v, 0.0, 1.0, Motion.style.lead_in)
+	if _rides:
+		await _jump(true)
+		if not is_inside_tree():
+			return
 	_drop_in(_title)
 	await get_tree().create_timer(Motion.time(Motion.style.set_off_wait)).timeout
 	if not is_inside_tree():
@@ -177,7 +193,7 @@ func begin() -> void:
 func _set_off() -> void:
 	App.start_walk(_project.id, _pet.id, str(_scenery.biome.get("id", "")))
 	_arriving = false
-	_walker.walking = true
+	_walker.walking = not _seated
 	_animal.walking = true
 	_apply_paused(false)
 	_last_second = -1
@@ -373,8 +389,10 @@ func _layout() -> void:
 	var spots := ChooseFocus.walk_spots(size, _scenery.path_y(), _pet.animal_id)
 	var s: float = spots["unit"]
 	_walker.scale = Vector2(s, s)
-	# (While walking in, only the height follows a resize.)
-	_walker.position = Vector2(_walker.position.x if _walking_in else spots["walker"].x, spots["walker"].y)
+	# (While walking in, only the height follows a resize; sitting on its
+	# back, you follow it in _process.)
+	if not _seated and not _hopping:
+		_walker.position = Vector2(_walker.position.x if _walking_in else spots["walker"].x, spots["walker"].y)
 	if not _finishing:
 		_animal.scale = Vector2(s, s)
 		_animal.position = spots["animal"]
@@ -388,7 +406,8 @@ func _process(delta: float) -> void:
 		var walk_speed := float(Content.animal(_pet.animal_id).get("walk_speed", 1.0))
 		var motion := 0.35 if App.state.settings.get("reduce_motion", false) else 1.0
 		_scenery.scroll += delta * BASE_SPEED * walk_speed * motion * _unit() * _pace
-	_actors.queue_redraw()
+	if _seated:
+		_walker.position = _seat()
 
 	if clock:
 		var elapsed := clock.elapsed(App.now())
@@ -442,17 +461,43 @@ func _show_quote(typed: bool) -> void:
 	_quote.modulate.a = 1.0
 
 
-func _draw_lead() -> void:
-	if _lead_alpha <= 0.0:
+## Where your feet go sitting on its back right now: on its saddle, lifted
+## with it when it flies, rising and falling a little with its stride.
+func _seat() -> Vector2:
+	var s := absf(_animal.scale.y)
+	var seat := _animal.position + (AnimalView.saddle(_pet.animal_id) + Vector2(0, CharacterView.SEAT)) * s
+	seat.y -= _animal.lift() * s
+	if _animal.walking:
+		var stride := float(Content.animal(_pet.animal_id).get("walk_speed", 1.0))
+		seat.y -= absf(sin(Time.get_ticks_msec() / 1000.0 * PI * (1.2 + stride))) * 3.0 * s
+	return seat
+
+
+## Hops up onto its back from just behind it (`on`), or back down to the
+## path there. Lands sitting (or standing) with a little settle.
+func _jump(on: bool) -> void:
+	_hopping = true
+	_seated = false
+	_walker.walking = false
+	if not on:
+		_walker.riding = false
+	var ground: Vector2 = ChooseFocus.walk_spots(size, _scenery.path_y(), _pet.animal_id)["walker"]
+	var from := _walker.position
+	var high := 70.0 * _unit()
+	var t := Motion.tween(_walker, "hop")
+	t.tween_method(func(p: float):
+		var to := _seat() if on else ground
+		var at := from.lerp(to, p)
+		at.y -= sin(p * PI) * high
+		_walker.position = at, 0.0, 1.0, Motion.time(Motion.style.hop_on)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await t.finished
+	if not is_inside_tree():
 		return
-	var hand := _walker.position + _walker.hand * _walker.scale
-	var collar := _animal.position + _animal.neck() * _animal.scale
-	var mid := (hand + collar) * 0.5 + Vector2(0, 26.0 * _walker.scale.y)
-	var pts := PackedVector2Array()
-	for i in 13:
-		var t := i / 12.0
-		pts.append(hand.lerp(mid, t).lerp(mid.lerp(collar, t), t))
-	_actors.draw_polyline(pts, Color("#7a3b2e", _lead_alpha), 3.0 * _walker.scale.x, true)
+	_hopping = false
+	if on:
+		_walker.riding = true
+		_seated = true
+	Motion.pop(_walker, 0.06)
 
 
 ## The scenery follows the clock by itself; the sound catches up every
@@ -495,7 +540,7 @@ func _toggle_pause() -> void:
 func _apply_paused(paused: bool) -> void:
 	_pause.icon = Icons.texture("play" if paused else "pause", 26, Color.WHITE, 2.6)
 	_pause.accessibility_name = Text.t("walk.carry_on" if paused else "walk.pause")
-	_walker.walking = not paused
+	_walker.walking = not paused and not _seated
 	_animal.walking = not paused
 	var walk_speed := float(Content.animal(_pet.animal_id).get("walk_speed", 1.0))
 	_walker.speed = clampf(walk_speed, 0.3, 1.2)
@@ -525,6 +570,16 @@ func _end() -> void:
 	Audio.play("walk_end", 1.0, -4.0, "bong")
 	_result = App.finish_walk()
 	Motion.fade(_hud, 0.0)
+	if _seated or _hopping:
+		# It slows to a stop, and you hop off its back first, so it can go
+		# and fetch the gift.
+		var slow := Motion.tween(self, "dive")
+		slow.tween_method(_set_pace, _pace, 0.0, Motion.time(0.6))
+		await slow.finished
+		_animal.walking = false
+		await _jump(false)
+		if _done or not is_inside_tree():
+			return
 	var gift: Dictionary = _result.get("gift", {})
 	if gift.is_empty():
 		_walker.walking = false
@@ -560,9 +615,8 @@ func _dive(gift_id: String) -> void:
 	_actors.add_child(_bush)
 	var t := Motion.tween(self, "dive")
 	t.set_parallel(true)
-	t.tween_method(_set_pace, 1.0, 0.0, Motion.time(1.0))
+	t.tween_method(_set_pace, _pace, 0.0, Motion.time(1.0 * _pace))
 	t.tween_property(_bush, "position:x", minf(size.x * 0.82, _animal.position.x + 260.0 * s), Motion.time(1.0))
-	t.tween_property(self, "_lead_alpha", 0.0, Motion.time(0.5))
 	await t.finished
 	if _done:
 		return
@@ -612,8 +666,7 @@ func _fly_fetch(gift_id: String) -> void:
 	var s := _unit()
 	var t := Motion.tween(self, "dive")
 	t.set_parallel(true)
-	t.tween_method(_set_pace, 1.0, 0.0, Motion.time(1.0))
-	t.tween_property(self, "_lead_alpha", 0.0, Motion.time(0.5))
+	t.tween_method(_set_pace, _pace, 0.0, Motion.time(1.0 * _pace))
 	await t.finished
 	if _done:
 		return
@@ -700,6 +753,14 @@ func _hop(t: float, from: Vector2, to: Vector2, hops: int, height: float, facing
 	_animal.position = p
 
 
+## Where you're standing for the end screen: on the path (where you hopped
+## off, should it be skipped to mid-hop).
+func _ground_spot() -> Vector2:
+	if _rides:
+		return ChooseFocus.walk_spots(size, _scenery.path_y(), _pet.animal_id)["walker"]
+	return _walker.position
+
+
 func _go_finish() -> void:
 	if _done:
 		return
@@ -709,7 +770,7 @@ func _go_finish() -> void:
 	params_out["instant"] = true
 	params_out["scene"] = {
 		"biome": _scenery.biome.get("id", "lake"), "scroll": _scenery.scroll, "clock": _scenery.clock,
-		"walker": _walker.position, "animal": _animal.position, "unit": _unit(),
+		"walker": _ground_spot(), "animal": _animal.position, "unit": _unit(),
 		"facing": signf(_animal.scale.x),
 	}
 	App.go("finish", params_out)

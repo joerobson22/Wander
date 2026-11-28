@@ -6,7 +6,8 @@ extends PanelContainer
 ## colour and glint under the pointer.
 ## What it does is up to where it is: `tappable` tiles report taps
 ## (`tapped`), and `draggable` ones can be picked up (`lifted`), by
-## pressing and holding, or with `quick_drag` just by dragging. Either way
+## pressing and holding, with `quick_drag` just by dragging, or with
+## `lift_on_press` the moment they're pressed. Either way
 ## they grow under the pointer, easing smoothly, and show the grab hand.
 ## `trades` tiles (your collection) show a GiftInfo card while hovered (on a
 ## phone, after a first tap); clicking one with enough to trade trades it
@@ -20,6 +21,11 @@ var gift_id := ""
 var art: GiftArt
 ## Dragging picks it up straight away, without holding first.
 var quick_drag := false
+## Pressing picks it up at once, to follow the finger (where dragging is
+## all you can do with it, like the shelf editor).
+var lift_on_press := false
+## Where it was picked up from, in this tile's own space.
+var _lifted_at := Vector2.ZERO
 var tappable := false:
 	set(v):
 		tappable = v
@@ -101,7 +107,7 @@ func set_on_shelf() -> void:
 
 ## Where the finger went down, in viewport coordinates.
 func press_point() -> Vector2:
-	return get_global_transform_with_canvas() * _press.at
+	return get_global_transform_with_canvas() * (_lifted_at if lift_on_press else _press.at)
 
 
 func _interactive() -> bool:
@@ -179,6 +185,15 @@ func _process(dt: float) -> void:
 
 func _gui_input(e: InputEvent) -> void:
 	if not _interactive():
+		return
+	if draggable and lift_on_press:
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and e.pressed:
+			accept_event()
+			_lifted_at = e.position
+			# The drag is the gift's now, not a scroll's or a swipe's.
+			Gestures.lifts = true
+			Gestures.claimed = true
+			lifted.emit(self)
 		return
 	_press.handle(e)
 	if not draggable or not quick_drag:

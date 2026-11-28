@@ -74,6 +74,8 @@ var _fade_layer := Control.new()
 var _fading := 0
 var _minimap: Minimap
 var _arrows := {}  # Vector2i direction -> NavArrow
+## Done over the on-screen keyboard, and sliding the app out of its way.
+var _keyboard: Keyboard
 var _bg := UI.backdrop()
 ## The view behind every screen (art/home/backdrop.tscn), if there is one:
 ## made once and kept, panning as you move between screens.
@@ -182,6 +184,8 @@ func _ready() -> void:
 	_phone_frame.visible = _phone_view
 	_phone_frame.z_index = 4
 	add_child(_phone_frame)
+	_keyboard = Keyboard.new(self)
+	add_child(_keyboard)
 
 	App.navigate.connect(_open)
 	App.prepare_screen.connect(_prepare_flow)
@@ -424,6 +428,7 @@ func _switch_palette(dark: bool) -> void:
 	_phone_frame.queue_redraw()
 	for dir in _arrows:
 		_arrows[dir].refresh()
+	_keyboard.restyle()
 	if _account:
 		var typed := _account.typed()
 		_account.queue_free()
